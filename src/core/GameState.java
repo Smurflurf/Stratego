@@ -12,11 +12,12 @@ public class GameState {
 	private Piece[] redPieces;
 	private Piece[] bluePieces;
 	
-	public GameState(Piece[][] field, Piece[] redPieces, Piece[] bluePieces) {
+	public GameState(Piece[] redPieces, Piece[] bluePieces) {
+		field = new Piece[8][8];
 		setTeam(true);
-		setField(field);
 		setRedPieces(redPieces);
 		setBluePieces(bluePieces);
+		createField();
 	}
 	
 	/**
@@ -30,6 +31,16 @@ public class GameState {
 	@Override
 	public GameState clone() {
 		return null;
+	}
+
+	/**
+	 * Places all pieces from {@link #redPieces} and {@link #bluePieces} on the field.
+	 */
+	private void createField(){
+		for(Piece piece : redPieces)
+			field[piece.getX()][piece.getY()] = piece;
+		for(Piece piece : bluePieces)
+			field[piece.getX()][piece.getY()] = piece;
 	}
 
 	public boolean getTeam() {
@@ -46,10 +57,6 @@ public class GameState {
 
 	public Piece[][] getField() {
 		return field;
-	}
-
-	public void setField(Piece[][] field) {
-		this.field = field;
 	}
 
 	public Piece[] getRedPieces() {

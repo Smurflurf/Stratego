@@ -37,4 +37,17 @@ public class Utils {
 		// TODO consider flags, pieces and so on
 		return anyMovePossible(gameState);
 	}
+	
+	public static void printField(Piece[][] field) {
+		for(int y=0; y<8; y++) {
+			for(int x=0; x<8; x++) {
+				System.out.print(field[x][y] == null ? "  . " : 
+					((field[x][y].getTeam() ? "r_" : "b_") + 
+							(field[x][y].getType().getStrength() == 0 ? 
+									(field[x][y].getType() == PieceType.FLAGGE ? "F" : "B") : 
+										field[x][y].getType().getStrength()) + " "));
+			}
+			System.out.println();
+		}
+	}
 }

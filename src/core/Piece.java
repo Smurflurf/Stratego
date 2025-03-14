@@ -1,27 +1,32 @@
 package core;
 
-public abstract class Piece {
-	PieceType type;
-	boolean team;
+public class Piece {
+	private PieceType type;
+	private boolean team;
 	//byte pos; TODO x und y in eine byte Variable packen, mit bitmasken kann x und y extrahiert werden
-	byte x, y;
+	private byte x, y;
 	
 	/**
-	 * Initialize an unknown piece.
+	 * Initialize a known piece with unknown placement.
+	 * Places the piece on 0,0
+	 * @param type PieceType
+	 * @param team true is red, false is blue
 	 */
-	public Piece(boolean team, int x, int y) {
-		this.type = PieceType.UNKNOWN;
-		setPos(x, y);
+	public Piece(PieceType type, boolean team) {
+		this.type = type;
+		this.team = team;
+		setPos(0, 0);
 	}
 	
 	/**
-	 * Initialize a piece with known strength
+	 * Initialize a known piece
 	 * @param type PieceType
 	 * @param y
 	 * @param x
 	 */
 	public Piece(PieceType type, boolean team, int x, int y) {
 		this.type = type;
+		this.team = team;
 		setPos(x, y);
 	}
 	
@@ -49,5 +54,21 @@ public abstract class Piece {
 
 	public void setTeam(boolean team) {
 		this.team = team;
+	}
+	
+	public byte getX() {
+		return x;
+	}
+	
+	public void setX(byte x) {
+		this.x = x;
+	}
+	
+	public byte getY() {
+		return y;
+	}
+	
+	public void setY(byte y) {
+		this.y = y;
 	}
 }

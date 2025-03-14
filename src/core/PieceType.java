@@ -14,13 +14,25 @@ public enum PieceType {
 	FLAGGE(0, 0, 1),
 	UNKNOWN(-1, -1, 10);
 	
-	int moves;
-	int strength;
-	int totalPieces;
+	private int moves;
+	private int strength;
+	private int pieceCount;
 	
-	private PieceType(int moves, int strength, int totalPieces) {
+	private PieceType(int moves, int strength, int pieceCount) {
 		this.moves = moves;
 		this.strength = strength;
-		this.totalPieces = totalPieces;
+		this.pieceCount = pieceCount;
+	}
+
+	public int getMoves() {
+		return moves;
+	}
+
+	public int getStrength() {
+		return strength;
+	}
+
+	public int getPieceCount() {
+		return pieceCount;
 	}
 }

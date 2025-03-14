@@ -42,6 +42,7 @@ public class Runner {
 	}
 	
 	public static void printResults() {
-		
+		for(WinnerEntry entry : winList)
+			System.out.println("winner : " + entry.winner + ", in " + entry.nanoTime + "ms");
 	}
 }
