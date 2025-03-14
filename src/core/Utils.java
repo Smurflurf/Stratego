@@ -35,7 +35,7 @@ public class Utils {
 	
 	public static boolean isGameOver(GameState gameState) {
 		// TODO consider flags, pieces and so on
-		return anyMovePossible(gameState);
+		return !anyMovePossible(gameState);
 	}
 	
 	public static void printField(Piece[][] field) {

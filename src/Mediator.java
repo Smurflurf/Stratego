@@ -20,7 +20,7 @@ public class Mediator {
 	 * @return true if team red, false if team blue won
 	 */
 	public boolean getWinnerTeam() {
-		return false;
+		return gameState.getTeam();
 	}
 	
 	/**

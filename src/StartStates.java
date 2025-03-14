@@ -9,7 +9,7 @@ import java.util.SplittableRandom;
  * Returns start GameStates
  */
 public class StartStates {
-	private static int availableStartStates = 0;
+	private static int availableStartStates = 1;
 	
 	/**
 	 * Generates a GameState as a starting point for simulations
@@ -20,10 +20,6 @@ public class StartStates {
 		if(gameState != null && gameState.length > 0 && gameState[0] >= 0 && gameState [0] < availableStartStates)
 			return getGameState(0);
 		return getGameState(new SplittableRandom().nextInt(availableStartStates));
-	}
-	
-	public static void main(String[] args) {
-		Utils.printField(getGameState(0).getField());
 	}
 	
 	private static GameState getGameState(int gameState) {
