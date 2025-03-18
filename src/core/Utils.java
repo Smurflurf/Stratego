@@ -1,15 +1,11 @@
 package core;
 
-import core.playing.AI;
-import core.playing.random.RandomAI;
-
 /**
  * Useful utilities for the whole project.
  * The methods do not alter their parameters.
  * All methods are static, so extending from Utils is not necessary.
  */
 public class Utils {
-	
 	/**
 	 * 
 	 * @param piece
@@ -30,7 +26,7 @@ public class Utils {
 	 * @param target the Pieces target destination
 	 * @return true if the Piece can reach the position
 	 */
-	public static boolean canReach(Piece piece, byte[] target) {
+	public static boolean canReach(Piece piece, int[] target) {
 		if(piece.getType().getMoves() >= Math.abs(piece.getX() - target[0]) ||
 				piece.getType().getMoves() >= Math.abs(piece.getY() - target[1]))
 			return true;
@@ -42,7 +38,7 @@ public class Utils {
 	 * @param coordinates coordinates to check
 	 * @return true if the coordinates are out of bounds, i.e. smaller than 0 or bigger than 7
 	 */
-	public static boolean outOfBounds(byte[] coordinates) {
+	public static boolean outOfBounds(int[] coordinates) {
 		if(coordinates[0] < 0 || coordinates[0] > 7 ||
 				coordinates[1] < 0 || coordinates[1] > 7)
 			return true;
@@ -70,6 +66,9 @@ public class Utils {
 	}
 
 	public static boolean isMovePossible(Move move, GameState gameState) {
+		if(outOfBounds(move.pos)) return false;
+		if(!canReach(move.piece, move.pos)) return false;
+		
 		return true;
 	}
 	
@@ -79,13 +78,15 @@ public class Utils {
 	}
 	
 	public static void printField(Piece[][] field) {
-		for(int y=0; y<8; y++) {
+		for(int y=-1; y<8; y++) {
+			System.out.print(y == -1 ? "y" : (y + " "));
 			for(int x=0; x<8; x++) {
-				System.out.print(field[x][y] == null ? "  . " : 
+				System.out.print(y == -1 ? (x == 0 ? "\\x 0" : "  " + x + " "): (
+						field[x][y] == null ? "  . " : 
 					((field[x][y].getTeam() ? "r_" : "b_") + 
 							(field[x][y].getType().getStrength() == 0 ? 
 									(field[x][y].getType() == PieceType.FLAGGE ? "F" : "B") : 
-										field[x][y].getType().getStrength()) + " "));
+										field[x][y].getType().getStrength()) + " ")));
 			}
 			System.out.println();
 		}

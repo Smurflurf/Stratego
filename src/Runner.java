@@ -15,7 +15,7 @@ public class Runner {
 	public static ArrayList<WinnerEntry> winList = new ArrayList<WinnerEntry>();
 	
 	public static void main(String[] args) {
-		simulate(10, Placer.Type.RANDOM, AI.Type.RANDOM, Placer.Type.RANDOM, AI.Type.RANDOM);
+		simulate(1, Placer.Type.PREBUILT, AI.Type.RANDOM, Placer.Type.PREBUILT, AI.Type.RANDOM);
 		printResults();
 	}
 
@@ -29,15 +29,23 @@ public class Runner {
 			AI blue = blueType.createAI(false, mediator.obfuscateFor(false));
 			
 			long startTime = System.nanoTime();
-			while(!mediator.isGameOver()) {
+//			while(!mediator.isGameOver()) {
 				Move move;
 				if(mediator.getCurrentTeam() == red.getTeam())
 					move = red.nextMove();
 				else
 					move = blue.nextMove();
-				mediator.makeMove(move);
+				if(!mediator.makeMove(move)) {
+					System.err.println();
+					try{Thread.sleep(1000);}catch(Exception e) {};
+					continue;
+				}
+				
+				System.out.println("\nMove: "+ move + "\n");
+				red.update(move);
+				blue.update(move);
 				mediator.print();
-			}
+//			}
 			long endTime = System.nanoTime();
 
 			System.out.println(

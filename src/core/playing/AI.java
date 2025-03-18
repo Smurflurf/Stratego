@@ -10,8 +10,8 @@ public abstract class AI extends Utils {
 	private boolean team;
 	protected Piece[] myPieces;
 	protected Piece[] enemyPieces;
-	private GameState gameState;
-	
+	protected GameState gameState;
+
 	public AI(boolean player, GameState gameState) {
 		team = player;
 		if(team) { 
@@ -27,7 +27,7 @@ public abstract class AI extends Utils {
 	public boolean getTeam() {
 		return team;
 	}
-	
+
 	/**
 	 * TODO updated den GameState mit einem Move.
 	 * @param move
@@ -35,19 +35,25 @@ public abstract class AI extends Utils {
 	public void update(Move move) {
 		gameState.update(move);
 	}
-	
+
 	abstract public Move nextMove();
-	
+
 	/**
 	 * Different AI Types to simulate with
 	 */
 	public enum Type {
 		RANDOM;
-		
+
 		public AI createAI(boolean team, GameState gameState) {
-			AI ai = 
-					this == RANDOM ? new RandomAI(true, gameState) :
-						new RandomAI(true, gameState);
+			AI ai; 
+			switch(this) {
+			case RANDOM:  
+				ai = new RandomAI(team, gameState);
+				break;
+			default: 
+				ai = new RandomAI(team, gameState);
+				break;
+			}
 			return ai;
 		}
 	}

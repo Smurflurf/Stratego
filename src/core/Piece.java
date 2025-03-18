@@ -30,6 +30,14 @@ public class Piece {
 		setPos(x, y);
 	}
 	
+	public Piece clone() {
+		return new Piece(type, team, x, y);
+	}
+	
+	public int[] createPos() {
+		return new int[] {x,y};
+	}
+	
 	public void setPos(int x, int y) {
 		this.x = (byte)x;
 		this.y = (byte)y;
@@ -39,6 +47,10 @@ public class Piece {
 		return piece2;
 	}
 	
+	@Override
+	public String toString() {
+		return (team ? "r" : "b") + "_" + type.getStrength() + " ["+x+"|"+y+"]";
+	}
 
 	public PieceType getType() {
 		return type;

@@ -29,8 +29,9 @@ public class GameState {
 	}
 	
 	@Override
+	//TODO
 	public GameState clone() {
-		return null; //TODO
+		return new GameState(bluePieces.clone(), bluePieces.clone());
 	}
 
 	/**

@@ -21,14 +21,20 @@ public abstract class Placer {
 	 * @return an Array containing all the teams pieces with their correctly placed locations (x and y initialized)
 	 */
 	public static Piece[] placePiecesWith(boolean team, Type type) {
-		Placer placer = null;
+		Placer placer;
 		switch(type) {
+		case PREBUILT: 
+			placer = new PrebuiltStates(team);
+			break;
 		case RANDOM:
 			placer = new RandomAI(team);
-		case HEURISTIC:
 			break;
-		default:
-			placer = new PrebuiltStates(team);
+		case HEURISTIC:
+			placer = null;
+			break;
+		default: 
+			placer = null;
+			break;
 		}
 		return placer.place();
 	}
