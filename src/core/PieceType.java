@@ -12,7 +12,7 @@ public enum PieceType {
 	SPIONIN(1, 2, 1), 
 	BOMBE(0, 0, 2), 
 	FLAGGE(0, 0, 1),
-	UNKNOWN(-1, -1, 10);
+	UNKNOWN(7, 10, 10);
 	
 	private int moves;
 	private int strength;

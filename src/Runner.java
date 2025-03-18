@@ -1,8 +1,11 @@
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import core.GameState;
 import core.Move;
-import core.ai.AI;
+import core.Piece;
+import core.placing.Placer;
+import core.playing.AI;
 
 /**
  * Runs simulations, execute the main method for doing so
@@ -12,17 +15,19 @@ public class Runner {
 	public static ArrayList<WinnerEntry> winList = new ArrayList<WinnerEntry>();
 	
 	public static void main(String[] args) {
-		simulate(10, AI.Type.RANDOM, AI.Type.RANDOM);
+		simulate(10, Placer.Type.RANDOM, AI.Type.RANDOM, Placer.Type.RANDOM, AI.Type.RANDOM);
 		printResults();
 	}
 
-	public static void simulate(int repetitions, AI.Type redType, AI.Type blueType, int ... startState) {
+	public static void simulate(int repetitions, Placer.Type redPlacement, AI.Type redType, Placer.Type bluePlacement, AI.Type blueType) {
 		while(repetitions-- > 0) {
-			Mediator mediator = new Mediator(StartStates.generateStartState(startState));
-
+			Piece[] redPieces = Placer.placePiecesWith(true, redPlacement);
+			Piece[] bluePieces = Placer.placePiecesWith(false, bluePlacement);
+			Mediator mediator = new Mediator(new GameState(redPieces, bluePieces));
+			mediator.print();
 			AI red = redType.createAI(true, mediator.obfuscateFor(true));
 			AI blue = blueType.createAI(false, mediator.obfuscateFor(false));
-
+			
 			long startTime = System.nanoTime();
 			while(!mediator.isGameOver()) {
 				Move move;
@@ -31,6 +36,7 @@ public class Runner {
 				else
 					move = blue.nextMove();
 				mediator.makeMove(move);
+				mediator.print();
 			}
 			long endTime = System.nanoTime();
 

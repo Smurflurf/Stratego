@@ -30,7 +30,7 @@ public class GameState {
 	
 	@Override
 	public GameState clone() {
-		return null;
+		return null; //TODO
 	}
 
 	/**

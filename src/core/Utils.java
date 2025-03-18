@@ -1,7 +1,7 @@
 package core;
 
-import core.ai.AI;
-import core.ai.random.RandomAI;
+import core.playing.AI;
+import core.playing.random.RandomAI;
 
 /**
  * Useful utilities for the whole project.
@@ -9,6 +9,46 @@ import core.ai.random.RandomAI;
  * All methods are static, so extending from Utils is not necessary.
  */
 public class Utils {
+	
+	/**
+	 * 
+	 * @param piece
+	 * @param target
+	 * @param direction direction the piece wants to move
+	 * @return
+	 */
+	public static boolean sightLine(Piece piece, byte[] target, Direction direction) {
+		if(Math.abs(piece.getX()-target[0]) == 1 && Math.abs(piece.getX()-target[0]) == 1)
+			return true;
+		return false;
+	}
+	
+	/**
+	 * Checks if a Piece can reach a target destination.
+	 * Does not check if the way is unobstructed, use with {@link #sightLine(Piece, byte[])}
+	 * @param piece Piece that wants to move
+	 * @param target the Pieces target destination
+	 * @return true if the Piece can reach the position
+	 */
+	public static boolean canReach(Piece piece, byte[] target) {
+		if(piece.getType().getMoves() >= Math.abs(piece.getX() - target[0]) ||
+				piece.getType().getMoves() >= Math.abs(piece.getY() - target[1]))
+			return true;
+		return false;
+	}
+	
+	/**
+	 * Checks if a given set of coordinates is out of bounds
+	 * @param coordinates coordinates to check
+	 * @return true if the coordinates are out of bounds, i.e. smaller than 0 or bigger than 7
+	 */
+	public static boolean outOfBounds(byte[] coordinates) {
+		if(coordinates[0] < 0 || coordinates[0] > 7 ||
+				coordinates[1] < 0 || coordinates[1] > 7)
+			return true;
+		return false;
+	}
+	
 	/**
 	 * Generates a list of all possible Moves (based on gameState current team).
 	 * Does not check if the game is still going i.e. no checks for the existence of flags are done here.

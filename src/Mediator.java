@@ -16,6 +16,13 @@ public class Mediator {
 	}
 	
 	/**
+	 * Prints the current GameState
+	 */
+	public void print() {
+		Utils.printField(gameState.getField());
+	}
+	
+	/**
 	 * Gives false information if game is not over yet, use after {@link #isGameOver()}.
 	 * @return true if team red, false if team blue won
 	 */

@@ -1,16 +1,26 @@
-package core.ai;
+package core.playing;
 
 import core.Utils;
-import core.ai.random.RandomAI;
+import core.playing.random.RandomAI;
 import core.GameState;
 import core.Move;
+import core.Piece;
 
 public abstract class AI extends Utils {
 	private boolean team;
+	protected Piece[] myPieces;
+	protected Piece[] enemyPieces;
 	private GameState gameState;
 	
 	public AI(boolean player, GameState gameState) {
-		this.team = player;
+		team = player;
+		if(team) { 
+			myPieces = gameState.getRedPieces(); 
+			enemyPieces = gameState.getBluePieces();
+		} else {
+			myPieces = gameState.getBluePieces();
+			enemyPieces = gameState.getRedPieces();
+		}
 		this.gameState = gameState;
 	};
 

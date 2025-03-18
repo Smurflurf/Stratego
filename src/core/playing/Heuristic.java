@@ -1,4 +1,4 @@
-package core.ai;
+package core.playing;
 
 import core.GameState;
 
