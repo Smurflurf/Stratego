@@ -53,7 +53,7 @@ public class Mediator {
 	 */
 	public boolean makeMove(Move move) {
 		if(Utils.isMovePossible(move, gameState))
-			;
+			Utils.makeMove(gameState, move);
 		else
 			return false;
 		return true;
@@ -79,5 +79,9 @@ public class Mediator {
 			piece.setType(PieceType.UNKNOWN);
 		
 		return obfuscated;
+	}
+	
+	public GameState getGameState() {
+		return gameState;
 	}
 }

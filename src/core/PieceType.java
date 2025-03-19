@@ -8,8 +8,8 @@ public enum PieceType {
 	MARSCHALL(1, 10, 1), 
 	GENERAL(1, 9, 1), 
 	MINEUR(1, 3, 2), 
-	SPAEHER(7, 1, 2), 
-	SPIONIN(1, 2, 1), 
+	SPAEHER(7, 2, 2), 
+	SPIONIN(1, 1, 1), 
 	BOMBE(0, 0, 2), 
 	FLAGGE(0, 0, 1),
 	UNKNOWN(7, 10, 10);

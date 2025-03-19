@@ -1,11 +1,11 @@
 package core;
 
-public class Piece {
+public class Piece implements Cloneable {
 	private PieceType type;
 	private boolean team;
 	//byte pos; TODO x und y in eine byte Variable packen, mit bitmasken kann x und y extrahiert werden
 	private byte x, y;
-	
+
 	/**
 	 * Initialize a known piece with unknown placement.
 	 * Places the piece on 0,0
@@ -17,7 +17,7 @@ public class Piece {
 		this.team = team;
 		setPos(0, 0);
 	}
-	
+
 	/**
 	 * Initialize a known piece
 	 * @param type PieceType
@@ -29,27 +29,35 @@ public class Piece {
 		this.team = team;
 		setPos(x, y);
 	}
-	
+
+	@Override
 	public Piece clone() {
 		return new Piece(type, team, x, y);
 	}
-	
+
 	public int[] createPos() {
 		return new int[] {x,y};
 	}
-	
+
 	public void setPos(int x, int y) {
 		this.x = (byte)x;
 		this.y = (byte)y;
 	}
-	
+
+	public void setPos(int[] pos) {
+		this.x = (byte)pos[0];
+		this.y = (byte)pos[1];
+	}
+
 	public Piece fight(Piece piece2) {
 		return piece2;
 	}
-	
+
 	@Override
 	public String toString() {
-		return (team ? "r" : "b") + "_" + type.getStrength() + " ["+x+"|"+y+"]";
+		return (team ? "r" : "b") + "_" + (type.getStrength() == 0 ? 
+				(type == PieceType.FLAGGE ? "F" : "B") : 
+					type.getStrength()) + " ["+x+"|"+y+"]";
 	}
 
 	public PieceType getType() {
@@ -67,19 +75,19 @@ public class Piece {
 	public void setTeam(boolean team) {
 		this.team = team;
 	}
-	
+
 	public byte getX() {
 		return x;
 	}
-	
+
 	public void setX(byte x) {
 		this.x = x;
 	}
-	
+
 	public byte getY() {
 		return y;
 	}
-	
+
 	public void setY(byte y) {
 		this.y = y;
 	}

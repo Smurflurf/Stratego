@@ -1,5 +1,7 @@
 package core;
 
+import core.placing.Placer;
+
 /**
  * Useful utilities for the whole project.
  * The methods do not alter their parameters.
@@ -7,16 +9,75 @@ package core;
  */
 public class Utils {
 	/**
+	 * Executes move on state. 
+	 * Does not check if move is possible or if the Piece exists on the board.
+	 * @param state GameState to execute move on
+	 * @param move move being executed on state
+	 */
+	public static void makeMove(GameState state, Move move) {
+		if(!(state.inspect(move.getPos()) instanceof Piece piece)) {
+			state.move(move);
+		} else {
+			move.getPiece().fight(piece);
+		}
+	}
+	
+	public static void main(String[] args) {
+		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
+		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
+		GameState state = new GameState(redPieces, bluePieces);
+		
+		printField(state.getField());
+		System.out.println(state.getRedPieces()[5]);
+		
+		long start = System.currentTimeMillis();
+		for(int i=0; i<1000000000; i++)
+			sightLine(state.getField(), state.getRedPieces()[5], new int[] {6,2}, Direction.UP);
+		long stop = System.currentTimeMillis();
+		System.out.print(stop - start + " ms");
+	}
+	
+	/**
+	 * TODO funktionsfähig machen
+	 * Checks if a Piece and its target position have 
 	 * 
 	 * @param piece
 	 * @param target
 	 * @param direction direction the piece wants to move
 	 * @return
 	 */
-	public static boolean sightLine(Piece piece, byte[] target, Direction direction) {
-		if(Math.abs(piece.getX()-target[0]) == 1 && Math.abs(piece.getX()-target[0]) == 1)
-			return true;
-		return false;
+	public static boolean sightLine(Piece[][] field, Piece piece, int[] target, Direction direction) {
+		switch(direction) {
+		case UP, DOWN:			
+			for(int y=direction.getOneDimTranslation(); y<Math.abs(piece.getY() - target[1]); y+=direction.getOneDimTranslation()) {
+				int newY = piece.getY() + y;
+				if(newY>-1 && newY<8 && blocked(field, piece.getX(), newY))
+					return false;
+			}
+			break;
+		case LEFT, RIGHT:			
+			for(int x=direction.getOneDimTranslation(); x<Math.abs(piece.getX() - target[0]); x+=direction.getOneDimTranslation()) {
+				int newX = piece.getX() + x;
+				if(newX>-1 && newX<8 && blocked(field, newX, piece.getY()))
+					return false;
+			}
+			break;
+		}
+		return true;
+	}
+	
+	/**
+	 * Checks if a Piece or Lake blocks a field
+	 * @param state
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public static boolean blocked(Piece[][] field, int x, int y) {
+		if(x == 2 || x == 5)
+			if(y == 3 || y == 4)
+				return false;
+		return field[x][y] != null;
 	}
 	
 	/**
@@ -27,9 +88,14 @@ public class Utils {
 	 * @return true if the Piece can reach the position
 	 */
 	public static boolean canReach(Piece piece, int[] target) {
-		if(piece.getType().getMoves() >= Math.abs(piece.getX() - target[0]) ||
-				piece.getType().getMoves() >= Math.abs(piece.getY() - target[1]))
-			return true;
+		if(piece.getX() != target[0]) {
+			if(piece.getY() != target[1]) return false;
+			if(piece.getType().getMoves() >= Math.abs(piece.getX() - target[0])) return true;
+		} else {
+			if(piece.getType().getMoves() >= Math.abs(piece.getY() - target[1])) return true;
+		}
+		if(piece.getX() != target[0] && piece.getY() != target[1]) return false;
+		
 		return false;
 	}
 	
@@ -66,8 +132,9 @@ public class Utils {
 	}
 
 	public static boolean isMovePossible(Move move, GameState gameState) {
-		if(outOfBounds(move.pos)) return false;
-		if(!canReach(move.piece, move.pos)) return false;
+		if(outOfBounds(move.getPos())) return false;
+		if(!canReach(move.getPiece(), move.getPos())) return false;
+		System.out.println(move);
 		
 		return true;
 	}
