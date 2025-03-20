@@ -22,12 +22,19 @@ public enum Direction {
 		return oneDimTranslation;
 	}
 	
-	public void translate(int[] original, int modifier) {
+	/**
+	 * Modifies original by modifier in {@link #Direction(int[], int)}
+	 * @param original unmodified x,y coordinates
+	 * @param modifier fields to go into {@link #Direction(int[], int)}
+	 * @return modified position represented as an int[x,y] array
+	 */
+	public int[] translate(int[] original, int modifier) {
 		if(translation[0] != 0) {
 			original[0] += translation[0] * modifier;
 		} else {
 			original[1] += translation[1] * modifier;
 		}
+		return original;
 	}
 	
 	public static Direction get(int dir) {

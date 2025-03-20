@@ -1,18 +1,31 @@
 package core;
 
 public class Move {
-	private int[] pos;
 	private Piece piece;
+	private Direction direction;
+	private int fields;
+	private Move firstMove;
 	
-	public Move(Piece piece, int x, int y) {
-		this.setPiece(piece);
-		getPos()[0] = x;
-		getPos()[1] = y;
+	public Move(Piece piece, Direction direction, int fields) {
+		setPiece(piece);
+		setDirection(direction);
+		setFields(fields);
+		setFirstMove(null);
 	}
 	
-	public Move(Piece piece, int[] pos) {
-		this.setPiece(piece);
-		this.setPos(pos);
+	/**
+	 * Use with a SPAEHER, as he can move and fight at the same time.
+	 * This Move always represents a fight.
+	 * @param firstMove the first move, indicating where the Piece moves
+	 * @param piece
+	 * @param direction
+	 * @param fields
+	 */
+	public Move(Move firstMove, Piece piece, Direction direction, int fields) {
+		setPiece(piece);
+		setDirection(direction);
+		setFields(fields);
+		setFirstMove(firstMove);
 	}
 	
 	@Override
@@ -21,11 +34,7 @@ public class Move {
 	}
 
 	public int[] getPos() {
-		return pos;
-	}
-
-	public void setPos(int[] pos) {
-		this.pos = pos;
+		return direction.translate(new int[] {piece.getX(),  piece.getY()} , fields);
 	}
 
 	public Piece getPiece() {
@@ -34,5 +43,29 @@ public class Move {
 
 	public void setPiece(Piece piece) {
 		this.piece = piece;
+	}
+
+	public Direction getDirection() {
+		return direction;
+	}
+
+	public void setDirection(Direction direction) {
+		this.direction = direction;
+	}
+
+	public int getFields() {
+		return fields;
+	}
+
+	public void setFields(int fields) {
+		this.fields = fields;
+	}
+
+	public Move getFirstMove() {
+		return firstMove;
+	}
+
+	public void setFirstMove(Move firstMove) {
+		this.firstMove = firstMove;
 	}
 }

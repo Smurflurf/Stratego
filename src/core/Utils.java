@@ -8,6 +8,28 @@ import core.placing.Placer;
  * All methods are static, so extending from Utils is not necessary.
  */
 public class Utils {
+	public static boolean checkAndExecute(GameState state, Move move) {
+		if(move.getFirstMove() != null) {
+			if(!isMovePossible(state, move.getFirstMove())) return false;
+			makeMove(state, move.getFirstMove());
+			if(!sightLine(state.getField(), move.getPiece(), move.getFields(), move.getDirection())) return false;
+			makeMove(state, move);
+		} else {
+			if(!isMovePossible(state, move)) return false;
+			makeMove(state, move);
+		}
+		return true;
+	}
+	
+	public static boolean isMovePossible(GameState state, Move move) {
+		if(outOfBounds(move.getPos())) return false;
+		if(!canReach(move.getPiece(), move.getPos())) return false;
+		if(!sightLine(state.getField(), move.getPiece(), move.getFields(), move.getDirection()))
+		System.out.println(move);
+		
+		return true;
+	}
+	
 	/**
 	 * Executes move on state. 
 	 * Does not check if move is possible or if the Piece exists on the board.
@@ -28,37 +50,52 @@ public class Utils {
 		GameState state = new GameState(redPieces, bluePieces);
 		
 		printField(state.getField());
-		System.out.println(state.getRedPieces()[5]);
+		System.out.println(state.getRedPieces()[1]);
 		
 		long start = System.currentTimeMillis();
 		for(int i=0; i<1000000000; i++)
-			sightLine(state.getField(), state.getRedPieces()[5], new int[] {6,2}, Direction.UP);
+			sightLine(state.getField(), state.getRedPieces()[5], 2, Direction.UP);
 		long stop = System.currentTimeMillis();
 		System.out.print(stop - start + " ms");
 	}
 	
 	/**
-	 * TODO funktionsfähig machen
-	 * Checks if a Piece and its target position have 
-	 * 
-	 * @param piece
-	 * @param target
-	 * @param direction direction the piece wants to move
-	 * @return
+	 * Checks if a Piece and its target position do not have any Pieces or Lakes in between.
+	 * @param field	the field from a GameState
+	 * @param piece Piece that moves
+	 * @param fields how many steps into a Direction
+	 * @param direction Direction the piece wants to move
+	 * @return true if nothing blocks the pieces line of sight within fields steps into direction
 	 */
-	public static boolean sightLine(Piece[][] field, Piece piece, int[] target, Direction direction) {
+	public static boolean sightLine(Piece[][] field, Piece piece, int fields, Direction direction) {
+		if(fields < 2) return true;
+		
 		switch(direction) {
-		case UP, DOWN:			
-			for(int y=direction.getOneDimTranslation(); y<Math.abs(piece.getY() - target[1]); y+=direction.getOneDimTranslation()) {
+		case UP:			
+			for(int y=-1; fields > 1; y--, --fields) {
 				int newY = piece.getY() + y;
-				if(newY>-1 && newY<8 && blocked(field, piece.getX(), newY))
+				if(newY<0 || newY>8 || blocked(field, piece.getX(), newY))
 					return false;
 			}
 			break;
-		case LEFT, RIGHT:			
-			for(int x=direction.getOneDimTranslation(); x<Math.abs(piece.getX() - target[0]); x+=direction.getOneDimTranslation()) {
+		case DOWN:
+			for(int y=1; fields > 1; y++, --fields) {
+				int newY = piece.getY() + y;
+				if(newY<0 || newY>7 || blocked(field, piece.getX(), newY))
+					return false;
+			}
+			break;
+		case LEFT:			
+			for(int x=-1; fields > 1; x--, --fields) {
 				int newX = piece.getX() + x;
-				if(newX>-1 && newX<8 && blocked(field, newX, piece.getY()))
+				if(newX<0 || newX>7 || blocked(field, newX, piece.getY()))
+					return false;
+			}
+			break;
+		case RIGHT:
+			for(int x=1; fields > 1; x++, --fields) {
+				int newX = piece.getX() + x;
+				if(newX<0 || newX>7 || blocked(field, newX, piece.getY()))
 					return false;
 			}
 			break;
@@ -129,14 +166,6 @@ public class Utils {
 	 */
 	public static boolean anyMovePossible(GameState gameState) {
 		return false;
-	}
-
-	public static boolean isMovePossible(Move move, GameState gameState) {
-		if(outOfBounds(move.getPos())) return false;
-		if(!canReach(move.getPiece(), move.getPos())) return false;
-		System.out.println(move);
-		
-		return true;
 	}
 	
 	public static boolean isGameOver(GameState gameState) {

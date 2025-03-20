@@ -52,11 +52,7 @@ public class Mediator {
 	 * @return true if move is possible and was executed
 	 */
 	public boolean makeMove(Move move) {
-		if(Utils.isMovePossible(move, gameState))
-			Utils.makeMove(gameState, move);
-		else
-			return false;
-		return true;
+		return Utils.checkAndExecute(gameState, move);
 	}
 	
 	/**

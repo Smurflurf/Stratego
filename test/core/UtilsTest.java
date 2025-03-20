@@ -2,7 +2,6 @@ package core;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -22,7 +21,7 @@ class UtilsTest extends Utils {
 		int newX = 0;
 		int newY = 5;
 		
-		Move move = new Move(state.getRedPieces()[5], new int[]{newX, newY});
+		Move move = new Move(state.getRedPieces()[5], Direction.LEFT, 6);
 		state.move(move);
 		
 		assertTrue(state.getField()[oldX][oldY] == null);
@@ -32,15 +31,19 @@ class UtilsTest extends Utils {
 	}
 
 	@Test
-	void testSightLine() {	
-		printField(state.getField());
-		System.out.println(state.getRedPieces()[5]);
-		
-		assertTrue(sightLine(state.getField(), state.getRedPieces()[4], new int[] {0,5}, Direction.LEFT));
-		assertFalse(sightLine(state.getField(), state.getRedPieces()[5], new int[] {0,5}, Direction.LEFT));
-		
+	void testSightLine() {
+		assertTrue(sightLine(state.getField(), state.getRedPieces()[4], 1, Direction.LEFT));
+		assertFalse(sightLine(state.getField(), state.getRedPieces()[5], 4, Direction.LEFT));
 
-		assertTrue(sightLine(state.getField(), state.getRedPieces()[5], new int[] {6,2}, Direction.UP));
+		assertTrue(sightLine(state.getField(), state.getRedPieces()[5], 3, Direction.UP));
+		assertTrue(sightLine(state.getField(), state.getBluePieces()[5], 3, Direction.DOWN));
+		assertTrue(sightLine(state.getField(), state.getRedPieces()[5], 2, Direction.LEFT));
+		assertTrue(sightLine(state.getField(), state.getBluePieces()[4], 2, Direction.RIGHT));
+		
+		assertFalse(sightLine(state.getField(), state.getBluePieces()[4], 3, Direction.RIGHT));
+		assertFalse(sightLine(state.getField(), state.getBluePieces()[4], 5, Direction.RIGHT));
+		assertFalse(sightLine(state.getField(), state.getBluePieces()[5], 4, Direction.DOWN));
+		assertFalse(sightLine(state.getField(), state.getBluePieces()[5], 8, Direction.UP));
 	}
 
 	@Test

@@ -35,10 +35,6 @@ public class Piece implements Cloneable {
 		return new Piece(type, team, x, y);
 	}
 
-	public int[] createPos() {
-		return new int[] {x,y};
-	}
-
 	public void setPos(int x, int y) {
 		this.x = (byte)x;
 		this.y = (byte)y;
