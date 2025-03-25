@@ -1,5 +1,6 @@
 package core;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,6 +14,34 @@ import core.placing.Placer;
 
 class UtilsTest extends Utils {
 	GameState state;
+	
+	@Test
+	void testReach() {
+		Piece piece = state.getRedPieces()[1];		
+		assertEquals(1, reach(state.getField(), piece, 0));
+		assertEquals(1, reach(state.getField(), piece, 1));
+		assertEquals(0, reach(state.getField(), piece, 2));
+		assertEquals(0, reach(state.getField(), piece, 3));
+	
+		piece = state.getRedPieces()[5];
+		assertEquals(3, reach(state.getField(), piece, 0));
+		assertEquals(2, reach(state.getField(), piece, 1));
+		assertEquals(1, reach(state.getField(), piece, 2));
+		assertEquals(0, reach(state.getField(), piece, 3));
+		
+		piece= state.getBluePieces()[4];
+		assertEquals(2, reach(state.getField(), piece, 0));
+		assertEquals(3, reach(state.getField(), piece, 1));
+		assertEquals(0, reach(state.getField(), piece, 2));
+		assertEquals(1, reach(state.getField(), piece, 3));
+		
+
+		piece= state.getBluePieces()[2];
+		assertEquals(0, reach(state.getField(), piece, 0));
+		assertEquals(1, reach(state.getField(), piece, 1));
+		assertEquals(1, reach(state.getField(), piece, 2));
+		assertEquals(0, reach(state.getField(), piece, 3));	
+	}
 
 	@Test
 	void testMakeMove() {

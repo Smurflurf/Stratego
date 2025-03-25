@@ -1,5 +1,7 @@
 package core;
 
+import java.util.ArrayList;
+
 import core.placing.Placer;
 
 /**
@@ -20,14 +22,28 @@ public class Utils {
 		}
 		return true;
 	}
-	
+
 	public static boolean isMovePossible(GameState state, Move move) {
 		if(outOfBounds(move.getPos())) return false;
 		if(!canReach(move.getPiece(), move.getPos())) return false;
 		if(!sightLine(state.getField(), move.getPiece(), move.getFields(), move.getDirection()))
-		System.out.println(move);
-		
+			System.out.println(move);
+
 		return true;
+	}
+
+	/**
+	 * Fills dirMap with direction-reach pairs to represent how many fields a Piece can walk into a given direction
+	 * @param state
+	 * @param picked
+	 * @param dirMap
+	 */
+	public static void fillDirectionMap(GameState state, Piece picked, ArrayList<int[]> dirMap){
+		dirMap.clear();
+		for(int direction=0; direction<4; direction++) {
+			int reach = reach(state.getField(), picked, direction);
+			if(reach > 0) dirMap.add(new int[] {direction, reach});
+		}
 	}
 	
 	/**
@@ -43,22 +59,22 @@ public class Utils {
 			move.getPiece().fight(piece);
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
 		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
 		GameState state = new GameState(redPieces, bluePieces);
-		
+
 		printField(state.getField());
 		System.out.println(state.getRedPieces()[1]);
-		
+
 		long start = System.currentTimeMillis();
 		for(int i=0; i<1000000000; i++)
 			sightLine(state.getField(), state.getRedPieces()[5], 2, Direction.UP);
 		long stop = System.currentTimeMillis();
 		System.out.print(stop - start + " ms");
 	}
-	
+
 	/**
 	 * Checks if a Piece and its target position do not have any Pieces or Lakes in between.
 	 * @param field	the field from a GameState
@@ -69,54 +85,142 @@ public class Utils {
 	 */
 	public static boolean sightLine(Piece[][] field, Piece piece, int fields, Direction direction) {
 		if(fields < 2) return true;
-		
+
 		switch(direction) {
 		case UP:			
 			for(int y=-1; fields > 1; y--, --fields) {
 				int newY = piece.getY() + y;
-				if(newY<0 || newY>8 || blocked(field, piece.getX(), newY))
+				if(outOfBounds(newY) || blocked(field, piece.getX(), newY)) {
 					return false;
+				}
 			}
 			break;
 		case DOWN:
 			for(int y=1; fields > 1; y++, --fields) {
 				int newY = piece.getY() + y;
-				if(newY<0 || newY>7 || blocked(field, piece.getX(), newY))
+				if(outOfBounds(newY) || blocked(field, piece.getX(), newY))
 					return false;
 			}
 			break;
 		case LEFT:			
 			for(int x=-1; fields > 1; x--, --fields) {
 				int newX = piece.getX() + x;
-				if(newX<0 || newX>7 || blocked(field, newX, piece.getY()))
+				if(outOfBounds(newX) || blocked(field, newX, piece.getY()))
 					return false;
 			}
 			break;
 		case RIGHT:
 			for(int x=1; fields > 1; x++, --fields) {
 				int newX = piece.getX() + x;
-				if(newX<0 || newX>7 || blocked(field, newX, piece.getY()))
+				if(outOfBounds(newX) || blocked(field, newX, piece.getY()))
 					return false;
 			}
 			break;
 		}
 		return true;
 	}
-	
+
 	/**
-	 * Checks if a Piece or Lake blocks a field
+	 * Returns a Pieces reach into a given direction.
+	 * The reach is impacted by the field border, same team Pieces and the lakes.
+	 * 
+	 * @param field	the field from a GameState
+	 * @param piece Piece that moves
+	 * @param direction Direction int the piece wants to move
+	 * @return the fields a Piece can walk into the given direction
+	 */
+	public static int reach(Piece[][] field, Piece piece, int direction) {
+		int maxReach = piece.getType().getMoves();
+		switch(direction) {
+		case 0: 
+			for(int y=piece.getY() - 1; y>=piece.getY() - maxReach; y--) {
+				if(outOfBounds(y))
+					return piece.getY() - y -1;
+				switch(blockedTeamSensitive(field, piece.getX(), y, piece.getTeam())){
+				case -1: return piece.getY() - y -1;
+				case 1: return piece.getY() - y -1;
+				case 2: return piece.getY() - y;
+				}
+			}
+			break;
+		case 1:
+			for(int y=piece.getY() + 1; y<=piece.getY() + maxReach; y++) {
+				if(outOfBounds(y))
+					return y - piece.getY() -1;
+				switch(blockedTeamSensitive(field, piece.getX(), y, piece.getTeam())){
+				case -1: return y - piece.getY() -1;
+				case 1: return y - piece.getY() -1;
+				case 2: return y - piece.getY();
+				}
+			}
+			break;
+		case 2:
+			for(int x=piece.getX() - 1; x>=piece.getX() - maxReach; x--) {
+				if(outOfBounds(x))
+					return piece.getX() - x -1;
+				switch(blockedTeamSensitive(field, x, piece.getY(), piece.getTeam())){
+				case -1: return piece.getX() - x -1;
+				case 1: return piece.getX() - x -1;
+				case 2: return piece.getX() - x;
+				}
+			}
+			break;
+		case 3:
+			for(int x=piece.getX() + 1; x<=piece.getX() + maxReach; x++) {
+				if(outOfBounds(x))
+					return x - piece.getX() -1;
+				switch(blockedTeamSensitive(field, x, piece.getY(), piece.getTeam())){
+				case -1: return x - piece.getX() -1;
+				case 1: return x - piece.getX() -1;
+				case 2: return x - piece.getX();
+				}
+			}
+			break;
+		}
+		return maxReach;
+	}
+
+	/**
+	 * Checks for different things blocking a field, returns what exactly is blocking
+	 * @param field
+	 * @param x
+	 * @param y
+	 * @param team
+	 * @return -1 if blocked by lake, 0 if not blocked, 1 if blocked by same team, 2 if blocked by different team
+	 */
+	public static int blockedTeamSensitive(Piece[][] field, int x, int y, boolean team) {
+		if(blockedByLake(x, y)) return -1;
+		if(field[x][y] == null) return 0;
+		else
+			return (field[x][y].getTeam() == team ? 1 : 2);
+	}
+
+	/**
+	 * Checks if a Piece or lake blocks a field
 	 * @param state
 	 * @param x
 	 * @param y
 	 * @return
 	 */
 	public static boolean blocked(Piece[][] field, int x, int y) {
+		return blockedByLake(x,y) ? 
+				true : field[x][y] != null;
+	}
+
+	/**
+	 * Checks if a lake blocks a field
+	 * @param state
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public static boolean blockedByLake(int x, int y) {
 		if(x == 2 || x == 5)
 			if(y == 3 || y == 4)
-				return false;
-		return field[x][y] != null;
+				return true;
+		return false;
 	}
-	
+
 	/**
 	 * Checks if a Piece can reach a target destination.
 	 * Does not check if the way is unobstructed, use with {@link #sightLine(Piece, byte[])}
@@ -132,10 +236,10 @@ public class Utils {
 			if(piece.getType().getMoves() >= Math.abs(piece.getY() - target[1])) return true;
 		}
 		if(piece.getX() != target[0] && piece.getY() != target[1]) return false;
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Checks if a given set of coordinates is out of bounds
 	 * @param coordinates coordinates to check
@@ -147,7 +251,16 @@ public class Utils {
 			return true;
 		return false;
 	}
-	
+
+	/**
+	 * Checks if a given integer is out of bounds
+	 * @param i integer to check
+	 * @return true if the integer is out of bounds, i.e. smaller than 0 or bigger than 7
+	 */
+	public static boolean outOfBounds(int i) {
+		return i<0 || i>7;
+	}
+
 	/**
 	 * Generates a list of all possible Moves (based on gameState current team).
 	 * Does not check if the game is still going i.e. no checks for the existence of flags are done here.
@@ -157,32 +270,37 @@ public class Utils {
 	public static Move[] getAllPossibleMoves(GameState gameState) {
 		return null;
 	}
-	
+
 	/**
 	 * Checks if any Move is possible in gameState.
 	 * Uses the same algorithm as {@link #getAllPossibleMoves(GameState)} but stops after finding the first Move.
 	 * Use this Method for anything related to possible Move checks, rather than {@link #getAllPossibleMoves(GameState)}.
 	 * @return false if no Move is possible in gameState
 	 */
-	public static boolean anyMovePossible(GameState gameState) {
+	public static boolean anyMovePossible(GameState state) {
+		ArrayList<Piece> list = new ArrayList<Piece>();
+		for(int i=0; i<10; i++)
+			if(state.getCurrentPieces()[i] != null) list.add(state.getCurrentPieces()[i]);
+		ArrayList<Direction> directions = new ArrayList(4);
 		return false;
 	}
-	
+
 	public static boolean isGameOver(GameState gameState) {
 		// TODO consider flags, pieces and so on
 		return !anyMovePossible(gameState);
 	}
-	
+
 	public static void printField(Piece[][] field) {
 		for(int y=-1; y<8; y++) {
 			System.out.print(y == -1 ? "y" : (y + " "));
 			for(int x=0; x<8; x++) {
 				System.out.print(y == -1 ? (x == 0 ? "\\x 0" : "  " + x + " "): (
-						field[x][y] == null ? "  . " : 
-					((field[x][y].getTeam() ? "r_" : "b_") + 
-							(field[x][y].getType().getStrength() == 0 ? 
-									(field[x][y].getType() == PieceType.FLAGGE ? "F" : "B") : 
-										field[x][y].getType().getStrength()) + " ")));
+						field[x][y] == null ? 
+								(blockedByLake(x, y) ? "  x " : "  . " ) : 
+									((field[x][y].getTeam() ? "r_" : "b_") + 
+											(field[x][y].getType().getStrength() == 0 ? 
+													(field[x][y].getType() == PieceType.FLAGGE ? "F" : "B") : 
+														field[x][y].getType().getStrength()) + " ")));
 			}
 			System.out.println();
 		}

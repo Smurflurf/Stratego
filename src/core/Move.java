@@ -6,6 +6,12 @@ public class Move {
 	private int fields;
 	private Move firstMove;
 	
+	/**
+	 * Use with everything but SPAEHER for a "normal" move
+	 * @param piece
+	 * @param direction
+	 * @param fields
+	 */
 	public Move(Piece piece, Direction direction, int fields) {
 		setPiece(piece);
 		setDirection(direction);

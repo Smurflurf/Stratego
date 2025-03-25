@@ -21,11 +21,11 @@ public class GameState implements Cloneable {
 	}
 
 	/**
-	 * TODO
-	 * @param move
+	 * Update the GameState with move
+	 * @param move the Move to make
 	 */
 	public void update(Move move) {
-
+		Utils.makeMove(this, move);
 	}
 
 	/**
@@ -65,6 +65,10 @@ public class GameState implements Cloneable {
 			field[piece.getX()][piece.getY()] = piece;
 	}
 
+	public Piece[] getCurrentPieces() {
+		return team ? redPieces : bluePieces;
+	}
+	
 	public boolean getTeam() {
 		return team;
 	}
