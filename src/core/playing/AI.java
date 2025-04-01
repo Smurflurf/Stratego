@@ -8,12 +8,28 @@ import core.Piece;
 
 public abstract class AI extends Utils {
 	private boolean team;
-	protected Piece[] myPieces;
+	public Piece[] myPieces;
 	protected Piece[] enemyPieces;
-	protected GameState gameState;
+	public GameState gameState;
 
 	public AI(boolean player, GameState gameState) {
 		team = player;
+		setArraysAndGameState(gameState);
+	};
+
+	public boolean getTeam() {
+		return team;
+	}
+
+	/**
+	 * updates the GameState and the Pieces Arrays.
+	 * @param state new GameState
+	 */
+	public void update(GameState state) {
+		setArraysAndGameState(state);
+	}
+	
+	protected void setArraysAndGameState(GameState gameState) {
 		if(team) { 
 			myPieces = gameState.getRedPieces(); 
 			enemyPieces = gameState.getBluePieces();
@@ -22,20 +38,13 @@ public abstract class AI extends Utils {
 			enemyPieces = gameState.getRedPieces();
 		}
 		this.gameState = gameState;
-	};
-
-	public boolean getTeam() {
-		return team;
 	}
 
-	/**
-	 * TODO updated den GameState mit einem Move.
-	 * @param move
-	 */
-	public void update(Move move) {
-		gameState.update(move);
+	public void print() {
+		System.out.println(getClass().getSimpleName() + (team ? " red" : " blue") + ":");
+		printField(gameState.getField());
 	}
-
+	
 	abstract public Move nextMove();
 
 	/**

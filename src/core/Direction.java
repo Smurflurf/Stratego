@@ -50,4 +50,18 @@ public enum Direction {
 		}
 		return null;
 	}
+	
+	public static Direction get(int xFrom, int xTo, int yFrom, int yTo) {
+		int i = xFrom - xTo;
+		if(i > 0)
+			return LEFT;
+		else if(i < 0)
+			return RIGHT;
+		i = yFrom - yTo;
+		if(i > 0)
+			return UP;
+		else if(i < 0)
+			return DOWN;
+		return UP;
+	}
 }

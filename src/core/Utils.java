@@ -2,8 +2,6 @@ package core;
 
 import java.util.ArrayList;
 
-import core.placing.Placer;
-
 /**
  * Useful utilities for the whole project.
  * The methods do not alter their parameters.
@@ -14,7 +12,7 @@ public class Utils {
 		if(move.getFirstMove() != null) {
 			if(!isMovePossible(state, move.getFirstMove())) return false;
 			makeMove(state, move.getFirstMove());
-			if(!sightLine(state.getField(), move.getPiece(), move.getFields(), move.getDirection())) return false;
+			if(!isMovePossible(state, move)) return false;
 			makeMove(state, move);
 		} else {
 			if(!isMovePossible(state, move)) return false;
@@ -23,26 +21,17 @@ public class Utils {
 		return true;
 	}
 
-	public static boolean isMovePossible(GameState state, Move move) {
-		if(outOfBounds(move.getPos())) return false;
-		if(!canReach(move.getPiece(), move.getPos())) return false;
-		if(!sightLine(state.getField(), move.getPiece(), move.getFields(), move.getDirection()))
-			System.out.println(move);
-
-		return true;
-	}
-
 	/**
-	 * Fills dirMap with direction-reach pairs to represent how many fields a Piece can walk into a given direction
-	 * @param state
-	 * @param picked
-	 * @param dirMap
+	 * Delay to use without adding too much code.
+	 * Stops the code when an Exception is thrown.
+	 * @param ms sleep time
 	 */
-	public static void fillDirectionMap(GameState state, Piece picked, ArrayList<int[]> dirMap){
-		dirMap.clear();
-		for(int direction=0; direction<4; direction++) {
-			int reach = reach(state.getField(), picked, direction);
-			if(reach > 0) dirMap.add(new int[] {direction, reach});
+	public static void sleep(int ms) {
+		try{
+			Thread.sleep(ms);
+		} catch(Exception e) {
+			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 	
@@ -53,28 +42,47 @@ public class Utils {
 	 * @param move move being executed on state
 	 */
 	public static void makeMove(GameState state, Move move) {
-		if(!(state.inspect(move.getPos()) instanceof Piece piece)) {
+		if(!(state.inspect(move.getEndX(), move.getEndY()) instanceof Piece piece)) {
 			state.move(move);
 		} else {
-			move.getPiece().fight(piece);
+			Piece loser = move.getPiece().attack(piece);
+			if(loser == null) {	
+				if(!state.removePiece(move.getPiece())) { System.err.println("two losers 1 " + move); printField(state.getField());};
+				if(!state.removePiece(state.inspect(move.getEndX(), move.getEndY()))) { System.err.println("two losers 2 " + move); printField(state.getField());};
+			} else {
+				if(!state.removePiece(loser)) { System.err.println("one loser " + move); printField(state.getField());};
+				if(loser != move.getPiece())
+					state.move(move);
+			}
 		}
 	}
+	
+	public static boolean isMovePossible(GameState state, Move move) {
+		if(state.getTeam() != move.getPiece().getTeam()) return false;	// is Pieces turn?
+		if(outOfBounds(move.getEndX()) || outOfBounds(move.getEndY())) return false;	// is Move out of bounds?
+		int blockState = blockedTeamSensitive(state.getField(), move.getEndX(), move.getEndY(), move.getPiece().getTeam());
+		if(blockState == -1 || blockState == 1) return false;	// is field blocked by lake or same team Piece?
+		if(!canReach(move.getPiece(), move.getEndX(), move.getEndY())) return false;	// is Piece reachable?
+		Direction dir = move.getDirection();
+		if(!sightLine(state.getField(), move.getPiece(), move.getFields(dir), dir)) return false; //TODO test return false;
 
-	public static void main(String[] args) {
-		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
-		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
-		GameState state = new GameState(redPieces, bluePieces);
-
-		printField(state.getField());
-		System.out.println(state.getRedPieces()[1]);
-
-		long start = System.currentTimeMillis();
-		for(int i=0; i<1000000000; i++)
-			sightLine(state.getField(), state.getRedPieces()[5], 2, Direction.UP);
-		long stop = System.currentTimeMillis();
-		System.out.print(stop - start + " ms");
+		return true;
 	}
-
+	
+	/**
+	 * Fills dirMap with Direction-reach pairs to represent how many fields a Piece can walk into a given direction.
+	 * @param state
+	 * @param picked
+	 * @param dirMap
+	 */
+	public static void fillDirectionMap(GameState state, Piece picked, ArrayList<int[]> dirMap){
+		dirMap.clear();
+		for(int direction=0; direction<4; direction++) {
+			int reach = reach(state.getField(), picked, direction, null);
+			if(reach > 0) dirMap.add(new int[] {direction, reach});
+		}
+	}
+	
 	/**
 	 * Checks if a Piece and its target position do not have any Pieces or Lakes in between.
 	 * @param field	the field from a GameState
@@ -127,9 +135,10 @@ public class Utils {
 	 * @param field	the field from a GameState
 	 * @param piece Piece that moves
 	 * @param direction Direction int the piece wants to move
+	 * @param enemyPieces a list containing enemy Pieces that can be reached by piece. If a new one is found, it gets added to the list.
 	 * @return the fields a Piece can walk into the given direction
 	 */
-	public static int reach(Piece[][] field, Piece piece, int direction) {
+	public static int reach(Piece[][] field, Piece piece, int direction, ArrayList<int[]> enemyPieces) {
 		int maxReach = piece.getType().getMoves();
 		switch(direction) {
 		case 0: 
@@ -137,9 +146,14 @@ public class Utils {
 				if(outOfBounds(y))
 					return piece.getY() - y -1;
 				switch(blockedTeamSensitive(field, piece.getX(), y, piece.getTeam())){
-				case -1: return piece.getY() - y -1;
+				case -1: 
+					return piece.getY() - y -1;
 				case 1: return piece.getY() - y -1;
-				case 2: return piece.getY() - y;
+				case 2: 
+					int reach = piece.getY() - y;
+					if(enemyPieces != null)
+						enemyPieces.add(new int[] {direction, reach}); 
+					return reach;
 				}
 			}
 			break;
@@ -150,7 +164,11 @@ public class Utils {
 				switch(blockedTeamSensitive(field, piece.getX(), y, piece.getTeam())){
 				case -1: return y - piece.getY() -1;
 				case 1: return y - piece.getY() -1;
-				case 2: return y - piece.getY();
+				case 2:
+					int reach = y - piece.getY();
+					if(enemyPieces != null)
+						enemyPieces.add(new int[] {direction, reach}); 
+					return reach;
 				}
 			}
 			break;
@@ -161,7 +179,11 @@ public class Utils {
 				switch(blockedTeamSensitive(field, x, piece.getY(), piece.getTeam())){
 				case -1: return piece.getX() - x -1;
 				case 1: return piece.getX() - x -1;
-				case 2: return piece.getX() - x;
+				case 2: 
+					int reach = piece.getX() - x;
+					if(enemyPieces != null)
+						enemyPieces.add(new int[] {direction, reach}); 
+					return reach;
 				}
 			}
 			break;
@@ -172,7 +194,11 @@ public class Utils {
 				switch(blockedTeamSensitive(field, x, piece.getY(), piece.getTeam())){
 				case -1: return x - piece.getX() -1;
 				case 1: return x - piece.getX() -1;
-				case 2: return x - piece.getX();
+				case 2: 
+					int reach = x - piece.getX();
+					if(enemyPieces != null)
+						enemyPieces.add(new int[] {direction, reach}); 
+					return reach;
 				}
 			}
 			break;
@@ -228,14 +254,14 @@ public class Utils {
 	 * @param target the Pieces target destination
 	 * @return true if the Piece can reach the position
 	 */
-	public static boolean canReach(Piece piece, int[] target) {
-		if(piece.getX() != target[0]) {
-			if(piece.getY() != target[1]) return false;
-			if(piece.getType().getMoves() >= Math.abs(piece.getX() - target[0])) return true;
+	public static boolean canReach(Piece piece, int x, int y) {
+		if(piece.getX() != x) {
+			if(piece.getY() != y) return false;
+			if(piece.getType().getMoves() >= Math.abs(piece.getX() - x)) return true;
 		} else {
-			if(piece.getType().getMoves() >= Math.abs(piece.getY() - target[1])) return true;
+			if(piece.getType().getMoves() >= Math.abs(piece.getY() - y)) return true;
 		}
-		if(piece.getX() != target[0] && piece.getY() != target[1]) return false;
+		if(piece.getX() != x && piece.getY() != y) return false;
 
 		return false;
 	}
@@ -251,7 +277,7 @@ public class Utils {
 			return true;
 		return false;
 	}
-
+	
 	/**
 	 * Checks if a given integer is out of bounds
 	 * @param i integer to check
@@ -268,28 +294,56 @@ public class Utils {
 	 * @return all possible moves in gameState
 	 */
 	public static Move[] getAllPossibleMoves(GameState gameState) {
+		//TODO
 		return null;
 	}
 
 	/**
 	 * Checks if any Move is possible in gameState.
-	 * Uses the same algorithm as {@link #getAllPossibleMoves(GameState)} but stops after finding the first Move.
 	 * Use this Method for anything related to possible Move checks, rather than {@link #getAllPossibleMoves(GameState)}.
 	 * @return false if no Move is possible in gameState
 	 */
 	public static boolean anyMovePossible(GameState state) {
-		ArrayList<Piece> list = new ArrayList<Piece>();
-		for(int i=0; i<10; i++)
-			if(state.getCurrentPieces()[i] != null) list.add(state.getCurrentPieces()[i]);
-		ArrayList<Direction> directions = new ArrayList(4);
+		for(int i=0; i<10; i++) {
+			if(state.getCurrentPieces()[i] == null) continue;
+			for(int dir=0; dir<4; dir++) {
+				if(isMovePossible(state, new Move(state.getCurrentPieces()[i], Direction.get(dir), 1))) {
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 
+	/**
+	 * Relies on the Fag being [9] in the Pieces array. 
+	 * TODO potentially use for loop starting from 9-- to find Flag. Not needed if it works without
+	 * Also relies on Bombs being [8] and [7] in the array
+	 * @param gameState
+	 * @return
+	 */
 	public static boolean isGameOver(GameState gameState) {
-		// TODO consider flags, pieces and so on
-		return !anyMovePossible(gameState);
+		Piece[] pieces = gameState.getCurrentPieces();
+		if(flagGoneCheck(pieces)) return true;	// Flag gone check
+		boolean allPiecesGone = true;
+		for(int i=0; i<7; i++) {
+			if(pieces[i] != null) {
+				allPiecesGone = false;
+				break;
+			}
+		}
+		
+		// TODO check square repetition
+		return allPiecesGone || !anyMovePossible(gameState);
 	}
-
+	
+	public static boolean flagGoneCheck(Piece[] pieces) {
+		return pieces[9] == null;
+	}
+	public static boolean piecesGoneCheck(Piece[] pieces) {
+		return true; //TODO
+	}
+	
 	public static void printField(Piece[][] field) {
 		for(int y=-1; y<8; y++) {
 			System.out.print(y == -1 ? "y" : (y + " "));
@@ -297,12 +351,24 @@ public class Utils {
 				System.out.print(y == -1 ? (x == 0 ? "\\x 0" : "  " + x + " "): (
 						field[x][y] == null ? 
 								(blockedByLake(x, y) ? "  x " : "  . " ) : 
-									((field[x][y].getTeam() ? "r_" : "b_") + 
-											(field[x][y].getType().getStrength() == 0 ? 
-													(field[x][y].getType() == PieceType.FLAGGE ? "F" : "B") : 
-														field[x][y].getType().getStrength()) + " ")));
+									field[x][y] + " "));
 			}
 			System.out.println();
 		}
+	}
+	
+	public static String fieldToString(Piece[][] field) {
+		StringBuilder sb = new StringBuilder();
+		for(int y=-1; y<8; y++) {
+			sb.append(y == -1 ? "y" : (y + " "));
+			for(int x=0; x<8; x++) {
+				sb.append(y == -1 ? (x == 0 ? "\\x 0" : "  " + x + " "): (
+						field[x][y] == null ? 
+								(blockedByLake(x, y) ? "  x " : "  . " ) : 
+									field[x][y] + " "));
+			}
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 }

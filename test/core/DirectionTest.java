@@ -19,4 +19,18 @@ class DirectionTest {
 		}
 	}
 
+	@Test
+	void testGet() {
+		int[] from = new int[] {4,4};
+		
+		int[] to = new int[] {2,4};
+		assertTrue(Direction.get(from[0], to[0], from[1], to[1]) == Direction.LEFT);
+		to = new int[] {6,4};
+		assertTrue(Direction.get(from[0], to[0], from[1], to[1]) == Direction.RIGHT);
+		to = new int[] {4,2};
+		assertTrue(Direction.get(from[0], to[0], from[1], to[1]) == Direction.UP);
+		to = new int[] {4,6};
+		assertTrue(Direction.get(from[0], to[0], from[1], to[1]) == Direction.DOWN);
+ 	}
+
 }

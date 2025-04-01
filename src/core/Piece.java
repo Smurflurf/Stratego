@@ -29,12 +29,7 @@ public class Piece implements Cloneable {
 		this.team = team;
 		setPos(x, y);
 	}
-
-	@Override
-	public Piece clone() {
-		return new Piece(type, team, x, y);
-	}
-
+	
 	public void setPos(int x, int y) {
 		this.x = (byte)x;
 		this.y = (byte)y;
@@ -45,15 +40,44 @@ public class Piece implements Cloneable {
 		this.y = (byte)pos[1];
 	}
 
-	public Piece fight(Piece piece2) {
-		return piece2;
+	/**
+	 * Returns the LOSER between this Piece as attacker and piece2 as defender.
+	 * If both Pieces are equal, null gets returned.
+	 * @param piece2 defender
+	 * @return null if no winner, this if defender wins, piece2 if attacker wins
+	 */
+	public Piece attack(Piece piece2) {
+		if(getType() == piece2.getType())
+			return null;
+		
+		return getType().attack(piece2.getType()) ? piece2 : this;
+	}
+	
+	public boolean equals(Piece piece2) {
+		return piece2 != null &&
+				getType() == piece2.getType() && 
+				getX() == piece2.getX() && 
+				getY() == piece2.getY() &&
+				getTeam() == piece2.getTeam();
 	}
 
-	@Override
 	public String toString() {
 		return (team ? "r" : "b") + "_" + (type.getStrength() == 0 ? 
 				(type == PieceType.FLAGGE ? "F" : "B") : 
-					type.getStrength()) + " ["+x+"|"+y+"]";
+					type.getStrength());
+	}	
+
+	public String coords() {
+		return " ["+x+"|"+y+"]";
+	}
+	
+	@Override
+	public Piece clone() {
+		return new Piece(type, team, x, y);
+	}
+
+	public Piece clone(PieceType type) {
+		return new Piece(type, team, x, y);
 	}
 
 	public PieceType getType() {

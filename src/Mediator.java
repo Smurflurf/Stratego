@@ -1,7 +1,5 @@
 import core.GameState;
 import core.Move;
-import core.Piece;
-import core.PieceType;
 import core.Utils;
 
 /**
@@ -10,26 +8,28 @@ import core.Utils;
  */
 public class Mediator {
 	private GameState gameState;
+	private Move lastMove;
 	
 	public Mediator(GameState gameState) {
 		this.gameState = gameState;
+		setLastMove(null);
 	}
-	
+
 	/**
 	 * Prints the current GameState
 	 */
 	public void print() {
 		Utils.printField(gameState.getField());
 	}
-	
+
 	/**
 	 * Gives false information if game is not over yet, use after {@link #isGameOver()}.
 	 * @return true if team red, false if team blue won
 	 */
 	public boolean getWinnerTeam() {
-		return gameState.getTeam();
+		return !gameState.getTeam();
 	}
-	
+
 	/**
 	 * Returns the current team.
 	 * @return current team in {@link #gameState}
@@ -37,7 +37,7 @@ public class Mediator {
 	public boolean getCurrentTeam() {
 		return gameState.getTeam();
 	}
-	
+
 	/**
 	 * Uses core.Utils for checking if the game is over.
 	 * @return true if the game over conditions are met
@@ -45,39 +45,49 @@ public class Mediator {
 	public boolean isGameOver() {
 		return Utils.isGameOver(gameState);
 	}
-	
+
 	/**
 	 * Executes move on {@link #gameState}, if move is not possible, it returns false.
+	 * Checks if the Piece in move and move.firstMove has moved, 
+	 * checks with Utils.
 	 * @param move Move to make
 	 * @return true if move is possible and was executed
 	 */
 	public boolean makeMove(Move move) {
-		return Utils.checkAndExecute(gameState, move);
+		move.normalize(gameState);
+		setLastMove(move);
+		
+		if(move.getStartX() == move.getEndX() &&
+				move.getStartY() == move.getEndY())
+			return false;
+		if(move.getFirstMove() != null)
+			if(move.getFirstMove().getStartX() == move.getFirstMove().getEndX() &&
+			move.getFirstMove().getStartY() == move.getFirstMove().getEndY())
+				return false;
+		
+		boolean executed = Utils.checkAndExecute(gameState, move);
+		gameState.changeTeam();
+		return executed;
 	}
-	
+
 	/**
 	 * Obfuscates the GameState for a given player.
 	 * Replaces all known PieceTypes of the enemy team in {@link #gameState} with the UNKNOWN type.
 	 * @param team true if player blue will be obfuscated	 
 	 */
 	public GameState obfuscateFor(boolean team) {
-		GameState obfuscated = gameState.clone();
-		
-		for(int x=0; x<8; x++)
-			for(int y=0; y<8; y++) {
-				Piece piece = gameState.getField()[y][x];
-				if(piece != null && piece.getTeam() != team)
-					piece.setType(PieceType.UNKNOWN);
-			}
-		
-		Piece[] pieces = team ? gameState.getBluePieces() : gameState.getRedPieces();
-		for(Piece piece : pieces)
-			piece.setType(PieceType.UNKNOWN);
-		
-		return obfuscated;
+		return gameState.obfuscateFor(team);
 	}
-	
+
 	public GameState getGameState() {
 		return gameState;
+	}
+
+	public Move getLastMove() {
+		return lastMove;
+	}
+
+	public void setLastMove(Move lastMove) {
+		this.lastMove = lastMove;
 	}
 }

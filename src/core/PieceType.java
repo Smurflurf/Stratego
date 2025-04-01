@@ -35,4 +35,20 @@ public enum PieceType {
 	public int getPieceCount() {
 		return pieceCount;
 	}
+	
+	/**
+	 * If a fight between two different PieceTypes takes place, the winner gets calculated here.
+	 * This is always the attacking Piece
+	 * @param type2 defending Piece that gets attacked by this
+	 * @return true if this wins, false if type2 wins
+	 */
+	public boolean attack(PieceType type2) {
+		if(type2 == BOMBE) {
+			return this == MINEUR;
+		} else if(this == SPIONIN) {
+			return (type2 == MARSCHALL);
+		}
+		
+		return getStrength() > type2.getStrength();
+	}
 }
