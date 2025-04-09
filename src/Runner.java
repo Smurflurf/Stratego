@@ -23,16 +23,16 @@ public class Runner {
 	public static boolean use_UI;
 
 	public static void main(String[] args) {
-		use_UI = true;		// UI only shows if simulation = 1
+		use_UI = false;		// UI only shows if simulation = 1
 		printGame = false;
 		printResults = false;
 		
-		int UI_delay = 100;
+		int UI_delay = 50;
 		Placer.Type redPlacement = Placer.Type.PREBUILT;
 		Placer.Type bluePlacement = Placer.Type.PREBUILT;
 		AI.Type bluePlayer = AI.Type.RANDOM;
 		AI.Type redPlayer = AI.Type.RANDOM;
-		int simulations = 1;
+		int simulations = 100_000;
 
 		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay);
 		printResults();
@@ -150,13 +150,14 @@ public class Runner {
 		winList.sort((o1, o2) -> (int)(o1.nanoTime - o2.nanoTime));
 		long median = winList.get(winList.size() / 2).nanoTime;
 		System.out.println(
-				"Played " + winList.size() + " game" + (winList.size() > 1 ? "s" : "")+ ".\n" + 
+				"Played " + String.format("%,d", winList.size()) + " game" + (winList.size() > 1 ? "s" : "")+ 
+				" in " +  String.format("%,d", (winList.stream().mapToLong(e -> e.nanoTime()).sum() / 1000000)) + "ms simulation time.\n" + 
 						"red placed with " + winList.get(0).redPlacement + ", played as "+ winList.get(0).redType + "\n" +
 						"blue placed with " + winList.get(0).bluePlacement + ", played as " + winList.get(0).blueType + "\n" +
 						"Win rate red:  \t" + (winsRed / winList.size()) * 100 + "%\n" +
 						"Win rate blue: \t" + (winsBlue / winList.size()) * 100 + "%\n" + 
-						"Average time:  \t" + (time / winList.size()) + "ns\n" + 
-						"Median time: \t" + median +  "ns\n" + 
+						"Average time:  \t" + String.format("%,d", (time / winList.size())) + "ns\n" + 
+						"Median time: \t" + String.format("%,d", median) +  "ns\n" + 
 						"Average moves: \t" + (moves / winList.size() + " longest Game: " + mostMoves + ", shortest Game: " + leastMoves));
 
 	}

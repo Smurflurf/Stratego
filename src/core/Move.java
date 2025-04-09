@@ -2,11 +2,14 @@ package core;
 
 public class Move {
 	private Piece piece;
-	private Move firstMove;
-	private int startX;
-	private int startY;
-	private int endX;
-	private int endY;
+	private byte start;
+	private byte end;
+	private byte fields;
+	private Direction direction;
+//	private int startX;
+//	private int startY;
+//	private int endX;
+//	private int endY;
 	
 	/**
 	 * Use with everything but SPAEHER for a "normal" move.
@@ -18,52 +21,69 @@ public class Move {
 	 */
 	public Move(Piece piece, Direction direction, int fields) {
 		setPiece(piece);
-		setStartX(piece.getX());
-		setStartY(piece.getY());
+		start = ByteMapper.toByte(piece.getX(), piece.getY());
 		calculateEndPos(direction, fields);
-		setFirstMove(null);
+		this.fields = (byte)fields;
+		this.direction = direction;
 	}
 	
 	/**
-	 * Use with a SPAEHER, as he can move and fight at the same time.
-	 * This Move always represents a fight.
-	 * @param firstMove the first move, indicating where the Piece moves
+	 * Clone constructor
 	 * @param piece
-	 * @param direction
-	 * @param fields
+	 * @param firstMove
+	 * @param startX
+	 * @param startY
+	 * @param endX
+	 * @param endY
 	 */
-	public Move(Move firstMove, Direction direction, int fields) {
-		setFirstMove(firstMove);
-		setStartX(firstMove.getEndX());
-		setStartY(firstMove.getEndY());
-		calculateEndPos(direction, fields);
+	/*public Move(Piece piece, int startX, int startY, int endX, int endY) {
+		setPiece(piece);
+		setStartX(startX);
+		setStartY(startY);
+		setEndX(endX);
+		setEndY(endY);
+	}*/
+	
+	/**
+	 * Clone constructor
+	 * @param piece
+	 * @param firstMove
+	 * @param startX
+	 * @param startY
+	 * @param endX
+	 * @param endY
+	 */
+	public Move(Piece piece, byte start, byte end, Direction direction, byte fields) {
+		setPiece(piece);
+		this.start = start;
+		this.end = end;
+		this.direction = direction;
+		this.fields = fields;
 	}
 	
 	/**
 	 * Normalizes the Move, i.e. if this Moves Piece is not from state, the reference from the according state Piece gets used.
 	 * @param state
 	 */
-	public void normalize(GameState state) {
-		//TODO check this, should work but not sure
-		for(Piece piece : this.piece.getTeam() ? state.getRedPieces() : state.getBluePieces()) {
-			if(piece != null && 
-					piece.getX() == (firstMove != null ? firstMove.getStartX() : getStartX()) && 
-					piece.getY() == (firstMove != null ? firstMove.getStartY() : getStartY())) {
-				if(!piece.equals(this.piece))
-//					System.err.println("HS " + piece + piece.coords()+" <-> "+ this.piece + this.piece.coords());
-				if(firstMove != null)
-					firstMove.setPiece(piece);
-				setPiece(piece);
-//				System.out.println("" + piece + piece.coords()+" <-> "+ this.piece + this.piece.coords());
-				break;
-			}
-				/*if(piece != null && piece.equals(firstMove != null ? firstMove.getPiece() : this.piece)) {
-				if(firstMove != null)
-					firstMove.setPiece(piece);
-				setPiece(piece);
-				break;
-			}*/
+	public Move normalize(GameState state) {
+		Piece piece = state.getField()[getStartX()][getStartY()];
+		if(piece != null)
+			setPiece(piece);
+		
+		return this;
+	}
+	
+	/**
+	 * @return all fields {@link #piece} steps over in this Move
+	 */
+	public Byte[] getRelevantFields() {
+		Direction dir = getDirection();
+		int fields = getFields() +1;
+		Byte[] positions = new Byte[fields];
+		for(int i=0; i<fields; i++) {
+			positions[i] = dir.translate(start, i);
 		}
+		return positions;
 	}
 	
 	/**
@@ -74,20 +94,32 @@ public class Move {
 	private void calculateEndPos(Direction direction, int fields) {
 		fields = direction.getOneDimTranslation() * fields;
 		if(direction.getTranslation()[0] == 0) {
-			setEndX(startX);
-			setEndY(startY + fields);
+			end = ByteMapper.toByte(ByteMapper.getX(start), ByteMapper.getY(start) + fields);
 		} else {
-			setEndX(startX + fields);
-			setEndY(startY);
+			end = ByteMapper.toByte(ByteMapper.getX(start) + fields, ByteMapper.getY(start) );
 		}
+	}
+	
+	public boolean equals(Move move2) {
+		if(move2 == null) return false;
+		if(!piece.equals(move2.piece)) return false;
+		if(getStartX() != move2.getStartX()) return false;
+		if(getStartY() != move2.getStartY()) return false;
+		if(getEndX() != move2.getEndX()) return false;
+		if(getEndY() != move2.getEndY()) return false;
+		return true;
+	}
+	
+	public Move clone(GameState state) {
+		Move clone = null;
+		clone = new Move(piece, start, end, direction, fields);
+		clone.normalize(state);
+		return clone;
 	}
 	
 	@Override
 	public String toString() {
-		if(firstMove == null)
-			return getPiece().toString() + "["+getStartX()+"|"+getStartY()+"]" + " to " + "["+getEndX()+"|"+getEndY()+"]";
-		else
-			return "<" + firstMove.toString() + "> then " + getPiece().toString() + " to " + "["+getEndX()+"|"+getEndY()+"]";
+		return getPiece().toString() + "["+getStartX()+"|"+getStartY()+"]" + " to " + "["+getEndX()+"|"+getEndY()+"]";
 	}
 
 	public Piece getPiece() {
@@ -99,61 +131,53 @@ public class Move {
 	}
 
 	public Direction getDirection() {
-		return Direction.get(startX, endX, startY, endY);
+//		return Direction.get(ByteMapper.getX(start), ByteMapper.getX(end), ByteMapper.getY(start), ByteMapper.getY(end));
+		return direction;
 	}
 
-	public int getFields(Direction dir) {
-		switch(dir) {
-		case LEFT:
-			return startX - endX;
-		case RIGHT:
-			return endX - startX;
-		case UP:
-			return startY - endY;
-		default:
-			return endY - startY;
-		}
-	}
-
-	public Move getFirstMove() {
-		return firstMove;
-	}
-
-	public void setFirstMove(Move firstMove) {
-		this.firstMove = firstMove;
-		if(firstMove != null)
-			piece = firstMove.piece;
+	public int getFields() {
+		return fields;
+//		switch(dir) {
+//		case LEFT:
+//			return startX - endX;
+//		case RIGHT:
+//			return endX - startX;
+//		case UP:
+//			return startY - endY;
+//		default:
+//			return endY - startY;
+//		}
 	}
 
 	public int getStartX() {
-		return startX;
+		return ByteMapper.getX(start);
 	}
 
 	public void setStartX(int startX) {
-		this.startX = startX;
+		ByteMapper.setX(start, startX);
 	}
 
 	public int getStartY() {
-		return startY;
+		return ByteMapper.getY(start);
 	}
 
 	public void setStartY(int startY) {
-		this.startY = startY;
+		ByteMapper.setY(start, startY);
 	}
 
 	public int getEndX() {
-		return endX;
+		return ByteMapper.getX(end);
 	}
 
 	public void setEndX(int endX) {
-		this.endX = endX;
+		ByteMapper.setX(end, endX);
 	}
 
 	public int getEndY() {
-		return endY;
+		return ByteMapper.getY(end);
 	}
 
 	public void setEndY(int endY) {
-		this.endY = endY;
+		ByteMapper.setY(end, endY);
 	}
 }

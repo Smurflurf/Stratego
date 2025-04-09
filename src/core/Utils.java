@@ -9,15 +9,9 @@ import java.util.ArrayList;
  */
 public class Utils {
 	public static boolean checkAndExecute(GameState state, Move move) {
-		if(move.getFirstMove() != null) {
-			if(!isMovePossible(state, move.getFirstMove())) return false;
-			makeMove(state, move.getFirstMove());
-			if(!isMovePossible(state, move)) return false;
-			makeMove(state, move);
-		} else {
-			if(!isMovePossible(state, move)) return false;
-			makeMove(state, move);
-		}
+		if(!isMovePossible(state, move)) return false;
+		makeMove(state, move);
+		state.updateLastMove(move);	
 		return true;
 	}
 
@@ -34,7 +28,7 @@ public class Utils {
 			System.exit(0);
 		}
 	}
-	
+
 	/**
 	 * Executes move on state. 
 	 * Does not check if move is possible or if the Piece exists on the board.
@@ -56,7 +50,7 @@ public class Utils {
 			}
 		}
 	}
-	
+
 	public static boolean isMovePossible(GameState state, Move move) {
 		if(state.getTeam() != move.getPiece().getTeam()) return false;	// is Pieces turn?
 		if(outOfBounds(move.getEndX()) || outOfBounds(move.getEndY())) return false;	// is Move out of bounds?
@@ -64,7 +58,9 @@ public class Utils {
 		if(blockState == -1 || blockState == 1) return false;	// is field blocked by lake or same team Piece?
 		if(!canReach(move.getPiece(), move.getEndX(), move.getEndY())) return false;	// is Piece reachable?
 		Direction dir = move.getDirection();
-		if(!sightLine(state.getField(), move.getPiece(), move.getFields(dir), dir)) return false; //TODO test return false;
+		if(!sightLine(state.getField(), move.getPiece(), move.getFields(), dir)) return false; //TODO test return false;
+		
+		if(twoSquaresRule(state, move)) return false;
 
 		return true;
 	}
@@ -82,7 +78,7 @@ public class Utils {
 			if(reach > 0) dirMap.add(new int[] {direction, reach});
 		}
 	}
-	
+
 	/**
 	 * Checks if a Piece and its target position do not have any Pieces or Lakes in between.
 	 * @param field	the field from a GameState
@@ -277,7 +273,7 @@ public class Utils {
 			return true;
 		return false;
 	}
-	
+
 	/**
 	 * Checks if a given integer is out of bounds
 	 * @param i integer to check
@@ -287,6 +283,16 @@ public class Utils {
 		return i<0 || i>7;
 	}
 
+	/**
+	 * Tests if the two square rule applies, i.e. if there are more than 3 repetitions
+	 * @param state
+	 * @param move
+	 * @return
+	 */
+	public static boolean twoSquaresRule(GameState state, Move move) {
+		return state.getRepetitions() > 2 && state.inMoveBounds(move);
+	}
+	
 	/**
 	 * Generates a list of all possible Moves (based on gameState current team).
 	 * Does not check if the game is still going i.e. no checks for the existence of flags are done here.
@@ -332,18 +338,18 @@ public class Utils {
 				break;
 			}
 		}
-		
+
 		// TODO check square repetition
 		return allPiecesGone || !anyMovePossible(gameState);
 	}
-	
+
 	public static boolean flagGoneCheck(Piece[] pieces) {
 		return pieces[9] == null;
 	}
 	public static boolean piecesGoneCheck(Piece[] pieces) {
 		return true; //TODO
 	}
-	
+
 	public static void printField(Piece[][] field) {
 		for(int y=-1; y<8; y++) {
 			System.out.print(y == -1 ? "y" : (y + " "));
@@ -356,7 +362,7 @@ public class Utils {
 			System.out.println();
 		}
 	}
-	
+
 	public static String fieldToString(Piece[][] field) {
 		StringBuilder sb = new StringBuilder();
 		for(int y=-1; y<8; y++) {

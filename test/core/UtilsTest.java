@@ -12,10 +12,160 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import core.placing.Placer;
-import core.playing.random.RandomAI;
 
 class UtilsTest extends Utils {
 	GameState state;
+	
+	@Test
+	void testTwoSquaresRule1() {
+		Move move = new Move(state.getCurrentPieces()[4], Direction.UP, 1);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// first rep red
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.UP, 1);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// first rep blue
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.DOWN, 1);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// second rep red
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.DOWN, 1);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// second rep blue
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.UP, 1);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// third rep red
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.UP, 1);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// third rep blue
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.DOWN, 1);
+		assertTrue(Utils.twoSquaresRule(state, move));
+		assertFalse(checkAndExecute(state, move));								// fourth rep red
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.DOWN, 1);
+		assertTrue(Utils.twoSquaresRule(state, move));
+		assertFalse(checkAndExecute(state, move));								// fourth rep blue
+		state.changeTeam();
+		
+		assertTrue(Utils.twoSquaresRule(state, move));
+	}
+	
+	@Test
+	void testTwoSquaresRule2() {
+		Move move = new Move(state.getCurrentPieces()[4], Direction.UP, 2);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// first rep red
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.UP, 2);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// first rep blue
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.DOWN, 2);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// second rep red
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.DOWN, 2);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// second rep blue
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.UP, 2);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// third rep red
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.UP, 2);
+		assertFalse(Utils.twoSquaresRule(state, move));
+		assertTrue(checkAndExecute(state, move));								// third rep blue
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.DOWN, 2);
+		assertTrue(Utils.twoSquaresRule(state, move));
+		assertFalse(checkAndExecute(state, move));								// fourth rep red
+		state.changeTeam();
+		
+		move = new Move(state.getCurrentPieces()[4], Direction.DOWN, 2);
+		assertTrue(Utils.twoSquaresRule(state, move));
+		assertFalse(checkAndExecute(state, move));								// fourth rep blue
+		state.changeTeam();
+		
+		assertTrue(Utils.twoSquaresRule(state, move));
+	}
+	
+	@Test
+	void testTwoSquaresRuleMore() throws InterruptedException {
+		Piece[] redPieces = new Piece[10];
+		Piece[] bluePieces = new Piece[10];
+		redPieces[9] = new Piece(PieceType.FLAGGE, true);
+		redPieces[9].setPos(0, 7);
+		redPieces[1] = new Piece(PieceType.SPAEHER, true);
+		redPieces[1].setPos(7, 7);
+		bluePieces[9] = new Piece(PieceType.FLAGGE, false);
+		bluePieces[9].setPos(0, 0);
+		bluePieces[0] = new Piece(PieceType.SPIONIN, false);
+		bluePieces[0].setPos(7, 0);
+		bluePieces[1] = new Piece(PieceType.SPAEHER, false);
+		bluePieces[1].setPos(2, 0);
+		state = new GameState(redPieces, bluePieces);
+//		UI ui = new UI();
+//		ui.updateBoard(state, null);
+		
+		Move move = new Move(redPieces[1], Direction.UP, 7);
+		assertTrue(Utils.checkAndExecute(state, move));				// 1 : attack UP
+		state.changeTeam();
+//		ui.updateBoard(state, move);
+//		Thread.sleep(1000);
+		
+		move = new Move(bluePieces[1], Direction.DOWN, 1);
+		assertTrue(Utils.checkAndExecute(state, move));
+		state.changeTeam();
+//		ui.updateBoard(state, move);
+//		Thread.sleep(1000);
+		
+		move = new Move(redPieces[1], Direction.DOWN, 2);			
+		assertTrue(Utils.checkAndExecute(state, move));				// 2 : go 2 DOWN
+		state.changeTeam();
+//		ui.updateBoard(state, move);
+//		Thread.sleep(500);
+		
+		move = new Move(bluePieces[1], Direction.UP, 1);
+		assertTrue(Utils.checkAndExecute(state, move));				
+		state.changeTeam();
+//		ui.updateBoard(state, move);
+//		Thread.sleep(500);
+		
+		move = new Move(redPieces[1], Direction.UP, 1);				
+		assertTrue(Utils.checkAndExecute(state, move));				// 3 : go 1 UP
+		state.changeTeam();
+//		ui.updateBoard(state, move);
+//		Thread.sleep(500);
+		
+		move = new Move(bluePieces[1], Direction.DOWN, 1);
+		assertTrue(Utils.checkAndExecute(state, move));				
+		state.changeTeam();
+//		ui.updateBoard(state, move);
+//		Thread.sleep(500);
+		
+		move = new Move(redPieces[1], Direction.DOWN, 3);				
+		assertFalse(Utils.checkAndExecute(state, move));				// 4 : go 3 DOWN
+		state.changeTeam();
+//		ui.updateBoard(state, move);
+//		Thread.sleep(3000);
+	}
 	
 	@Test
 	void testCheckAndExecute() {
@@ -35,17 +185,6 @@ class UtilsTest extends Utils {
 		move2 = new Move(state.getBluePieces()[2], Direction.LEFT, 1);
 		assertFalse(checkAndExecute(state, move2));
 		init();
-		
-		// game that failed in practice even though it should not have failed
-		Move firstMove = new Move(state.getRedPieces()[1], Direction.UP, 1);
-		assertTrue(checkAndExecute(state, firstMove));
-		state.changeTeam();
-		Move secondMove = new Move(state.getBluePieces()[0], Direction.DOWN, 1);
-		assertTrue(checkAndExecute(state, secondMove));
-		state.changeTeam();
-		Move thirdMove = new Move(state.getRedPieces()[4], Direction.DOWN, 2);
-		Move thirdAttack = new Move(thirdMove, Direction.UP, 5);
-		assertTrue(checkAndExecute(state, thirdAttack));
 	}
 	
 //	@Test
@@ -78,8 +217,6 @@ class UtilsTest extends Utils {
 	@Test
 	void testReach() {
 		ArrayList<int[]> enemyPieces = new ArrayList<int[]>();
-		
-		Utils.printField(state.getField());
 		
 		Piece piece = state.getRedPieces()[1];
 		assertEquals(1, reach(state.getField(), piece, 0, enemyPieces));

@@ -1,6 +1,7 @@
 package core;
 
-import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * Represents a state of the game Stratego quick battle 
@@ -10,9 +11,15 @@ public class GameState implements Cloneable {
 	 * true is red, the beginning team
 	 */
 	private boolean team;
-	private Piece[][] field;
+	private int repetitionsRed;
+	private int repetitionsBlue;
+	private Move firstRepetitionRedMove;
+	private Move firstRepetitionBlueMove;
+	private HashSet<Byte> repetitionRedFields;
+	private HashSet<Byte> repetitionBlueFields;
 	private Piece[] redPieces;
 	private Piece[] bluePieces;
+	private Piece[][] field;
 
 	public GameState(Piece[] redPieces, Piece[] bluePieces) {
 		field = new Piece[8][8];
@@ -20,10 +27,17 @@ public class GameState implements Cloneable {
 		setRedPieces(redPieces);
 		setBluePieces(bluePieces);
 		createField();
+		setFirstRepetitionRedMove(null);
+		setFirstRepetitionBlueMove(null);
+		setRepetitionsRed(0);
+		setRepetitionsBlue(0);
+		setRepetitionRedFields(new HashSet<Byte>(Arrays.asList(new Byte[] {})));
+		setRepetitionBlueFields(new HashSet<Byte>(Arrays.asList(new Byte[] {})));
 	}
 
 	/**
-	 * Update the GameState with move
+	 * Update the GameState with move.
+	 * Does not update {@link #firstRepetitionRedMove} or {@link #firstRepetitionBlueMove}, use Utils.checkAndExecute(Move move)
 	 * @param move the Move to make
 	 */
 	public void update(Move move) {
@@ -38,7 +52,7 @@ public class GameState implements Cloneable {
 	public Piece inspect(int[] pos) {
 		return field[pos[0]][pos[1]];
 	}
-	
+
 	/**
 	 * Returns the Piece on x , y in {@link #field}, null if no Piece is present
 	 * @param x position
@@ -48,10 +62,11 @@ public class GameState implements Cloneable {
 	public Piece inspect(int x, int y) {
 		return field[x][y];
 	}
-	
+
 	/**
-	 * Moves a Piece to its new place in move.
+	 * Only moves a Piece to its new place in move.
 	 * Alters {@link #field} and the Piece itself to represent the new location.
+	 * Does not update {@link #firstRepetitionRedMove} or {@link #firstRepetitionBlueMove}, use Utils.checkAndExecute(Move move)
 	 * @param move contains the Piece and new position
 	 */
 	public void move(Move move) {
@@ -88,8 +103,43 @@ public class GameState implements Cloneable {
 			if(!getBluePieces()[i].equals(state2.getBluePieces()[i]))
 				return false;
 		}
-		
+
+		if(getFirstRepetitionRedMove() != null)
+			if(!getFirstRepetitionRedMove().equals(state2.getFirstRepetitionRedMove())) return false;
+		if(getFirstRepetitionBlueMove() != null)
+			if(!getFirstRepetitionBlueMove().equals(state2.getFirstRepetitionBlueMove())) return false;
+		if(getRepetitionsRed() != state2.getRepetitionsRed()) return false;
+		if(getRepetitionsBlue() != state2.getRepetitionsBlue()) return false;
+
 		return true;
+	}
+
+	public void updateLastMove(Move move) {
+		Move first = getRepMove(move.getPiece().getTeam());
+		if(first != null 
+				&& first.getPiece().equals(move.getPiece())
+				&& inMoveBounds(move)) {
+			incrementRep(move.getPiece().getTeam());
+		} else {
+			setRep(move.getPiece().getTeam(), 1);
+			setRepMove(move);
+		}
+	}
+
+	/**
+	 * Checks if a new Move is in the boundaries of the old Move, meaning a repetition takes place
+	 * @param move
+	 * @return
+	 */
+	public boolean inMoveBounds(Move next) {
+		if(next.getPiece().getTeam()) {
+			if(repetitionRedFields.contains(ByteMapper.toByte(next.getEndX(), next.getEndY())))
+				return true;
+		} else {
+			if(repetitionBlueFields.contains(ByteMapper.toByte(next.getEndX(), next.getEndY())))
+				return true;
+		}
+		return false;
 	}
 	
 	@Override
@@ -102,9 +152,19 @@ public class GameState implements Cloneable {
 		for(int i=0; i<10; i++) 
 			if(redPieces[i] != null)
 				redClone[i] = redPieces[i].clone();
-		return new GameState(redClone, blueClone);
+		GameState state = new GameState(redClone, blueClone);
+		if(firstRepetitionBlueMove != null)
+			state.setFirstRepetitionBlueMove(firstRepetitionBlueMove.normalize(state));
+		if(firstRepetitionRedMove != null)
+			state.setFirstRepetitionRedMove(firstRepetitionRedMove.normalize(state));
+		state.setTeam(this.team);
+		state.setRepetitionsRed(repetitionsRed);
+		state.setRepetitionsBlue(repetitionsBlue);
+		state.setRepetitionRedFields(repetitionRedFields);
+		state.setRepetitionBlueFields(repetitionBlueFields);
+		return state;
 	}
-	
+
 	/**
 	 * Obfuscates this GameState for team.
 	 * If team all blue PieceTypes get set to UNKNOWN, if !team all red PieceTypes get replaced.
@@ -123,6 +183,14 @@ public class GameState implements Cloneable {
 		}
 		GameState obfuscated = new GameState(redClone, blueClone); 
 		obfuscated.setTeam(this.team);
+		if(firstRepetitionBlueMove != null)
+			obfuscated.setFirstRepetitionBlueMove(firstRepetitionBlueMove.normalize(obfuscated));
+		if(firstRepetitionRedMove != null)
+			obfuscated.setFirstRepetitionRedMove(firstRepetitionRedMove.normalize(obfuscated));
+		obfuscated.setRepetitionsRed(repetitionsRed);
+		obfuscated.setRepetitionsBlue(repetitionsBlue);
+		obfuscated.setRepetitionRedFields(repetitionRedFields);
+		obfuscated.setRepetitionBlueFields(repetitionBlueFields);
 		return obfuscated;
 	}
 
@@ -132,8 +200,6 @@ public class GameState implements Cloneable {
 	 */
 	public boolean removePiece(Piece piece) {
 		for(int i=0; i<10; i++) {
-//			if((piece.getTeam() ? redPieces : bluePieces)[i] != null)
-//				System.out.println((piece.getTeam() ? redPieces : bluePieces)[i] + " " + (piece.getTeam() ? redPieces : bluePieces)[i].getX() + " " + (piece.getTeam() ? redPieces : bluePieces)[i].getY());
 			if((piece.getTeam() ? redPieces : bluePieces)[i] == piece) {
 				(piece.getTeam() ? redPieces : bluePieces)[i] = null;
 				field[piece.getX()][piece.getY()] = null;
@@ -158,10 +224,47 @@ public class GameState implements Cloneable {
 				field[piece.getX()][piece.getY()] = piece;
 	}
 
+
+	public Move getRepMove(boolean team) {
+		if(team) {
+			return getFirstRepetitionRedMove();
+		} else {
+			return getFirstRepetitionBlueMove();
+		}
+	}
+	
+	public void incrementRep(boolean team) {
+		if(team) {
+			repetitionsRed++;
+		} else {
+			repetitionsBlue++;
+		}
+	}
+	
+	public void setRep(boolean team, int repetitions) {
+		if(team) {
+			repetitionsRed = repetitions;
+		} else {
+			repetitionsBlue = repetitions;
+		}
+	}
+	
+	public void setRepMove(Move move) {
+		if(move.getPiece().getTeam()) {
+			setFirstRepetitionRedMove(move);
+			HashSet<Byte> moves = new HashSet<Byte>(Arrays.asList(move.getRelevantFields()));
+			setRepetitionRedFields(moves);
+		} else {
+			setFirstRepetitionBlueMove(move);
+			HashSet<Byte> moves = new HashSet<Byte>(Arrays.asList(move.getRelevantFields()));
+			setRepetitionBlueFields(moves);
+		}
+	}
+	
 	public Piece[] getCurrentPieces() {
 		return team ? redPieces : bluePieces;
 	}
-	
+
 	public boolean getTeam() {
 		return team;
 	}
@@ -192,5 +295,61 @@ public class GameState implements Cloneable {
 
 	public void setBluePieces(Piece[] bluePieces) {
 		this.bluePieces = bluePieces;
+	}
+
+	public int getRepetitions() {
+		if(team) {
+			return repetitionsRed;
+		} else {
+			return repetitionsBlue;
+		}
+	}
+	
+	public Move getFirstRepetitionRedMove() {
+		return firstRepetitionRedMove;
+	}
+
+	public void setFirstRepetitionRedMove(Move firstRepetitionRedMove) {
+		this.firstRepetitionRedMove = firstRepetitionRedMove;
+	}
+
+	public Move getFirstRepetitionBlueMove() {
+		return firstRepetitionBlueMove;
+	}
+
+	public void setFirstRepetitionBlueMove(Move firstRepetitionBlueMove) {
+		this.firstRepetitionBlueMove = firstRepetitionBlueMove;
+	}
+
+	public int getRepetitionsRed() {
+		return repetitionsRed;
+	}
+
+	public void setRepetitionsRed(int repetitionsRed) {
+		this.repetitionsRed = repetitionsRed;
+	}
+
+	public int getRepetitionsBlue() {
+		return repetitionsBlue;
+	}
+
+	public void setRepetitionsBlue(int repetitionsBlue) {
+		this.repetitionsBlue = repetitionsBlue;
+	}
+
+	public HashSet<Byte> getRepetitionRedFields() {
+		return repetitionRedFields;
+	}
+
+	public void setRepetitionRedFields(HashSet<Byte> repetitionRedFields) {
+		this.repetitionRedFields = repetitionRedFields;
+	}
+
+	public HashSet<Byte> getRepetitionBlueFields() {
+		return repetitionBlueFields;
+	}
+
+	public void setRepetitionBlueFields(HashSet<Byte> repetitionBlueFields) {
+		this.repetitionBlueFields = repetitionBlueFields;
 	}
 }

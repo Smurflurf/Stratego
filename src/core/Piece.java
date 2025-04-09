@@ -1,10 +1,10 @@
 package core;
 
 public class Piece implements Cloneable {
-	private PieceType type;
 	private boolean team;
 	//byte pos; TODO x und y in eine byte Variable packen, mit bitmasken kann x und y extrahiert werden
 	private byte x, y;
+	private PieceType type;
 
 	/**
 	 * Initialize a known piece with unknown placement.

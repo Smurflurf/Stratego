@@ -60,13 +60,9 @@ public class Mediator {
 		if(move.getStartX() == move.getEndX() &&
 				move.getStartY() == move.getEndY())
 			return false;
-		if(move.getFirstMove() != null)
-			if(move.getFirstMove().getStartX() == move.getFirstMove().getEndX() &&
-			move.getFirstMove().getStartY() == move.getFirstMove().getEndY())
-				return false;
 		
 		boolean executed = Utils.checkAndExecute(gameState, move);
-		gameState.changeTeam();
+		if(executed) gameState.changeTeam();
 		return executed;
 	}
 

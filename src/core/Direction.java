@@ -37,6 +37,20 @@ public enum Direction {
 		return original;
 	}
 	
+	/**
+	 * Modifies position by modifier in {@link #Direction(int[], int)}
+	 * @param original unmodified x,y coordinates as byte representation
+	 * @param modifier fields to go into {@link #Direction(int[], int)}
+	 * @return modified position represented as an [x,y] byte
+	 */
+	public byte translate(byte position, int modifier) {
+		if(translation[0] != 0) {
+			return ByteMapper.setX(position, (byte) (ByteMapper.getX(position) + translation[0] * modifier));
+		} else {
+			return ByteMapper.setY(position, (byte) (ByteMapper.getY(position) + translation[1] * modifier));
+		}
+	}
+	
 	public static Direction get(int dir) {
 		switch(dir) {
 		case 0:

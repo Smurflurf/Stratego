@@ -1,6 +1,7 @@
 package ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridLayout;
 
@@ -11,6 +12,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import core.ByteMapper;
 import core.GameState;
 import core.Move;
 import core.Piece;
@@ -18,7 +20,7 @@ import core.PieceType;
 import core.Utils;
 
 /**
- * A simple graphical UI to display the Stratego Quick Battle GameState.
+ * A simple graphical UI to display a GameState
  */
 public class UI {
 	JFrame frame;
@@ -74,15 +76,20 @@ public class UI {
 				}
 			}
 			if(lastMove != null) {
-				if(lastMove.getFirstMove() != null) {
-					squares[lastMove.getFirstMove().getStartX()][lastMove.getFirstMove().getStartY()]
-							.setBackground(lastMove.getPiece().getTeam() ? RED_COLOR_BG1 : BLUE_COLOR_BG1);
-					squares[lastMove.getFirstMove().getStartX()][lastMove.getFirstMove().getStartY()]
-							.setForeground(lastMove.getPiece().getTeam() ? RED_DEAD_COLOR : BLUE_DEAD_COLOR);
-					squares[lastMove.getFirstMove().getStartX()][lastMove.getFirstMove().getStartY()]
-							.setText(getPieceSymbol(lastMove.getPiece()));
-				}
+//				if(lastMove.getFirstMove() != null) {
+//					squares[lastMove.getFirstMove().getStartX()][lastMove.getFirstMove().getStartY()]
+//							.setBackground(lastMove.getPiece().getTeam() ? RED_COLOR_BG1 : BLUE_COLOR_BG1);
+//					squares[lastMove.getFirstMove().getStartX()][lastMove.getFirstMove().getStartY()]
+//							.setForeground(lastMove.getPiece().getTeam() ? RED_DEAD_COLOR : BLUE_DEAD_COLOR);
+//					squares[lastMove.getFirstMove().getStartX()][lastMove.getFirstMove().getStartY()]
+//							.setText(getPieceSymbol(lastMove.getPiece()));
+//				}
 
+				for(Byte b : lastMove.getRelevantFields()) {
+					squares[ByteMapper.getX(b)][ByteMapper.getY(b)]
+							.setBackground(lastMove.getPiece().getTeam() ? RED_COLOR_BG1 : BLUE_COLOR_BG1);
+				}
+				
 				squares[lastMove.getStartX()][lastMove.getStartY()]
 						.setBackground(lastMove.getPiece().getTeam() ? RED_COLOR_BG2 : BLUE_COLOR_BG2);
 				squares[lastMove.getStartX()][lastMove.getStartY()]
