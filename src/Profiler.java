@@ -12,7 +12,7 @@ import core.playing.AI;
 
 public class Profiler {
 	public static void main(String[] args) {
-				memoryFootprint(Class.Piece);
+//		memoryFootprint(Class.Piece);
 
 		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
 		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
