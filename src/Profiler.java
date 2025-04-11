@@ -12,9 +12,27 @@ import core.playing.AI;
 
 public class Profiler {
 	public static void main(String[] args) {
-		memoryFootprint(Class.Move);
+				memoryFootprint(Class.Piece);
+
+		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
+		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
+		AI ai = AI.Type.RANDOM.createAI(true, new GameState(redPieces, bluePieces));
+		nextMoves(ai, 10000000);
 	}
-	
+
+	public static void nextMoves(AI ai, int repetitions) {
+		long start = System.currentTimeMillis();
+		for (int i=0; i<repetitions; i++) {
+			ai.nextMove();
+		}
+		long end = System.currentTimeMillis();
+		System.out.println(end - start + " ms for " +repetitions+ " repetitions");
+	}
+
+	/**
+	 * Prints out a classes memory Footprint
+	 * @param c Class to analyze
+	 */
 	public static void memoryFootprint(Class c) {
 		Object object = null;
 		switch(c) {
@@ -28,12 +46,12 @@ public class Profiler {
 		case Move:
 			object = new Move(new Piece(PieceType.SPAEHER, true), Direction.UP, 1);
 		}
-		
+
 		System.out.println(ClassLayout.parseInstance(object).toPrintable());
 //		System.out.println(GraphLayout.parseInstance(object).toPrintable());
 		System.out.println(GraphLayout.parseInstance(object).toFootprint());
 	}
-	
+
 	enum Class {
 		GameState,
 		Piece,

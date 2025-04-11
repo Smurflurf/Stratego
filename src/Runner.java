@@ -27,12 +27,12 @@ public class Runner {
 		printGame = false;
 		printResults = false;
 		
-		int UI_delay = 50;
+		int UI_delay = 100;
 		Placer.Type redPlacement = Placer.Type.PREBUILT;
 		Placer.Type bluePlacement = Placer.Type.PREBUILT;
 		AI.Type bluePlayer = AI.Type.RANDOM;
 		AI.Type redPlayer = AI.Type.RANDOM;
-		int simulations = 100_000;
+		int simulations = 1_000;
 
 		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay);
 		printResults();
@@ -80,6 +80,9 @@ public class Runner {
 				if(!mediator.makeMove(move)) {
 					// TODO wenn ein Piece angegriffen wird soll es nicht mehr obfuscated werden 
 					System.err.println("error while executing move " + move + "\n" + Utils.fieldToString(mediator.getGameState().getField()));
+					System.err.println(mediator.getGameState().isInChase() + " " + mediator.getGameState().getInChase() + " " + mediator.getGameState().getChasedFields().size() + "\n" +
+							blue.gameState.isInChase() + " " + blue.gameState.getInChase() + " " + blue.gameState.getChasedFields().size() + " \n" +
+							red.gameState.isInChase() + " " + red.gameState.getInChase() + " " + red.gameState.getChasedFields().size());
 					break;
 				}
 

@@ -7,7 +7,17 @@ import org.junit.jupiter.api.Test;
 import core.placing.Placer;
 import core.playing.AI;
 
-class GameStateTest {
+class GameStateTest {	
+	@Test
+	void testGetLastMove() {
+		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
+		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
+		GameState state = new GameState(redPieces, bluePieces);
+		
+		Move move = new Move(redPieces[4], Direction.UP, 2);
+		Utils.checkAndExecute(state, move);
+		assertEquals(move, state.getLastMove());
+	}
 
 	@Test
 	void testRepetitions() {

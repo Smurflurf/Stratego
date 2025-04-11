@@ -1,7 +1,6 @@
 package ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 import java.awt.GridLayout;
 
@@ -42,7 +41,10 @@ public class UI {
 	private static final Color PIECE_BG_COLOR = new Color(230, 230, 230);
 
 	public UI() {
-		squares = new JLabel[8][8];
+		frame = new JFrame("Stratego Quick Battle");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLayout(new BorderLayout());
+		frame.setSize(500, 550);
 		initializeUI();
 	}
 
@@ -110,7 +112,7 @@ public class UI {
 			frame.setTitle("Stratego Quick Battle - Turn: " + (gameState.getTeam() ? "Red" : "Blue"));
 		});
 	}
-
+	
 	/**
 	 * Changes the background color of all Pieces to the winners color
 	 * @param winner true if red
@@ -127,11 +129,7 @@ public class UI {
 	}
 
 	private void initializeUI() {
-		frame = new JFrame("Stratego Quick Battle");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLayout(new BorderLayout());
-		frame.setSize(500, 550);
-
+		squares = new JLabel[8][8];
 		boardPanel = new JPanel(new GridLayout(8, 8));
 		initPanels();
 

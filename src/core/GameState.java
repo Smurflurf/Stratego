@@ -11,12 +11,19 @@ public class GameState implements Cloneable {
 	 * true is red, the beginning team
 	 */
 	private boolean team;
-	private int repetitionsRed;
-	private int repetitionsBlue;
+	/**
+	 * 0: no chase
+	 * 1: red chases blue
+	 * 2: blue chases red
+	 */
+	private byte inChase;
+	private byte repetitionsRed;
+	private byte repetitionsBlue;
 	private Move firstRepetitionRedMove;
 	private Move firstRepetitionBlueMove;
 	private HashSet<Byte> repetitionRedFields;
 	private HashSet<Byte> repetitionBlueFields;
+	private HashSet<Short> chasedFields;
 	private Piece[] redPieces;
 	private Piece[] bluePieces;
 	private Piece[][] field;
@@ -29,19 +36,29 @@ public class GameState implements Cloneable {
 		createField();
 		setFirstRepetitionRedMove(null);
 		setFirstRepetitionBlueMove(null);
-		setRepetitionsRed(0);
-		setRepetitionsBlue(0);
-		setRepetitionRedFields(new HashSet<Byte>(Arrays.asList(new Byte[] {})));
-		setRepetitionBlueFields(new HashSet<Byte>(Arrays.asList(new Byte[] {})));
+		setRepetitionsRed((byte)0);
+		setRepetitionsBlue((byte)0);
+		setRepetitionRedFields(new HashSet<Byte>());
+		setRepetitionBlueFields(new HashSet<Byte>());
+		setInChase((byte)0);
+		setChasedFields(new HashSet<Short>());
 	}
 
-	/**
-	 * Update the GameState with move.
-	 * Does not update {@link #firstRepetitionRedMove} or {@link #firstRepetitionBlueMove}, use Utils.checkAndExecute(Move move)
-	 * @param move the Move to make
-	 */
-	public void update(Move move) {
-		Utils.makeMove(this, move);
+	public GameState(Piece[] redPieces, Piece[] bluePieces, boolean team, Move firstRepetitionRedMove, Move firstRepetitionBlueMove, byte repetitionsRed, byte repetitionsBlue,
+			HashSet<Byte> repetitionRedFields, HashSet<Byte> repetitionBlueFields, byte inChase, HashSet<Short> chasedFields) {
+		field = new Piece[8][8];
+		setTeam(team);
+		setRedPieces(redPieces);
+		setBluePieces(bluePieces);
+		createField();
+		setFirstRepetitionRedMove(firstRepetitionRedMove);
+		setFirstRepetitionBlueMove(firstRepetitionBlueMove);
+		setRepetitionsRed(repetitionsRed);
+		setRepetitionsBlue(repetitionsBlue);
+		setRepetitionRedFields(repetitionRedFields);
+		setRepetitionBlueFields(repetitionBlueFields);
+		setInChase(inChase);
+		setChasedFields(chasedFields);
 	}
 
 	/**
@@ -66,10 +83,13 @@ public class GameState implements Cloneable {
 	/**
 	 * Only moves a Piece to its new place in move.
 	 * Alters {@link #field} and the Piece itself to represent the new location.
-	 * Does not update {@link #firstRepetitionRedMove} or {@link #firstRepetitionBlueMove}, use Utils.checkAndExecute(Move move)
+	 * TODO call {@link #updateChase(Move)} and {@link #updateLastMove(Move)}
 	 * @param move contains the Piece and new position
 	 */
 	public void move(Move move) {
+		//		updateLastMove(move);	
+		//		updateChase(move);
+
 		field[move.getStartX()][move.getStartY()] = null;
 		field[move.getEndX()][move.getEndY()] = move.getPiece();
 		move.getPiece().setPos(move.getEndX(), move.getEndY());
@@ -110,8 +130,56 @@ public class GameState implements Cloneable {
 			if(!getFirstRepetitionBlueMove().equals(state2.getFirstRepetitionBlueMove())) return false;
 		if(getRepetitionsRed() != state2.getRepetitionsRed()) return false;
 		if(getRepetitionsBlue() != state2.getRepetitionsBlue()) return false;
+		if(isInChase() != state2.isInChase()) return false;
+		if(getChasedFields().size() != state2.getChasedFields().size()) return false;
 
 		return true;
+	}
+
+	/**
+	 * First checks if a chase is happening
+	 * @param move
+	 */
+	public void updateChase(Move move) {
+		Move lastMove = getLastMove();
+		checkIfChase(lastMove, move);
+		if(isInChase()) {
+			getChasedFields().add(ByteMapper.hash(lastMove.getEnd(), move.getEnd()));
+		}
+	}
+
+	/**
+	 * Updates {@link #inChase}
+	 * @param lastMove
+	 * @param move
+	 */
+	private void checkIfChase(Move lastMove, Move move) {
+		if(lastMove == null)
+			return;
+
+		if(!isInChase()) {
+			if(lastMove.getStart() == move.getEnd()) { //TODO
+				setInChase(move.getPiece().getTeam() ? (byte)1 : (byte)2);
+			}
+		} else {
+			if(getChaser() != null 
+					&& getChaser().getTeam() != move.getPiece().getTeam()) {	// chased piece does something
+				if(move.getEnd() == getChaser().getPos() // chased piece fights back
+						|| !move.getPiece().equals(getBeforeLastMove().getPiece())){ 	// other piece than the chased one gets used
+					setInChase((byte)0);
+					if(getChasedFields().size() > 0)
+						setChasedFields(new HashSet<Short>());	//TODO implementation so this HashSet does not get altered by cloning
+				}
+			} else {	// chaser does something
+				if(lastMove.getStart() == move.getEnd()) { //TODO
+					setInChase(move.getPiece().getTeam() ? (byte)1 : (byte)2);
+				} else {
+					setInChase((byte)0);
+					if(getChasedFields().size() > 0)
+						setChasedFields(new HashSet<Short>());	//TODO implementation so this HashSet does not get altered by cloning
+				}
+			}
+		}
 	}
 
 	public void updateLastMove(Move move) {
@@ -121,7 +189,7 @@ public class GameState implements Cloneable {
 				&& inMoveBounds(move)) {
 			incrementRep(move.getPiece().getTeam());
 		} else {
-			setRep(move.getPiece().getTeam(), 1);
+			resetRep(move.getPiece().getTeam());
 			setRepMove(move);
 		}
 	}
@@ -141,7 +209,7 @@ public class GameState implements Cloneable {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public GameState clone() {
 		Piece[] blueClone = new Piece[10];
@@ -152,16 +220,27 @@ public class GameState implements Cloneable {
 		for(int i=0; i<10; i++) 
 			if(redPieces[i] != null)
 				redClone[i] = redPieces[i].clone();
-		GameState state = new GameState(redClone, blueClone);
+
+		GameState state = 
+				new GameState(
+						redClone, 
+						blueClone, 
+						team, 
+						firstRepetitionRedMove, 
+						firstRepetitionBlueMove, 
+						repetitionsRed, 
+						repetitionsBlue,
+						repetitionRedFields, 
+						repetitionBlueFields, 
+						inChase, 
+						chasedFields
+						);
+
 		if(firstRepetitionBlueMove != null)
 			state.setFirstRepetitionBlueMove(firstRepetitionBlueMove.normalize(state));
 		if(firstRepetitionRedMove != null)
 			state.setFirstRepetitionRedMove(firstRepetitionRedMove.normalize(state));
-		state.setTeam(this.team);
-		state.setRepetitionsRed(repetitionsRed);
-		state.setRepetitionsBlue(repetitionsBlue);
-		state.setRepetitionRedFields(repetitionRedFields);
-		state.setRepetitionBlueFields(repetitionBlueFields);
+
 		return state;
 	}
 
@@ -175,23 +254,34 @@ public class GameState implements Cloneable {
 		Piece[] blueClone = new Piece[10];
 		Piece[] redClone = new Piece[10];
 		if(team) {
-			for(int i=0;i<10;i++) if(bluePieces[i] != null) blueClone[i] = bluePieces[i].clone(PieceType.UNKNOWN);	
+			for(int i=0;i<10;i++) if(bluePieces[i] != null) blueClone[i] = bluePieces[i].clone((byte)-1);	
 			for(int i=0; i<10; i++) if(redPieces[i] != null) redClone[i] = redPieces[i].clone();
 		} else {
 			for(int i=0;i<10;i++) if(bluePieces[i] != null) blueClone[i] = bluePieces[i].clone();	
-			for(int i=0; i<10; i++) if(redPieces[i] != null) redClone[i] = redPieces[i].clone(PieceType.UNKNOWN);
+			for(int i=0; i<10; i++) if(redPieces[i] != null) redClone[i] = redPieces[i].clone((byte)-1);
 		}
-		GameState obfuscated = new GameState(redClone, blueClone); 
-		obfuscated.setTeam(this.team);
+		
+		GameState state = 
+				new GameState(
+						redClone, 
+						blueClone, 
+						this.team, 
+						firstRepetitionRedMove, 
+						firstRepetitionBlueMove, 
+						repetitionsRed, 
+						repetitionsBlue,
+						repetitionRedFields, 
+						repetitionBlueFields, 
+						inChase, 
+						chasedFields
+						);
+
 		if(firstRepetitionBlueMove != null)
-			obfuscated.setFirstRepetitionBlueMove(firstRepetitionBlueMove.normalize(obfuscated));
+			state.setFirstRepetitionBlueMove(firstRepetitionBlueMove.normalize(state));
 		if(firstRepetitionRedMove != null)
-			obfuscated.setFirstRepetitionRedMove(firstRepetitionRedMove.normalize(obfuscated));
-		obfuscated.setRepetitionsRed(repetitionsRed);
-		obfuscated.setRepetitionsBlue(repetitionsBlue);
-		obfuscated.setRepetitionRedFields(repetitionRedFields);
-		obfuscated.setRepetitionBlueFields(repetitionBlueFields);
-		return obfuscated;
+			state.setFirstRepetitionRedMove(firstRepetitionRedMove.normalize(state));
+		
+		return state;
 	}
 
 	/**
@@ -224,6 +314,40 @@ public class GameState implements Cloneable {
 				field[piece.getX()][piece.getY()] = piece;
 	}
 
+	/**
+	 * If a chase is happening, it returns the Piece that initiates the chase.
+	 * @return red Piece if it chases the blue Piece or vice versa
+	 */
+	public Piece getChaser() {
+		if(inChase == 1) {
+			return firstRepetitionRedMove.getPiece();
+		} else if (inChase == 2){
+			return firstRepetitionBlueMove.getPiece();
+		} else {
+			return null;
+		}
+	}
+
+	public boolean isInChase() {
+		return inChase != 0;
+	}
+
+	/**
+	 * TODO DOCUMENTATION ANPASSEN
+	 * Returns the last moved Piece
+	 * @return last moved Piece
+	 */
+	public Move getLastMove() {
+		return getRepMove(!team);
+	}
+	/**
+	 * TODO DOCUMENTATION ANPASSEN
+	 * Returns the last moved Piece
+	 * @return last moved Piece
+	 */
+	public Move getBeforeLastMove() {
+		return getRepMove(team);
+	}
 
 	public Move getRepMove(boolean team) {
 		if(team) {
@@ -232,7 +356,7 @@ public class GameState implements Cloneable {
 			return getFirstRepetitionBlueMove();
 		}
 	}
-	
+
 	public void incrementRep(boolean team) {
 		if(team) {
 			repetitionsRed++;
@@ -240,15 +364,15 @@ public class GameState implements Cloneable {
 			repetitionsBlue++;
 		}
 	}
-	
-	public void setRep(boolean team, int repetitions) {
+
+	public void resetRep(boolean team) {
 		if(team) {
-			repetitionsRed = repetitions;
+			repetitionsRed = 1;
 		} else {
-			repetitionsBlue = repetitions;
+			repetitionsBlue = 1;
 		}
 	}
-	
+
 	public void setRepMove(Move move) {
 		if(move.getPiece().getTeam()) {
 			setFirstRepetitionRedMove(move);
@@ -260,9 +384,17 @@ public class GameState implements Cloneable {
 			setRepetitionBlueFields(moves);
 		}
 	}
-	
+
 	public Piece[] getCurrentPieces() {
 		return team ? redPieces : bluePieces;
+	}
+
+	public int getRepetitions() {
+		if(team) {
+			return repetitionsRed;
+		} else {
+			return repetitionsBlue;
+		}
 	}
 
 	public boolean getTeam() {
@@ -297,14 +429,6 @@ public class GameState implements Cloneable {
 		this.bluePieces = bluePieces;
 	}
 
-	public int getRepetitions() {
-		if(team) {
-			return repetitionsRed;
-		} else {
-			return repetitionsBlue;
-		}
-	}
-	
 	public Move getFirstRepetitionRedMove() {
 		return firstRepetitionRedMove;
 	}
@@ -325,7 +449,7 @@ public class GameState implements Cloneable {
 		return repetitionsRed;
 	}
 
-	public void setRepetitionsRed(int repetitionsRed) {
+	public void setRepetitionsRed(byte repetitionsRed) {
 		this.repetitionsRed = repetitionsRed;
 	}
 
@@ -333,7 +457,7 @@ public class GameState implements Cloneable {
 		return repetitionsBlue;
 	}
 
-	public void setRepetitionsBlue(int repetitionsBlue) {
+	public void setRepetitionsBlue(byte repetitionsBlue) {
 		this.repetitionsBlue = repetitionsBlue;
 	}
 
@@ -351,5 +475,21 @@ public class GameState implements Cloneable {
 
 	public void setRepetitionBlueFields(HashSet<Byte> repetitionBlueFields) {
 		this.repetitionBlueFields = repetitionBlueFields;
+	}
+
+	public void setInChase(byte inChase) {
+		this.inChase = inChase;
+	}
+
+	public byte getInChase() {
+		return inChase;
+	}
+
+	public HashSet<Short> getChasedFields() {
+		return chasedFields;
+	}
+
+	public void setChasedFields(HashSet<Short> chasedFields) {
+		this.chasedFields = chasedFields;
 	}
 }

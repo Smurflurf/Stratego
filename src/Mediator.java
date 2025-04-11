@@ -61,9 +61,7 @@ public class Mediator {
 				move.getStartY() == move.getEndY())
 			return false;
 		
-		boolean executed = Utils.checkAndExecute(gameState, move);
-		if(executed) gameState.changeTeam();
-		return executed;
+		return Utils.checkAndExecute(gameState, move);
 	}
 
 	/**

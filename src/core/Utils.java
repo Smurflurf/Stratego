@@ -10,8 +10,10 @@ import java.util.ArrayList;
 public class Utils {
 	public static boolean checkAndExecute(GameState state, Move move) {
 		if(!isMovePossible(state, move)) return false;
-		makeMove(state, move);
+		state.updateChase(move);
 		state.updateLastMove(move);	
+		makeMove(state, move);
+		state.changeTeam();
 		return true;
 	}
 
@@ -35,16 +37,16 @@ public class Utils {
 	 * @param state GameState to execute move on
 	 * @param move move being executed on state
 	 */
-	public static void makeMove(GameState state, Move move) {
+	private static void makeMove(GameState state, Move move) {
 		if(!(state.inspect(move.getEndX(), move.getEndY()) instanceof Piece piece)) {
 			state.move(move);
 		} else {
 			Piece loser = move.getPiece().attack(piece);
 			if(loser == null) {	
-				if(!state.removePiece(move.getPiece())) { System.err.println("two losers 1 " + move); printField(state.getField());};
-				if(!state.removePiece(state.inspect(move.getEndX(), move.getEndY()))) { System.err.println("two losers 2 " + move); printField(state.getField());};
+				state.removePiece(move.getPiece());
+				state.removePiece(state.inspect(move.getEndX(), move.getEndY()));
 			} else {
-				if(!state.removePiece(loser)) { System.err.println("one loser " + move); printField(state.getField());};
+				state.removePiece(loser);
 				if(loser != move.getPiece())
 					state.move(move);
 			}
@@ -58,13 +60,14 @@ public class Utils {
 		if(blockState == -1 || blockState == 1) return false;	// is field blocked by lake or same team Piece?
 		if(!canReach(move.getPiece(), move.getEndX(), move.getEndY())) return false;	// is Piece reachable?
 		Direction dir = move.getDirection();
-		if(!sightLine(state.getField(), move.getPiece(), move.getFields(), dir)) return false; //TODO test return false;
-		
+		if(!sightLine(state.getField(), move.getPiece(), move.getFields(), dir)) return false;
+
 		if(twoSquaresRule(state, move)) return false;
+		if(moreSquaresRule(state, move)) return false;
 
 		return true;
 	}
-	
+
 	/**
 	 * Fills dirMap with Direction-reach pairs to represent how many fields a Piece can walk into a given direction.
 	 * @param state
@@ -287,21 +290,48 @@ public class Utils {
 	 * Tests if the two square rule applies, i.e. if there are more than 3 repetitions
 	 * @param state
 	 * @param move
-	 * @return
+	 * @return true if the rule applies, move is invalid
 	 */
 	public static boolean twoSquaresRule(GameState state, Move move) {
 		return state.getRepetitions() > 2 && state.inMoveBounds(move);
 	}
-	
+
+	/**
+	 * Tests if the more square rule applies, i.e. if a chase  is happening and the chaser and chased are on positions that already happened once.
+	 * @param state
+	 * @param move
+	 * @return true if the rule applies, move is invalid
+	 */
+	public static boolean moreSquaresRule(GameState state, Move move) {
+		if(state.isInChase()) {
+			return state.getChasedFields().contains(ByteMapper.hash(state.getLastMove().getEnd(), move.getEnd()));
+		} else {
+			return false;
+		}
+	}
+
 	/**
 	 * Generates a list of all possible Moves (based on gameState current team).
 	 * Does not check if the game is still going i.e. no checks for the existence of flags are done here.
-	 * @param gameState the gameState to analyze. Its team attribute is considered.
+	 * @param state the gameState to analyze. Its team attribute is considered.
 	 * @return all possible moves in gameState
 	 */
-	public static Move[] getAllPossibleMoves(GameState gameState) {
-		//TODO
-		return null;
+	public static Move[] getAllPossibleMoves(GameState state) {
+		ArrayList<Move> moves = new ArrayList<Move>();
+		for(int i=0; i<8; i++) {
+			if(state.getCurrentPieces()[i] == null) continue;
+			for(int dir=0; dir<4; dir++) {
+				for(int reach=0; reach<state.getCurrentPieces()[i].getType().getMoves(); reach++) {
+					Move move = new Move(state.getCurrentPieces()[i], Direction.get(dir), reach+1);
+					if(isMovePossible(state, move)) {
+						moves.add(move);
+					} else {
+						continue;
+					}
+				}
+			}
+		}
+		return moves.toArray(Move[]::new);
 	}
 
 	/**
@@ -330,24 +360,31 @@ public class Utils {
 	 */
 	public static boolean isGameOver(GameState gameState) {
 		Piece[] pieces = gameState.getCurrentPieces();
-		if(flagGoneCheck(pieces)) return true;	// Flag gone check
-		boolean allPiecesGone = true;
-		for(int i=0; i<7; i++) {
-			if(pieces[i] != null) {
-				allPiecesGone = false;
-				break;
-			}
-		}
-
-		// TODO check square repetition
-		return allPiecesGone || !anyMovePossible(gameState);
+		return flagGoneCheck(pieces) || piecesGoneCheck(pieces) || !anyMovePossible(gameState);
 	}
 
+	/**
+	 * Checks if all Pieces are gone from one teams pieces
+	 * @implSpec only checks pieces[9], the Flag should be located there
+	 * @param pieces
+	 * @return 
+	 */
 	public static boolean flagGoneCheck(Piece[] pieces) {
 		return pieces[9] == null;
 	}
+	/**
+	 * Checks if all Pieces are gone from one teams pieces
+	 * @implSpec does not check pieces[7,8,9], the Flag and two Bombs should be located there
+	 * @param pieces
+	 * @return
+	 */
 	public static boolean piecesGoneCheck(Piece[] pieces) {
-		return true; //TODO
+		for(int i=0; i<7; i++) {
+			if(pieces[i] != null) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public static void printField(Piece[][] field) {

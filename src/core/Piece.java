@@ -2,9 +2,8 @@ package core;
 
 public class Piece implements Cloneable {
 	private boolean team;
-	//byte pos; TODO x und y in eine byte Variable packen, mit bitmasken kann x und y extrahiert werden
-	private byte x, y;
-	private PieceType type;
+	private byte pos;
+	private byte type;
 
 	/**
 	 * Initialize a known piece with unknown placement.
@@ -13,7 +12,7 @@ public class Piece implements Cloneable {
 	 * @param team true is red, false is blue
 	 */
 	public Piece(PieceType type, boolean team) {
-		this.type = type;
+		this.type = type.getByte();
 		this.team = team;
 		setPos(0, 0);
 	}
@@ -24,20 +23,18 @@ public class Piece implements Cloneable {
 	 * @param y
 	 * @param x
 	 */
-	public Piece(PieceType type, boolean team, int x, int y) {
-		this.type = type;
-		this.team = team;
-		setPos(x, y);
-	}
-	
-	public void setPos(int x, int y) {
-		this.x = (byte)x;
-		this.y = (byte)y;
+	public Piece(byte type, boolean team, byte pos) {
+		setType(type);
+		setTeam(team);
+		setPos(pos);
 	}
 
-	public void setPos(int[] pos) {
-		this.x = (byte)pos[0];
-		this.y = (byte)pos[1];
+	public void setPos(int x, int y) {
+		pos = ByteMapper.toByte(x, y);
+	}
+
+	public void setPos(byte pos) {
+		this.pos = pos;
 	}
 
 	/**
@@ -49,10 +46,10 @@ public class Piece implements Cloneable {
 	public Piece attack(Piece piece2) {
 		if(getType() == piece2.getType())
 			return null;
-		
+
 		return getType().attack(piece2.getType()) ? piece2 : this;
 	}
-	
+
 	public boolean equals(Piece piece2) {
 		return piece2 != null &&
 				getType() == piece2.getType() && 
@@ -62,29 +59,30 @@ public class Piece implements Cloneable {
 	}
 
 	public String toString() {
+		PieceType type = PieceType.getType(this.type);
 		return (team ? "r" : "b") + "_" + (type.getStrength() == 0 ? 
 				(type == PieceType.FLAGGE ? "F" : "B") : 
 					type.getStrength());
 	}	
 
 	public String coords() {
-		return " ["+x+"|"+y+"]";
-	}
-	
-	@Override
-	public Piece clone() {
-		return new Piece(type, team, x, y);
+		return " ["+getX()+"|"+getY()+"]";
 	}
 
-	public Piece clone(PieceType type) {
-		return new Piece(type, team, x, y);
+	@Override
+	public Piece clone() {
+		return new Piece(type, team, pos);
+	}
+
+	public Piece clone(byte type) {
+		return new Piece(type, team, pos);
 	}
 
 	public PieceType getType() {
-		return type;
+		return PieceType.getType(type);
 	}
 
-	public void setType(PieceType type) {
+	public void setType(byte type) {
 		this.type = type;
 	}
 
@@ -96,19 +94,23 @@ public class Piece implements Cloneable {
 		this.team = team;
 	}
 
-	public byte getX() {
-		return x;
+	public byte getPos() {
+		return pos;
+	}
+	
+	public int getX() {
+		return ByteMapper.getX(pos);
 	}
 
 	public void setX(byte x) {
-		this.x = x;
+		this.pos = ByteMapper.setX(pos, x);
 	}
 
-	public byte getY() {
-		return y;
+	public int getY() {
+		return ByteMapper.getY(pos);
 	}
 
 	public void setY(byte y) {
-		this.y = y;
+		this.pos = ByteMapper.setY(pos, y);
 	}
 }

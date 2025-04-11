@@ -65,8 +65,6 @@ public class RandomAI extends AI {
 	 */
 	@Override
 	public Move nextMove() {
-		//		if(gameState.getRepetitions() == 3)
-		//		System.out.println("\n"+gameState.getRepetitions());
 		Move move = null;
 		ArrayList<Piece> pieces = new ArrayList<Piece>();
 		ArrayList<int[]> dirMap = new ArrayList<int[]>();

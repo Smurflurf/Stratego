@@ -6,10 +6,6 @@ public class Move {
 	private byte end;
 	private byte fields;
 	private Direction direction;
-//	private int startX;
-//	private int startY;
-//	private int endX;
-//	private int endY;
 	
 	/**
 	 * Use with everything but SPAEHER for a "normal" move.
@@ -21,7 +17,7 @@ public class Move {
 	 */
 	public Move(Piece piece, Direction direction, int fields) {
 		setPiece(piece);
-		start = ByteMapper.toByte(piece.getX(), piece.getY());
+		start = piece.getPos();
 		calculateEndPos(direction, fields);
 		this.fields = (byte)fields;
 		this.direction = direction;
@@ -149,6 +145,14 @@ public class Move {
 //		}
 	}
 
+	public byte getStart() {
+		return start;
+	}
+	
+	public byte getEnd() {
+		return end;
+	}
+	
 	public int getStartX() {
 		return ByteMapper.getX(start);
 	}

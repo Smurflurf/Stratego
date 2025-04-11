@@ -2,9 +2,25 @@ package core;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.HashSet;
+
 import org.junit.jupiter.api.Test;
 
 class ByteMapperTest {
+	@Test
+	void testHash() {
+		HashSet<Short> positions = new HashSet<Short>();
+		for(int x1=0; x1<8; x1++) {
+			for(int y1=0; y1<8; y1++) {
+				for(int x2=0; x2<8; x2++) {
+					for(int y2=0; y2<8; y2++) {
+						assertTrue(positions.add(ByteMapper.hash(ByteMapper.toByte(x1, y1), ByteMapper.toByte(x2, y2))));
+					}
+				}
+			}
+		}
+	}
+	
 	@Test
 	void testAllNumbers() {
 		for(int x=0; x<8; x++) {

@@ -31,4 +31,10 @@ public class ByteMapper {
 	public static byte setY(byte b, int y) {
 		return (byte) ((b & 0xF0) | (y & 0x0F));
 	}
+	
+	public static short hash(byte b1, byte b2) {
+		int upper = (b1 & 0xFF) << 8;
+	    int lower = (b2 & 0xFF);
+	    return (short) (upper | lower);
+	}
 }

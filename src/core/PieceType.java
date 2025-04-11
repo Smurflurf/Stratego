@@ -5,23 +5,25 @@ package core;
  * Includes information about their attack strength, how they move and 
  */
 public enum PieceType {
-	MARSCHALL(1, 10, 1), 
-	GENERAL(1, 9, 1), 
-	MINEUR(1, 3, 2), 
-	SPAEHER(7, 2, 2), 
-	SPIONIN(1, 1, 1), 
-	BOMBE(0, 0, 2), 
-	FLAGGE(0, 0, 1),
-	UNKNOWN(7, 10, 10);
+	MARSCHALL(1, 10, 1, (byte)6), 
+	GENERAL(1, 9, 1, (byte)5), 
+	MINEUR(1, 3, 2, (byte)4), 
+	SPAEHER(7, 2, 2, (byte)3), 
+	SPIONIN(1, 1, 1, (byte)2), 
+	BOMBE(0, 0, 2, (byte)1), 
+	FLAGGE(0, 0, 1, (byte)0),
+	UNKNOWN(7, 10, 10, (byte)-1);
 	
 	private int moves;
 	private int strength;
 	private int pieceCount;
+	private byte byteType;
 	
-	private PieceType(int moves, int strength, int pieceCount) {
+	private PieceType(int moves, int strength, int pieceCount, byte byteType) {
 		this.moves = moves;
 		this.strength = strength;
 		this.pieceCount = pieceCount;
+		this.byteType = byteType;
 	}
 
 	public int getMoves() {
@@ -34,6 +36,23 @@ public enum PieceType {
 
 	public int getPieceCount() {
 		return pieceCount;
+	}
+	
+	public byte getByte() {
+		return byteType;
+	}
+	
+	public static PieceType getType(byte b) {
+		switch(b) {
+		case 0: return PieceType.FLAGGE;
+		case 1: return PieceType.BOMBE;
+		case 2: return PieceType.SPIONIN;
+		case 3: return PieceType.SPAEHER;
+		case 4: return PieceType.MINEUR;
+		case 5: return PieceType.GENERAL;
+		case 6: return PieceType.MARSCHALL;
+		default: return PieceType.UNKNOWN;
+		}
 	}
 	
 	/**
