@@ -8,6 +8,31 @@ import org.junit.jupiter.api.Test;
 
 class ByteMapperTest {
 	@Test
+	void testContains() {
+		short total = 0;
+		for(int x=0; x<8; x++) {
+			for(int y=0; y<8; y++) {
+				short s = ByteMapper.add((short)0, ByteMapper.toByte(x,y));
+				assertTrue(ByteMapper.contains(s, ByteMapper.toByte(x,y)));
+				total |= s;
+				assertTrue(ByteMapper.contains(total, ByteMapper.toByte(x,y)));
+			}
+		}
+	}
+	
+	@Test
+	void testAdd() {
+		for(int x=0; x<8; x++) {
+			for(int y=0; y<8; y++) {
+				int sho = 0;
+				sho = (sho | 1 << x) << 8;
+				sho = sho | 1 << y;
+				assertEquals((short)sho, ByteMapper.add((short)0, ByteMapper.toByte(x, y)));
+			}
+		}
+	}
+	
+	@Test
 	void testHash() {
 		HashSet<Short> positions = new HashSet<Short>();
 		for(int x1=0; x1<8; x1++) {

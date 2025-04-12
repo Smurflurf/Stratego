@@ -32,7 +32,7 @@ public class Runner {
 		Placer.Type bluePlacement = Placer.Type.PREBUILT;
 		AI.Type bluePlayer = AI.Type.RANDOM;
 		AI.Type redPlayer = AI.Type.RANDOM;
-		int simulations = 1_000_000;
+		int simulations = 100_000;
 
 		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay);
 		printResults();
@@ -50,6 +50,7 @@ public class Runner {
 	 */
 	public static void simulate(int simulations, Placer.Type redPlacement, AI.Type redType, Placer.Type bluePlacement, AI.Type blueType, int delay) {
 		if(simulations > 1) { if(use_UI) { printGame = true; printResults = true; } use_UI = false;}
+		long start = System.currentTimeMillis();
 		while(simulations-- > 0) {
 			initUI();
 			Piece[] redPieces = Placer.placePiecesWith(true, redPlacement);
@@ -97,6 +98,8 @@ public class Runner {
 			showWinner(mediator, simTime);
 			winList.add(new WinnerEntry(redPlacement, bluePlacement, redType, blueType, mediator.getWinnerTeam(), moves, simTime));
 		}
+		long end = System.currentTimeMillis();
+		System.out.println("total time: " + (end - start) + "ms");
 	}
 
 	public static void showWinner(Mediator mediator, long simTime) {

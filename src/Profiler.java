@@ -12,12 +12,12 @@ import core.playing.AI;
 
 public class Profiler {
 	public static void main(String[] args) {
-//		memoryFootprint(Class.Piece);
+		memoryFootprint(Class.GameState);
 
 		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
 		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
 		AI ai = AI.Type.RANDOM.createAI(true, new GameState(redPieces, bluePieces));
-		nextMoves(ai, 10000000);
+//		nextMoves(ai, 10000000);
 	}
 
 	public static void nextMoves(AI ai, int repetitions) {
@@ -26,7 +26,7 @@ public class Profiler {
 			ai.nextMove();
 		}
 		long end = System.currentTimeMillis();
-		System.out.println(end - start + " ms for " +repetitions+ " repetitions");
+		System.out.println(String.format("%,d", (end - start)) + " ms for " +String.format("%,d", (repetitions))+ " repetitions");
 	}
 
 	/**

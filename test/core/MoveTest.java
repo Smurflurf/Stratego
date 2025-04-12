@@ -9,29 +9,30 @@ class MoveTest {
 	@Test
 	void getRelevantFields() {
 		Move move1 = new Move(new Piece(PieceType.MARSCHALL.getByte(), true, ByteMapper.toByte(4, 4)), Direction.UP, 1);
-		Byte[] fields = move1.getRelevantFields();
-		assertEquals(ByteMapper.toByte(4, 4), fields[0]);
-		assertEquals(ByteMapper.toByte(4, 3), fields[1]);
+		short fields = move1.getRelevantFields();
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(4, 4)));
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(4, 3)));
 		
 		Move move2 = new Move(new Piece(PieceType.SPAEHER.getByte(), true, ByteMapper.toByte(4, 4)), Direction.UP, 4);
 		fields = move2.getRelevantFields();
-		assertEquals(ByteMapper.toByte(4, 4), fields[0]);
-		assertEquals(ByteMapper.toByte(4, 3), fields[1]);
-		assertEquals(ByteMapper.toByte(4, 2), fields[2]);
-		assertEquals(ByteMapper.toByte(4, 1), fields[3]);
-		assertEquals(ByteMapper.toByte(4, 0), fields[4]);
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(4, 4)));
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(4, 3)));
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(4, 2)));
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(4, 1)));
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(4, 0)));
 		
 		Move move3 = new Move(new Piece(PieceType.SPAEHER.getByte(), true, ByteMapper.toByte(4, 4)), Direction.RIGHT, 3);
 		fields = move3.getRelevantFields();
-		assertEquals(ByteMapper.toByte(4, 4), fields[0]);
-		assertEquals(ByteMapper.toByte(5, 4), fields[1]);
-		assertEquals(ByteMapper.toByte(6, 4), fields[2]);
-		assertEquals(ByteMapper.toByte(7, 4), fields[3]);
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(4, 4)));
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(5, 4)));
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(6, 4)));
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(7, 4)));
 
 		Move move4 = new Move(new Piece(PieceType.MINEUR.getByte(), false, ByteMapper.toByte(7, 0)), Direction.LEFT, 1);
 		fields = move4.getRelevantFields();
-		assertEquals(ByteMapper.toByte(7, 0), fields[0]);
-		assertEquals(ByteMapper.toByte(6, 0), fields[1]);
+
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(7, 0)));
+		assertTrue(ByteMapper.contains(fields, ByteMapper.toByte(6, 0)));
 	}
 	
 	@Test

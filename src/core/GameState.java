@@ -1,7 +1,6 @@
 package core;
-
-import java.util.Arrays;
-import java.util.HashSet;
+	
+import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 
 /**
  * Represents a state of the game Stratego quick battle 
@@ -19,11 +18,11 @@ public class GameState implements Cloneable {
 	private byte inChase;
 	private byte repetitionsRed;
 	private byte repetitionsBlue;
+	private short repetitionRedFields;
+	private short repetitionBlueFields;
 	private Move firstRepetitionRedMove;
 	private Move firstRepetitionBlueMove;
-	private HashSet<Byte> repetitionRedFields;
-	private HashSet<Byte> repetitionBlueFields;
-	private HashSet<Short> chasedFields;
+	private ShortOpenHashSet chasedFields;
 	private Piece[] redPieces;
 	private Piece[] bluePieces;
 	private Piece[][] field;
@@ -38,14 +37,14 @@ public class GameState implements Cloneable {
 		setFirstRepetitionBlueMove(null);
 		setRepetitionsRed((byte)0);
 		setRepetitionsBlue((byte)0);
-		setRepetitionRedFields(new HashSet<Byte>());
-		setRepetitionBlueFields(new HashSet<Byte>());
+		setRepetitionRedFields((short)0);
+		setRepetitionBlueFields((short)0);
 		setInChase((byte)0);
-		setChasedFields(new HashSet<Short>());
+		setChasedFields(new ShortOpenHashSet());
 	}
 
 	public GameState(Piece[] redPieces, Piece[] bluePieces, boolean team, Move firstRepetitionRedMove, Move firstRepetitionBlueMove, byte repetitionsRed, byte repetitionsBlue,
-			HashSet<Byte> repetitionRedFields, HashSet<Byte> repetitionBlueFields, byte inChase, HashSet<Short> chasedFields) {
+			short repetitionRedFields, short repetitionBlueFields, byte inChase, ShortOpenHashSet chasedFields) {
 		field = new Piece[8][8];
 		setTeam(team);
 		setRedPieces(redPieces);
@@ -158,7 +157,7 @@ public class GameState implements Cloneable {
 			return;
 
 		if(!isInChase()) {
-			if(lastMove.getStart() == move.getEnd()) { //TODO
+			if(lastMove.getStart() == move.getEnd()) {
 				setInChase(move.getPiece().getTeam() ? (byte)1 : (byte)2);
 			}
 		} else {
@@ -168,15 +167,15 @@ public class GameState implements Cloneable {
 						|| !move.getPiece().equals(getBeforeLastMove().getPiece())){ 	// other piece than the chased one gets used
 					setInChase((byte)0);
 					if(getChasedFields().size() > 0)
-						setChasedFields(new HashSet<Short>());	//TODO implementation so this HashSet does not get altered by cloning
+						setChasedFields(new ShortOpenHashSet());	//TODO implementation so this HashSet does not get altered by cloning
 				}
 			} else {	// chaser does something
-				if(lastMove.getStart() == move.getEnd()) { //TODO
+				if(lastMove.getStart() == move.getEnd()) {
 					setInChase(move.getPiece().getTeam() ? (byte)1 : (byte)2);
 				} else {
 					setInChase((byte)0);
 					if(getChasedFields().size() > 0)
-						setChasedFields(new HashSet<Short>());	//TODO implementation so this HashSet does not get altered by cloning
+						setChasedFields(new ShortOpenHashSet());	//TODO implementation so this HashSet does not get altered by cloning
 				}
 			}
 		}
@@ -201,10 +200,10 @@ public class GameState implements Cloneable {
 	 */
 	public boolean inMoveBounds(Move next) {
 		if(next.getPiece().getTeam()) {
-			if(repetitionRedFields.contains(ByteMapper.toByte(next.getEndX(), next.getEndY())))
+			if(ByteMapper.contains(repetitionRedFields, ByteMapper.toByte(next.getEndX(), next.getEndY())))
 				return true;
 		} else {
-			if(repetitionBlueFields.contains(ByteMapper.toByte(next.getEndX(), next.getEndY())))
+			if(ByteMapper.contains(repetitionBlueFields, ByteMapper.toByte(next.getEndX(), next.getEndY())))
 				return true;
 		}
 		return false;
@@ -376,12 +375,12 @@ public class GameState implements Cloneable {
 	public void setRepMove(Move move) {
 		if(move.getPiece().getTeam()) {
 			setFirstRepetitionRedMove(move);
-			HashSet<Byte> moves = new HashSet<Byte>(Arrays.asList(move.getRelevantFields()));
-			setRepetitionRedFields(moves);
+//			ByteOpenHashSet moves = new ByteOpenHashSet(move.getRelevantFields());
+			setRepetitionRedFields(move.getRelevantFields());
 		} else {
 			setFirstRepetitionBlueMove(move);
-			HashSet<Byte> moves = new HashSet<Byte>(Arrays.asList(move.getRelevantFields()));
-			setRepetitionBlueFields(moves);
+//			ByteOpenHashSet moves = new ByteOpenHashSet(move.getRelevantFields());
+			setRepetitionBlueFields(move.getRelevantFields());
 		}
 	}
 
@@ -461,19 +460,19 @@ public class GameState implements Cloneable {
 		this.repetitionsBlue = repetitionsBlue;
 	}
 
-	public HashSet<Byte> getRepetitionRedFields() {
+	public short getRepetitionRedFields() {
 		return repetitionRedFields;
 	}
 
-	public void setRepetitionRedFields(HashSet<Byte> repetitionRedFields) {
+	public void setRepetitionRedFields(short repetitionRedFields) {
 		this.repetitionRedFields = repetitionRedFields;
 	}
 
-	public HashSet<Byte> getRepetitionBlueFields() {
+	public short getRepetitionBlueFields() {
 		return repetitionBlueFields;
 	}
 
-	public void setRepetitionBlueFields(HashSet<Byte> repetitionBlueFields) {
+	public void setRepetitionBlueFields(short repetitionBlueFields) {
 		this.repetitionBlueFields = repetitionBlueFields;
 	}
 
@@ -485,11 +484,11 @@ public class GameState implements Cloneable {
 		return inChase;
 	}
 
-	public HashSet<Short> getChasedFields() {
+	public ShortOpenHashSet getChasedFields() {
 		return chasedFields;
 	}
 
-	public void setChasedFields(HashSet<Short> chasedFields) {
+	public void setChasedFields(ShortOpenHashSet chasedFields) {
 		this.chasedFields = chasedFields;
 	}
 }

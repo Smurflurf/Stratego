@@ -72,12 +72,12 @@ public class Move {
 	/**
 	 * @return all fields {@link #piece} steps over in this Move
 	 */
-	public Byte[] getRelevantFields() {
+	public short getRelevantFields() {
 		Direction dir = getDirection();
 		int fields = getFields() +1;
-		Byte[] positions = new Byte[fields];
+		short positions = 0;
 		for(int i=0; i<fields; i++) {
-			positions[i] = dir.translate(start, i);
+			positions = ByteMapper.add(positions, dir.translate(start, i));
 		}
 		return positions;
 	}
