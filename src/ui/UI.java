@@ -87,9 +87,11 @@ public class UI {
 //							.setText(getPieceSymbol(lastMove.getPiece()));
 //				}
 
-//				for(Byte b : lastMove.getRelevantFields()) {
-//					squares[ByteMapper.getX(b)][ByteMapper.getY(b)]
-//							.setBackground(lastMove.getPiece().getTeam() ? RED_COLOR_BG1 : BLUE_COLOR_BG1);
+				short s = lastMove.getRelevantFields();
+				for(int x=0; x<7; x++)
+					for(int y=0; y<7; y++)
+						if(ByteMapper.contains(s, ByteMapper.toByte(x, y)))
+							squares[x][y].setBackground(lastMove.getPiece().getTeam() ? RED_COLOR_BG1 : BLUE_COLOR_BG1);
 //				}
 				
 				squares[lastMove.getStartX()][lastMove.getStartY()]

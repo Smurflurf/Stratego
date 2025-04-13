@@ -167,7 +167,7 @@ public class GameState implements Cloneable {
 						|| !move.getPiece().equals(getBeforeLastMove().getPiece())){ 	// other piece than the chased one gets used
 					setInChase((byte)0);
 					if(getChasedFields().size() > 0)
-						setChasedFields(new ShortOpenHashSet());	//TODO implementation so this HashSet does not get altered by cloning
+						chasedFields.clear();
 				}
 			} else {	// chaser does something
 				if(lastMove.getStart() == move.getEnd()) {
@@ -175,7 +175,7 @@ public class GameState implements Cloneable {
 				} else {
 					setInChase((byte)0);
 					if(getChasedFields().size() > 0)
-						setChasedFields(new ShortOpenHashSet());	//TODO implementation so this HashSet does not get altered by cloning
+						chasedFields.clear();
 				}
 			}
 		}
@@ -232,7 +232,7 @@ public class GameState implements Cloneable {
 						repetitionRedFields, 
 						repetitionBlueFields, 
 						inChase, 
-						chasedFields
+						new ShortOpenHashSet(chasedFields)
 						);
 
 		if(firstRepetitionBlueMove != null)
@@ -272,7 +272,7 @@ public class GameState implements Cloneable {
 						repetitionRedFields, 
 						repetitionBlueFields, 
 						inChase, 
-						chasedFields
+						new ShortOpenHashSet(chasedFields)
 						);
 
 		if(firstRepetitionBlueMove != null)
@@ -332,15 +332,16 @@ public class GameState implements Cloneable {
 	}
 
 	/**
-	 * TODO DOCUMENTATION ANPASSEN
-	 * Returns the last moved Piece
-	 * @return last moved Piece
+	 * Returns the last move made
+	 * @return last Move
 	 */
 	public Move getLastMove() {
 		return getRepMove(!team);
 	}
+	
 	/**
-	 * TODO DOCUMENTATION ANPASSEN
+	 * Returns the last Move made by {@link #team},
+	 * if called before updating the repetition Move.
 	 * Returns the last moved Piece
 	 * @return last moved Piece
 	 */

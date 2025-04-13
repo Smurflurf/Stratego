@@ -1,8 +1,7 @@
 package core;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.Arrays;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,12 +9,12 @@ class DirectionTest {
 
 	@Test
 	void testTranslate() {
-		int[] original = new int[] {0,0};
-		for(int y=0; y<8; y++) {
-			assertTrue(Arrays.equals(Direction.UP.translate(original.clone(), y), new int[] {0, -y}));
-			assertTrue(Arrays.equals(Direction.DOWN.translate(original.clone(), y), new int[] {0, y}));
-			assertTrue(Arrays.equals(Direction.LEFT.translate(original.clone(), y), new int[] {-y, 0}));
-			assertTrue(Arrays.equals(Direction.RIGHT.translate(original.clone(), y), new int[] {y, 0}));
+		byte original = ByteMapper.toByte(4, 4);
+		for(int y=0; y<4; y++) {
+			assertEquals(Direction.UP.translate(original, y),ByteMapper.toByte(4, 4-y));
+			assertEquals(Direction.DOWN.translate(original, y), ByteMapper.toByte(4, 4+y));
+			assertEquals(Direction.LEFT.translate(original, y), ByteMapper.toByte(4-y, 4));
+			assertEquals(Direction.RIGHT.translate(original, y), ByteMapper.toByte(4+y, 4));
 		}
 	}
 

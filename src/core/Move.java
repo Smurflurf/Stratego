@@ -16,7 +16,7 @@ public class Move {
 	 * @param fields
 	 */
 	public Move(Piece piece, Direction direction, int fields) {
-		setPiece(piece);
+		this.piece = piece;;
 		start = piece.getPos();
 		calculateEndPos(direction, fields);
 		this.fields = (byte)fields;
@@ -50,7 +50,7 @@ public class Move {
 	 * @param endY
 	 */
 	public Move(Piece piece, byte start, byte end, Direction direction, byte fields) {
-		setPiece(piece);
+		this.piece = piece;;
 		this.start = start;
 		this.end = end;
 		this.direction = direction;
@@ -64,7 +64,7 @@ public class Move {
 	public Move normalize(GameState state) {
 		Piece piece = state.getField()[getStartX()][getStartY()];
 		if(piece != null)
-			setPiece(piece);
+			this.piece = piece;
 		
 		return this;
 	}
@@ -120,10 +120,6 @@ public class Move {
 
 	public Piece getPiece() {
 		return piece;
-	}
-
-	public void setPiece(Piece piece) {
-		this.piece = piece;
 	}
 
 	public Direction getDirection() {
