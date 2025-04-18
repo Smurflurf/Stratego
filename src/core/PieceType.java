@@ -14,10 +14,10 @@ public enum PieceType {
 	FLAGGE(0, 0, 1, (byte)0),
 	UNKNOWN(7, 10, 10, (byte)-1);
 	
-	private int moves;
-	private int strength;
-	private int pieceCount;
-	private byte byteType;
+	private final int moves;
+	private final int strength;
+	private final int pieceCount;
+	private final byte byteType;
 	
 	private PieceType(int moves, int strength, int pieceCount, byte byteType) {
 		this.moves = moves;

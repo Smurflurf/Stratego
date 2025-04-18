@@ -32,7 +32,7 @@ public class Runner {
 		Placer.Type bluePlacement = Placer.Type.PREBUILT;
 		AI.Type bluePlayer = AI.Type.RANDOM;
 		AI.Type redPlayer = AI.Type.RANDOM;
-		int simulations = 100_000;
+		int simulations = 10_000;
 
 		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay);
 		printResults();

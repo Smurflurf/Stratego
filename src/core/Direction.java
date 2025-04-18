@@ -6,8 +6,8 @@ public enum Direction {
 	LEFT(new int[] {-1,0}, -1),
 	RIGHT(new int[] {1,0}, 1);
 	
-	private int[] translation;
-	private int oneDimTranslation;
+	private final int[] translation;
+	private final int oneDimTranslation;
 	
 	private Direction(int[] translation, int oneDimTranslation) {
 		this.translation = translation;

@@ -236,9 +236,9 @@ public class GameState implements Cloneable {
 						);
 
 		if(firstRepetitionBlueMove != null)
-			state.setFirstRepetitionBlueMove(firstRepetitionBlueMove.normalize(state));
+			state.setFirstRepetitionBlueMove(firstRepetitionBlueMove.clone(state));
 		if(firstRepetitionRedMove != null)
-			state.setFirstRepetitionRedMove(firstRepetitionRedMove.normalize(state));
+			state.setFirstRepetitionRedMove(firstRepetitionRedMove.clone(state));
 
 		return state;
 	}
@@ -276,9 +276,9 @@ public class GameState implements Cloneable {
 						);
 
 		if(firstRepetitionBlueMove != null)
-			state.setFirstRepetitionBlueMove(firstRepetitionBlueMove.normalize(state));
+			state.setFirstRepetitionBlueMove(firstRepetitionBlueMove.clone(state));
 		if(firstRepetitionRedMove != null)
-			state.setFirstRepetitionRedMove(firstRepetitionRedMove.normalize(state));
+			state.setFirstRepetitionRedMove(firstRepetitionRedMove.clone(state));
 		
 		return state;
 	}
