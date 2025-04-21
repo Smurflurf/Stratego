@@ -17,7 +17,7 @@ import strados2.tools.Scraper;
  * If the files are not downloaded yet, it calls the downloader {@link Scraper}.
  */
 public class GravonAnalyser {
-	static String mode = "barrage";
+	static String mode = "classic";
 	static String title = "";
 	static ClassicPiece.ClassicRank[] ranks = null;
 	static ArrayList<ClassicPiece[][]> relevantBoards;
@@ -36,7 +36,8 @@ public class GravonAnalyser {
 		};
 		
 //		analyseHeatMap(relevantBoards);
-		analyseLinePlot(relevantBoards);
+		analyseLinePlotX(relevantBoards);
+		analyseLinePlotY(relevantBoards);
 
 	}
 	
@@ -44,18 +45,37 @@ public class GravonAnalyser {
 	 * Creates an xyChart containing all PieceTypes in {@link #ranks} distribution.
 	 * @param relevantBoards all boards to analyse
 	 */
-	static void analyseLinePlot(ArrayList<ClassicPiece[][]> relevantBoards) {
+	static void analyseLinePlotX(ArrayList<ClassicPiece[][]> relevantBoards) {
 		if(ranks.length == 0) {	
 			return;
 		} else {
 			double[][] rankDistributions = new double[ranks.length][GeneralTools.BOARD_SIZE];
 			for(int r=0; r<ranks.length; r++) {
-				int[][] boards = HeatMapGenerator.aggregatePlacementCounts(relevantBoards, ranks[r]);
+				int[][] boards = GeneralTools.aggregatePlacementCounts(relevantBoards, ranks[r]);
+				double[] distribution = LinePlotGenerator.getPieceXDistribution(boards);
+				rankDistributions[r] = distribution;
+			}
+			title = "Figurenverteilung_Spalten_" + (mode.equals("classic") ? "klassisch" : "Trommelfeuer");
+			LinePlotGenerator.createLinePlot(rankDistributions, title, ranks, "Spalte");
+		}
+	}
+	
+	/**
+	 * Creates an xyChart containing all PieceTypes in {@link #ranks} distribution.
+	 * @param relevantBoards all boards to analyse
+	 */
+	static void analyseLinePlotY(ArrayList<ClassicPiece[][]> relevantBoards) {
+		if(ranks.length == 0) {	
+			return;
+		} else {
+			double[][] rankDistributions = new double[ranks.length][GeneralTools.BOARD_SIZE];
+			for(int r=0; r<ranks.length; r++) {
+				int[][] boards = GeneralTools.aggregatePlacementCounts(relevantBoards, ranks[r]);
 				double[] distribution = LinePlotGenerator.getPieceYDistribution(boards);
 				rankDistributions[r] = distribution;
 			}
-			title = "Figurenverteilung " + (mode.equals("classic") ? "klassisch" : "Trommelfeuer");
-			LinePlotGenerator.createLinePlot(rankDistributions, title, ranks);
+			title = "Figurenverteilung_Reihen_" + (mode.equals("classic") ? "klassisch" : "Trommelfeuer");
+			LinePlotGenerator.createLinePlot(rankDistributions, title, ranks, "Reihe aus Spieler Sicht");
 		}
 	}
 	
@@ -67,7 +87,7 @@ public class GravonAnalyser {
 	static void analyseHeatMap(ArrayList<ClassicPiece[][]> relevantBoards) {
 		if(ranks.length == 0) {	// analyse all Pieces
 			int[][] heat = HeatMapGenerator.aggregatePlacementCounts(relevantBoards, null);
-			title = "" + "all Pieces " + mode;
+			title = "" + "all_Pieces_" + mode;
 			HeatMapGenerator.createHeatmapChart(heat, title, title);
 			return;
 		} else {				// analyse picked Pieces

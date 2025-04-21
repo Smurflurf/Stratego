@@ -2,8 +2,16 @@ package core;
 
 public class Piece implements Cloneable {
 	private boolean team;
+	/**
+	 * Represents the x,y position as a 0xxx0yyy byte. Bitmasking extracts the coordinates.
+	 */
 	private byte pos;
-	private byte type;
+	/**
+	 * Contains the information if a Piece is known to the enemy.
+	 * Also represents the PieceType as a byte to save space.
+	 * k000tttt: byte representation: the left bit represents known, the right four the PieceType
+	 */
+	private byte knownAndType;
 
 	/**
 	 * Initialize a known piece with unknown placement.
@@ -12,19 +20,19 @@ public class Piece implements Cloneable {
 	 * @param team true is red, false is blue
 	 */
 	public Piece(PieceType type, boolean team) {
-		this.type = type.getByte();
+		knownAndType = type.getByte();
 		this.team = team;
 		setPos(0, 0);
 	}
 
 	/**
 	 * Initialize a known piece
-	 * @param type PieceType
-	 * @param y
-	 * @param x
+	 * @param knownAndType known and PieceType bit
+	 * @param team true for red
+	 * @param pos position
 	 */
-	public Piece(byte type, boolean team, byte pos) {
-		setType(type);
+	public Piece(byte knownAndType, boolean team, byte pos) {
+		this.knownAndType = knownAndType;
 		setTeam(team);
 		setPos(pos);
 	}
@@ -37,6 +45,8 @@ public class Piece implements Cloneable {
 		this.pos = pos;
 	}
 
+	
+	
 	/**
 	 * Returns the LOSER between this Piece as attacker and piece2 as defender.
 	 * If both Pieces are equal, null gets returned.
@@ -59,7 +69,7 @@ public class Piece implements Cloneable {
 	}
 
 	public String toString() {
-		PieceType type = PieceType.getType(this.type);
+		PieceType type = PieceType.getType(knownAndType);
 		return (team ? "r" : "b") + "_" + (type.getStrength() == 0 ? 
 				(type == PieceType.FLAGGE ? "F" : "B") : 
 					type.getStrength());
@@ -71,7 +81,7 @@ public class Piece implements Cloneable {
 
 	@Override
 	public Piece clone() {
-		return new Piece(type, team, pos);
+		return new Piece(knownAndType, team, pos);
 	}
 
 	public Piece clone(byte type) {
@@ -79,11 +89,27 @@ public class Piece implements Cloneable {
 	}
 
 	public PieceType getType() {
-		return PieceType.getType(type);
+		return PieceType.getType(knownAndType);
 	}
 
+	public boolean getKnown() {
+		return -1 == (knownAndType | 0b01111111);
+	}
+	
+	public void setKnown(boolean known) {
+		if(known) {
+			knownAndType |= 0b10000000;
+		} else {
+			knownAndType &= 0b01111111;
+		}
+	}
+	
+	/**
+	 * Sets only the PieceType
+	 * @param type
+	 */
 	public void setType(byte type) {
-		this.type = type;
+		this.knownAndType = (byte) (0b10000000 | type);
 	}
 
 	public boolean getTeam() {

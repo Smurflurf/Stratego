@@ -1,17 +1,12 @@
 package strados2.tools;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.util.List;
 
-import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.HeatMapChart;
 import org.knowm.xchart.HeatMapChartBuilder;
-import org.knowm.xchart.VectorGraphicsEncoder;
-import org.knowm.xchart.internal.chartpart.Chart;
 
 import strados2.classic.ClassicPiece;
-import strados2.classic.ClassicPiece.ClassicColor;
 import strados2.classic.ClassicPiece.ClassicRank;
 
 /**
@@ -29,7 +24,6 @@ public class HeatMapGenerator extends GeneralTools {
 		HeatMapChart chart = new HeatMapChartBuilder()
 				.width(600)
 				.height(600)
-				.title(title)
 				.xAxisTitle("x")
 				.yAxisTitle("y")
 				.build();
@@ -38,6 +32,7 @@ public class HeatMapGenerator extends GeneralTools {
 		.setShowValue(true)
 		.setRangeColors(new Color[] {Color.white, Color.red})
 		.setSeriesColors(new Color[] {Color.white, Color.red})
+		.setChartBackgroundColor(Color.white)
 		.setPlotContentSize(0.9) 	// Platz für Achsenbeschriftungen lassen
 		.setLegendVisible(true);   // Legende ist bei Heatmaps mit Farbbalken oft redundant
 

@@ -42,8 +42,14 @@ public enum PieceType {
 		return byteType;
 	}
 	
+	/**
+	 * Returns a Pieces type from a byte representation.
+	 * Uses a bitmask to cut the first four bits so they can be used to store other stuff
+	 * @param b byte containing the type as xxxx0000 where x gets ignored and 0 can be used
+	 * @return PieceType from byte representation
+	 */
 	public static PieceType getType(byte b) {
-		switch(b) {
+		switch(b & 0x0F) {
 		case 0: return PieceType.FLAGGE;
 		case 1: return PieceType.BOMBE;
 		case 2: return PieceType.SPIONIN;
