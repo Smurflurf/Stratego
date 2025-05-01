@@ -22,7 +22,7 @@ public class Piece implements Cloneable {
 	public Piece(PieceType type, boolean team) {
 		knownAndType = type.getByte();
 		this.team = team;
-		setPos(0, 0);
+		pos = -1;
 	}
 
 	/**
@@ -63,8 +63,7 @@ public class Piece implements Cloneable {
 	public boolean equals(Piece piece2) {
 		return piece2 != null &&
 				getType() == piece2.getType() && 
-				getX() == piece2.getX() && 
-				getY() == piece2.getY() &&
+				getPos() == piece2.getPos() &&
 				getTeam() == piece2.getTeam();
 	}
 

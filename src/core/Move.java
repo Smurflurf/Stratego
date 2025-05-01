@@ -63,7 +63,7 @@ public class Move {
 	 */
 	public Move normalize(GameState state) {
 		Piece piece = state.getField()[getStartX()][getStartY()];
-		if(piece != null)
+		if(piece != null && piece.getTeam() == this.piece.getTeam())
 			this.piece = piece;
 		
 		return this;

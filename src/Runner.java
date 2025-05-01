@@ -23,13 +23,13 @@ public class Runner {
 	public static boolean use_UI;
 
 	public static void main(String[] args) {
-		use_UI = false;		// UI only shows if simulation = 1
+		use_UI = false;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
 		printGame = false;
 		printResults = false;
 		
 		int UI_delay = 100;
-		Placer.Type redPlacement = Placer.Type.PREBUILT;
-		Placer.Type bluePlacement = Placer.Type.PREBUILT;
+		Placer.Type redPlacement = Placer.Type.RANDOM;
+		Placer.Type bluePlacement = Placer.Type.DEBOER;
 		AI.Type bluePlayer = AI.Type.RANDOM;
 		AI.Type redPlayer = AI.Type.RANDOM;
 		int simulations = 10_000;
@@ -84,6 +84,7 @@ public class Runner {
 					System.err.println(mediator.getGameState().isInChase() + " " + mediator.getGameState().getInChase() + " " + mediator.getGameState().getChasedFields().size() + "\n" +
 							blue.gameState.isInChase() + " " + blue.gameState.getInChase() + " " + blue.gameState.getChasedFields().size() + " \n" +
 							red.gameState.isInChase() + " " + red.gameState.getInChase() + " " + red.gameState.getChasedFields().size());
+					System.exit(0);
 					break;
 				}
 

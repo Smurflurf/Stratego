@@ -50,14 +50,14 @@ public enum PieceType {
 	 */
 	public static PieceType getType(byte b) {
 		switch(b & 0x0F) {
-		case 0: return PieceType.FLAGGE;
-		case 1: return PieceType.BOMBE;
-		case 2: return PieceType.SPIONIN;
-		case 3: return PieceType.SPAEHER;
-		case 4: return PieceType.MINEUR;
-		case 5: return PieceType.GENERAL;
-		case 6: return PieceType.MARSCHALL;
-		default: return PieceType.UNKNOWN;
+		case 0: return FLAGGE;
+		case 1: return BOMBE;
+		case 2: return SPIONIN;
+		case 3: return SPAEHER;
+		case 4: return MINEUR;
+		case 5: return GENERAL;
+		case 6: return MARSCHALL;
+		default: return UNKNOWN;
 		}
 	}
 	

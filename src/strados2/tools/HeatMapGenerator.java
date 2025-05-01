@@ -23,9 +23,10 @@ public class HeatMapGenerator extends GeneralTools {
 	public static void createHeatmapChart(int[][] heatData, String title, String seriesName) {
 		HeatMapChart chart = new HeatMapChartBuilder()
 				.width(600)
-				.height(600)
+				.height(600 / (10 / heatData[0].length))
 				.xAxisTitle("x")
 				.yAxisTitle("y")
+				.title(title)
 				.build();
 
 		chart.getStyler()
@@ -34,9 +35,19 @@ public class HeatMapGenerator extends GeneralTools {
 		.setSeriesColors(new Color[] {Color.white, Color.red})
 		.setChartBackgroundColor(Color.white)
 		.setPlotContentSize(0.9) 	// Platz für Achsenbeschriftungen lassen
-		.setLegendVisible(true);   // Legende ist bei Heatmaps mit Farbbalken oft redundant
+		.setLegendVisible(true)
+		.setChartTitleVisible(true);
+		
 
-		chart.addSeries(seriesName, COL_LABELS, ROW_LABELS, heatData);
+		int[] ROW_LABELS = new int[heatData[0].length];
+		for(int i=0; i<ROW_LABELS.length; i++)
+			ROW_LABELS[i] = GeneralTools.ROW_LABELS[i];
+		
+		int[] COL_LABELS = new int[heatData.length];
+		for(int i=0; i<COL_LABELS.length; i++)
+			COL_LABELS[i] = GeneralTools.COL_LABELS[i];
+		
+		chart.addSeries(title, COL_LABELS, ROW_LABELS, heatData);
 
 		saveChart(chart, seriesName);
 	}

@@ -28,11 +28,15 @@ public class RandomAI extends AI {
 	 * @return a random valid Move, wrong Moves or null if no Move is possible
 	 */
 	public Move nextMove() {
+		if(gameState.getFirstRepetitionBlueMove() != null &&
+				gameState.getFirstRepetitionBlueMove().getPiece().getTeam())
+			System.out.println("error in team"); //TODO
+//		System.out.print(this.gameState.getCurrentRepetitions() + " last " + this.gameState.getRepMove(getTeam()) + " next: ");
 		Move move = null;
 		pieces.clear();
 
 		for(int i=0; i<8; i++)
-			if(myPieces[i] != null) pieces.add(myPieces[i]);
+			if(myPieces[i] != null && myPieces[i].getType().getMoves() > 0) pieces.add(myPieces[i]);
 
 		while(pieces.size() > 0) {
 			int randomInt = random.nextInt(pieces.size());
@@ -42,15 +46,18 @@ public class RandomAI extends AI {
 			while (dirMap.size() > 0) {
 				move = getDirectionMove(dirMap, picked);
 
-				if(isMovePossible(gameState, move))
+				if(isMovePossible(gameState, move)) {
+//					System.out.println(move + " is possible");
 					return move;
+				}
 			}
 			pieces.remove(randomInt);
 		}
 
 		if(move == null)
 			System.err.println("first move not possible, see RandomAI.java#136");
-		return move;
+		System.out.println("first move not possible, see RandomAI.java#136");
+		return null;
 	}
 	
 	/**

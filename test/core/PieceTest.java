@@ -9,7 +9,7 @@ class PieceTest {
 	@Test
 	void testKnownAndType() {
 		Piece piece = new Piece(PieceType.MARSCHALL, true);
-		assertEquals(ByteMapper.toByte(0, 0), piece.getPos());
+		assertEquals(-1, piece.getPos());
 		assertEquals(PieceType.MARSCHALL, piece.getType());
 		assertFalse(piece.getKnown());
 		assertTrue(piece.getTeam());

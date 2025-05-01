@@ -1,6 +1,4 @@
 package core.placing.prebuilt;
-import java.util.SplittableRandom;
-
 import core.Piece;
 import core.placing.Placer;
 
@@ -8,12 +6,10 @@ import core.placing.Placer;
  * Returns start GameStates
  */
 public class PrebuiltStates extends Placer {
-	private SplittableRandom random;
 	private static int availableStartStates = 1;
 
 	public PrebuiltStates(boolean team) {
 		super(team);
-		random = new SplittableRandom();
 	}
 
 	@Override

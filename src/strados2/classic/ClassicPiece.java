@@ -69,20 +69,27 @@ public class ClassicPiece {
     }
     
     public enum ClassicRank {
-        FLAGGE("F", 0, true), SPIONIN("1", 1, true), SPAEHER("2", 2, true), MINEUR("3", 3, true), SERGEANT("4", 4, false),
-        LIEUTENANT("5", 5, false), CAPTAIN("6", 6, false), MAJOR("7", 7, false), COLONEL("8", 8, false),
-        GENERAL("9", 9, true), MARSCHALL("X", 10, true), BOMBE("B", 11, true),
-        EMPTY("-", -1, false), LAKE("#", -2, false), UNKNOWN("?", -3, false);
+        FLAGGE("F", 0, 1, 1, 1, true), SPIONIN("1", 1, 1, 1, 1, true), SPAEHER("2", 2, 2, 2, 8, true), MINEUR("3", 3, 2, 1, 5, true), 
+        SERGEANT("4", 4, 0, 0, 4, false), LIEUTENANT("5", 5, 0, 0, 4, false), CAPTAIN("6", 6, 0, 0, 4, false), MAJOR("7", 7, 0, 0, 3, false), COLONEL("8", 8, 0, 0, 2, false),
+        GENERAL("9", 9, 1, 1, 1, true), MARSCHALL("X", 10, 1, 1, 1, true), BOMBE("B", 11, 2, 1, 6, true),
+        EMPTY("-", -1, 0, 0, 0, false), LAKE("#", -2, 8, 8, 8, false), UNKNOWN("?", -3, 0, 0, 0, false);
 
         private final String symbol;
         private final int strength;
         private final boolean relevant;
+        private final int duellCount;
+        private final int barrageCount;
+        private final int classicCount;
 
-        ClassicRank(String symbol, int strength, boolean relevant) {
+        ClassicRank(String symbol, int strength, int duellCount, int barrageCount, int classicCount, boolean relevant) {
             this.symbol = symbol;
             this.strength = strength;
             this.relevant = relevant;
+            this.duellCount = duellCount;
+            this.barrageCount = barrageCount;
+            this.classicCount = classicCount;
         }
+        
         public String getName() { 
         	StringBuilder sb = new StringBuilder().append(this.toString().charAt(0));
         	sb.append(this.toString().substring(1).toLowerCase()); 
@@ -90,6 +97,14 @@ public class ClassicPiece {
         };
         public String getSymbol() { return symbol; }
         public int getStrength() { return strength; }
+        public int getCount(String mode) { 
+        	if(mode.equals("duell"))
+        		return duellCount; 
+        	else if(mode.equals("barrage"))
+        		return barrageCount;
+        	else
+        		return classicCount;
+        	}
         public boolean getRelevant() { return relevant; }
     }
 

@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * @author Gemini 2.5 pro Preview 03-25
  */
 public class XmlParser {
-
+static int i = 0;
     // Regex, um das content-Attribut im field-Tag zu finden
     // Macht Annahmen über die XML-Struktur, aber flexibler als Stringsuche
     private static final Pattern FIELD_CONTENT_PATTERN = Pattern.compile(
@@ -37,7 +37,6 @@ public class XmlParser {
             System.err.println("Fehler beim Lesen der Datei " + xmlFilePath + ": " + e.getMessage());
             return null;
         }
-
         Matcher matcher = FIELD_CONTENT_PATTERN.matcher(xmlContent);
         if (matcher.find()) {
             String contentString = matcher.group(1); // Gruppe 1 ist der Inhalt in den Anführungszeichen

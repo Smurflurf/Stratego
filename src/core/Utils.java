@@ -54,18 +54,28 @@ public class Utils {
 	}
 
 	public static boolean isMovePossible(GameState state, Move move) {
-		if(state.getTeam() != move.getPiece().getTeam()) return false;	// is Pieces turn?
-		if(outOfBounds(move.getEndX()) || outOfBounds(move.getEndY())) return false;	// is Move out of bounds?
+		if(state.getTeam() != move.getPiece().getTeam()){ printError(move, "not your turn!");  return false;}	// is Pieces turn?
+		if(outOfBounds(move.getEndX()) || outOfBounds(move.getEndY())){ printError(move, "out of bounds!");  return false;}	// is Move out of bounds?
 		int blockState = blockedTeamSensitive(state.getField(), move.getEndX(), move.getEndY(), move.getPiece().getTeam());
-		if(blockState == -1 || blockState == 1) return false;	// is field blocked by lake or same team Piece?
-		if(!canReach(move.getPiece(), move.getEndX(), move.getEndY())) return false;	// is Piece reachable?
+		if(blockState == -1 || blockState == 1){ printError(move, "blocked by lake or enemy!");  return false;}	// is field blocked by lake or same team Piece?
+		if(!canReach(move.getPiece(), move.getEndX(), move.getEndY())){ printError(move, "can't reach!");  return false;}	// is Piece reachable?
 		Direction dir = move.getDirection();
-		if(!sightLine(state.getField(), move.getPiece(), move.getFields(), dir)) return false;
+		if(!sightLine(state.getField(), move.getPiece(), move.getFields(), dir)){ printError(move, "no sight line!");  return false;}
 
-		if(twoSquaresRule(state, move)) return false;
-		if(moreSquaresRule(state, move)) return false;
+		if(twoSquaresRule(state, move)){ printError(move, "two squares rule (repetition)! reps:" + state.getCurrentRepetitions() + " imb: " + state.inMoveBounds(move) +" "+ state.getBeforeLastMove());  return false;}
+		if(moreSquaresRule(state, move)){ printError(move, "more squares rule (chase repetition)!");  return false;}
 
 		return true;
+	}
+	
+	static void printError(Move move, String error){
+		boolean mediator = false;
+		for(var v : Thread.currentThread().getStackTrace())
+			if(v.getClassName().equals("Mediator") && !v.toString().equals("Mediator.isGameOver(Mediator.java:46)")) {
+				mediator = true;
+				System.out.println(v);
+			}
+		if(mediator)System.err.println("move: "+ move + " " + error);
 	}
 
 	/**
@@ -293,7 +303,9 @@ public class Utils {
 	 * @return true if the rule applies, move is invalid
 	 */
 	public static boolean twoSquaresRule(GameState state, Move move) {
-		return state.getRepetitions() > 2 && state.inMoveBounds(move);
+		return state.getCurrentRepetitions() > 2
+				&& state.inMoveBounds(move);
+//				&& move.getPiece().equals(state.getRepMove(move.getPiece().getTeam()).getPiece());
 	}
 
 	/**

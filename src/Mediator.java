@@ -55,13 +55,17 @@ public class Mediator {
 	 */
 	public boolean makeMove(Move move) {
 		move.normalize(gameState);
-		setLastMove(move);
 		
 		if(move.getStartX() == move.getEndX() &&
-				move.getStartY() == move.getEndY())
+				move.getStartY() == move.getEndY()) {
+			System.err.println("Move ain't moving -> Mediator:62");
 			return false;
+		}
 		
-		return Utils.checkAndExecute(gameState, move);
+		boolean moved = Utils.checkAndExecute(gameState, move);
+		if(moved)
+			setLastMove(move);
+		return moved;
 	}
 
 	/**

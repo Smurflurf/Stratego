@@ -22,6 +22,40 @@ class UtilsTest extends Utils {
 	}
 	
 	@Test
+	void testTeam() {
+		assertTrue(state.getTeam());
+		state.changeTeam();
+		assertFalse(state.getTeam());
+		state.setTeam(true);
+		assertTrue(state.getTeam());
+		state.setTeam(false);
+		assertFalse(state.getTeam());
+	}
+	
+	@Test
+	void testRepetitions() {
+		assertEquals(0, state.getRepetitions());
+		
+		state.setRepetitions((byte)0b00001111);
+		assertEquals(0b00001111, state.getRepetitions());
+		assertEquals(0b11, state.getRepetitionsRed());
+		assertEquals(0b11, state.getRepetitionsBlue());
+		
+		state.setRepetitions((byte)0);
+		state.setRepetitionsRed(2);
+		assertEquals(2, state.getRepetitionsRed());		//xxxx1000
+		assertEquals(0, state.getRepetitionsBlue());	//xxxx1000
+		
+		state.setRepetitionsBlue(2);
+		assertEquals(2, state.getRepetitionsBlue());	//xxxx1010
+		assertEquals(2, state.getRepetitionsRed());		//xxxx1010
+		
+		state.setRepetitionsRed(0);
+		assertEquals(0, state.getRepetitionsRed());		//xxxx0010
+		assertEquals(2, state.getRepetitionsBlue());	//xxxx0010
+	}
+	
+	@Test
 	void testCheckAndExecute() {
 		// not possible not walk out of bounds
 		state.changeTeam();

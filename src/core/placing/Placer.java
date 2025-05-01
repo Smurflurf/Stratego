@@ -1,19 +1,25 @@
 package core.placing;
 
+import java.util.SplittableRandom;
+
 import core.Piece;
 import core.PieceType;
+import core.placing.barrage.HeuristicBarrage;
+import core.placing.deboer.HeuristicDeBoer;
 import core.placing.prebuilt.PrebuiltStates;
 import core.placing.random.RandomAI;
 
 public abstract class Placer {
+	protected SplittableRandom random;
 	public boolean team;
 	public Piece[] pieces;
-	
+
 	public Placer(boolean team) {
+		random = new SplittableRandom();
 		this.team = team;
 		pieces = createPieceArray(team);
 	}
-	
+
 	/**
 	 * Places a teams pieces on the board with the selected placing algorithm
 	 * @param team the team which pieces will be placed
@@ -29,23 +35,61 @@ public abstract class Placer {
 		case RANDOM:
 			placer = new RandomAI(team);
 			break;
-		case HEURISTIC:
-			placer = null;
+		case DEBOER:
+			placer = new HeuristicDeBoer(team);
+			break;
+		case BARRAGE:
+			placer = new HeuristicBarrage(team);
 			break;
 		default: 
-			placer = null;
+			placer = new RandomAI(team);
 			break;
 		}
 		return placer.place();
 	}
-	
+
 	/**
 	 * Places a teams pieces on the board.
 	 * The team is 
 	 */
 	abstract public Piece[] place();
 
+	/**
+	 * Checks if a field specified by its x and y coordinates is already occupied by another piece
+	 * @param x
+	 * @param y
+	 * @return true if an x|y position is already occupied
+	 */
+	protected boolean fieldIsOccupied(int x, int y) {
+		for(Piece piece : pieces)
+			if(piece.getX() == x && piece.getY() == y)
+				return true;
+		return false;
+	}
+
+	/**
+	 * Checks if a field specified by its x and y coordinates is already occupied by another piece
+	 * @param location x,y BitMapper byte representation
+	 * @return true if an x|y position is already occupied
+	 */
+	protected boolean fieldIsOccupied(byte location) {
+		for(Piece piece : pieces)
+			if(piece.getPos() == location)
+				return true;
+		return false;
+	}
 	
+	/**
+	 * Call this after placing Pieces on red's side to mirror the y coordinate to player blue's side.
+	 * Converts a placing for red to a placing for blue.
+	 */
+	protected void mirrorPlacing() {
+		if(team)
+			for(Piece piece : pieces) {
+				piece.setY((byte)(7 - piece.getY()));
+			}
+	}
+
 	/**
 	 * Creates an array with all 8 Pieces a team got in the beginning.
 	 * Places the Pieces in the following order (first one being pieces[0]):
@@ -72,11 +116,11 @@ public abstract class Placer {
 		}
 		return pieces;
 	}
-	
+
 	/**
 	 * Different AI Placer Types to place the Pieces on the board
 	 */
 	public enum Type {
-		PREBUILT, RANDOM, HEURISTIC;
+		PREBUILT, RANDOM, DEBOER, BARRAGE;
 	}
 }
