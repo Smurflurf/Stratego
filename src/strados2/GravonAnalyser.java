@@ -55,8 +55,8 @@ public class GravonAnalyser extends GeneralTools {
 		/**
 		 * Generate Heat Maps based on the Piece distributions in %. Saves them for later use in Heuristics.
 		 **/
-		int[][][] maps = percentageHeatMap();
-		compressDistributionsHeatMaps(maps);
+		/*int[][][] maps = percentageHeatMap();
+		compressDistributionsHeatMaps(maps);*/
 
 		
 		

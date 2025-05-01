@@ -25,7 +25,7 @@ public class CompressedMapIO {
 	public static final String pyLocation = "src" + File.separator + "strados2" + File.separator + "py" + File.separator + "piece_distributions_";
     public static final String filename = location + "piece_distributions_";
     /**
-     * First loaded map. If {@link #loadedMap} is not null, {@link #loadCompressedMaps()} will always return a clone of {@link #loadedMap} to minimize IO time.
+     * Saves loaded maps, {@link #loadCompressedMaps()} will always return a clone of the here loaded map to minimize IO time.
      */
     private static HashMap<String, Map<PieceType, int[][]>> loadedMaps = new HashMap<String, Map<PieceType, int[][]>>();
 

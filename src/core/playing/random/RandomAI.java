@@ -28,10 +28,6 @@ public class RandomAI extends AI {
 	 * @return a random valid Move, wrong Moves or null if no Move is possible
 	 */
 	public Move nextMove() {
-		if(gameState.getFirstRepetitionBlueMove() != null &&
-				gameState.getFirstRepetitionBlueMove().getPiece().getTeam())
-			System.out.println("error in team"); //TODO
-//		System.out.print(this.gameState.getCurrentRepetitions() + " last " + this.gameState.getRepMove(getTeam()) + " next: ");
 		Move move = null;
 		pieces.clear();
 
@@ -47,16 +43,13 @@ public class RandomAI extends AI {
 				move = getDirectionMove(dirMap, picked);
 
 				if(isMovePossible(gameState, move)) {
-//					System.out.println(move + " is possible");
 					return move;
 				}
 			}
 			pieces.remove(randomInt);
 		}
 
-		if(move == null)
-			System.err.println("first move not possible, see RandomAI.java#136");
-		System.out.println("first move not possible, see RandomAI.java#136");
+		System.err.println("first move not possible, see RandomAI.java#136");
 		return null;
 	}
 	
@@ -87,17 +80,7 @@ public class RandomAI extends AI {
 		Move[] moves = getAllPossibleMoves(gameState);
 		return moves[random.nextInt(moves.length)];
 	}
-
-	//	private Move getAttackingMove(Move move, GameState gameState) {
-	//		ArrayList<int[]> reachableEnemyPieces = new ArrayList<int[]>();
-	//		for(int i=0; i<4; i++)
-	//			reach(gameState.getField(), move.getPiece(), i, reachableEnemyPieces);
-	//		if(reachableEnemyPieces.size() == 0)
-	//			return move;
-	//		int[] randomPiece = reachableEnemyPieces.get(random.nextInt(reachableEnemyPieces.size()));
-	//		return new Move(move, Direction.get(randomPiece[0]), randomPiece[1]);
-	//	}
-
+	
 	/**
 	 * Picks a random entry from dirMap, them creates a Move with picked
 	 * @param dirMap ArrayList filled by {@link #fillDirectionMap(GameState, Piece, ArrayList)}

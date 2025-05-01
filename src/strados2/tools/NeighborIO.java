@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import strados2.classic.ClassicPiece;
@@ -24,6 +25,13 @@ public class NeighborIO {
 	public static final String filename = location + "neighborCounts_";
 
 	/**
+	 * Saves loaded neighbor distributions, {@link #loadNeighborCounts(String)} will always return a clone of the here loaded map to minimize IO time.
+	 */
+	private static HashMap<String, Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>>> loadedNeighbors 
+	= new HashMap<String, Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>>>();
+
+
+	/**
 	 * Prints all neighbor Counts to console, with rank1, relative position, rank2
 	 * @param neighborCounts
 	 */
@@ -39,7 +47,7 @@ public class NeighborIO {
 			}
 		}
 	}
-	
+
 	/**
 	 * Prints a LaTeX ready table containing the probabilities that one piece is next to another.
 	 * @param ranks
@@ -53,7 +61,7 @@ public class NeighborIO {
 		for(ClassicRank rank2 : ranks)
 			System.out.print((rank2.getName().substring(0,3) + (rank2 == ClassicRank.MARSCHALL ? " \\\\" : " & ")));
 		System.out.print("\n\\hline");
-		
+
 		for(ClassicRank rank : ranks) {
 			System.out.print("\n" + rank.getName() + " & ");
 			for(ClassicRank rank2 : ranks) {
@@ -73,7 +81,7 @@ public class NeighborIO {
 			}
 		}
 	}
-	
+
 	/**
 	 * Speichert die Nachbarschaftszählungen in eine Datei.
 	 *
@@ -144,7 +152,11 @@ public class NeighborIO {
 	 */
 	public static Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> loadNeighborCounts(String mode) {
 		String filename = NeighborIO.filename + mode + ".txt";
-		
+		if(loadedNeighbors.containsKey(mode)) {
+			var loadedNeighbor = loadedNeighbors.get(mode);
+			return deepCloneMap(loadedNeighbor);
+		}
+
 		Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> loadedCounts =
 				new EnumMap<>(ClassicPiece.ClassicRank.class);
 		ClassicPiece.ClassicRank currentRank1 = null;
@@ -198,5 +210,30 @@ public class NeighborIO {
 			System.err.println("Error reading neighbor counts from file '" + filename + "': " + e.getMessage());
 			return null;
 		}
+	}
+
+
+	private static Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> deepCloneMap(
+			Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> neighborCounts){
+
+		Map<ClassicRank, Map<RelativePosition, Map<ClassicRank, Double>>> clone = new EnumMap<>(ClassicRank.class);
+
+		for(ClassicRank rank : neighborCounts.keySet()) {
+			HashMap<RelativePosition, Map<ClassicRank, Double>> posProbMap = new HashMap<RelativePosition, Map<ClassicRank, Double>>();
+
+			for(RelativePosition pos : neighborCounts.get(rank).keySet()) {
+				Map<ClassicRank, Double> probMap = new HashMap<ClassicRank, Double>();
+
+				for(ClassicRank rank2 : neighborCounts.get(rank).get(pos).keySet()) {
+
+					double count = neighborCounts.get(rank).get(pos).get(rank2);
+					probMap.put(rank2, count);
+					posProbMap.put(pos, probMap);
+				}
+			}
+			clone.put(rank, posProbMap);
+		}
+
+		return clone;
 	}
 }
