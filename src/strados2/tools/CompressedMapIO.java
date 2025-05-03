@@ -10,8 +10,8 @@ import java.util.HashMap; // Import HashMap
 import java.util.Map;     // Import Map
 import java.util.StringJoiner;
 
-import strados2.classic.ClassicPiece; // Import für ClassicPiece.ClassicRank
 import core.PieceType;                 // Import für core.PieceType
+import strados2.classic_board_representation.ClassicPiece;
 
 /**
  * Saves and loads piece distribution heatmaps, associating them with piece types.

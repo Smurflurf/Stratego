@@ -14,9 +14,10 @@ import org.knowm.xchart.BitmapEncoder;
 import org.knowm.xchart.VectorGraphicsEncoder;
 import org.knowm.xchart.internal.chartpart.Chart;
 
-import strados2.classic.ClassicPiece;
-import strados2.classic.ClassicPiece.ClassicColor;
-import strados2.classic.ClassicPiece.ClassicRank;
+import it.unimi.dsi.fastutil.Pair;
+import strados2.classic_board_representation.ClassicPiece;
+import strados2.classic_board_representation.ClassicPiece.ClassicColor;
+import strados2.classic_board_representation.ClassicPiece.ClassicRank;
 
 public class GeneralTools {
 	public static final String folderName = "charts";
@@ -125,7 +126,7 @@ public class GeneralTools {
 				total += ii;
 
 		int[][] percentage = new int[boards.length][boards[0].length];
-		for(int x=0; x<10; x++)
+		for(int x=0; x<boards.length; x++)
 			for(int y=0; y<boards[0].length; y++)
 				percentage[x][y] = (int)Math.round((boards[x][y] / total) * 100);
 		return percentage;
@@ -141,6 +142,30 @@ public class GeneralTools {
 	public static Map<ClassicRank, Map<RelativePosition, Map<ClassicRank, Double>>> neighborCounts(ArrayList<ClassicPiece[][]> boards, String mode) {
 		Map<ClassicRank, Map<RelativePosition, Map<ClassicRank, Integer>>> neighborCounts = new EnumMap<>(ClassicRank.class);
 
+		fillNeighborCounts(boards, neighborCounts);
+
+		Map<ClassicRank, Map<RelativePosition, Map<ClassicRank, Double>>> neighborCountsProb = new EnumMap<>(ClassicRank.class);
+		for(ClassicRank rank : neighborCounts.keySet()) {
+			HashMap<RelativePosition, Map<ClassicRank, Double>> posProbMap = new HashMap<RelativePosition, Map<ClassicRank, Double>>();
+			for(RelativePosition pos : neighborCounts.get(rank).keySet()) {
+				Map<ClassicRank, Double> probMap = new HashMap<ClassicRank, Double>();
+				double allNeighbors = 0;
+				for(ClassicRank rank2 : neighborCounts.get(rank).get(pos).keySet())
+					allNeighbors += neighborCounts.get(rank).get(pos).get(rank2);
+
+				for(ClassicRank rank2 : neighborCounts.get(rank).get(pos).keySet()) {
+					int count = neighborCounts.get(rank).get(pos).get(rank2);
+					probMap.put(rank2, count / allNeighbors);
+					posProbMap.put(pos, probMap);
+				}
+			}
+			neighborCountsProb.put(rank, posProbMap);
+		}
+
+		return neighborCountsProb;
+	}
+
+	public static void fillNeighborCounts(ArrayList<ClassicPiece[][]> boards, Map<ClassicRank, Map<RelativePosition, Map<ClassicRank, Integer>>> neighborCounts) {
 		for(ClassicPiece[][] board : boards) {
 			if(board == null) continue;
 
@@ -169,22 +194,37 @@ public class GeneralTools {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Generates all 49 Rank x Rank pairs with their total neighbor count
+	 * @param neighborCounts
+	 * @return
+	 */
+	public static Map<Pair<ClassicRank, ClassicRank>, Integer> neighborCountsAllDirections(
+			Map<ClassicRank, Map<RelativePosition, Map<ClassicRank, Integer>>> neighborCounts) {
 		
-		Map<ClassicRank, Map<RelativePosition, Map<ClassicRank, Double>>> neighborCountsProb = new EnumMap<>(ClassicRank.class);
+		Map<Pair<ClassicRank, ClassicRank>, Integer> neighborCountsAllDir = new HashMap<Pair<ClassicRank, ClassicRank>, Integer>();
+		
+		//fill map with all 7x7 pairs
 		for(ClassicRank rank : neighborCounts.keySet()) {
-			HashMap<RelativePosition, Map<ClassicRank, Double>> posProbMap = new HashMap<RelativePosition, Map<ClassicRank, Double>>();
-			for(RelativePosition pos : neighborCounts.get(rank).keySet()) {
-				Map<ClassicRank, Double> probMap = new HashMap<ClassicRank, Double>();
-				for(ClassicRank rank2 : neighborCounts.get(rank).get(pos).keySet()) {
-					int count = neighborCounts.get(rank).get(pos).get(rank2);
-					probMap.put(rank2, (count / (double)(rank.getCount(mode) * rank2.getCount(mode) * boards.size() * 2)));
-					posProbMap.put(pos, probMap);
-				}
+			for(ClassicRank rank2 : neighborCounts.keySet()) {
+				Pair<ClassicRank, ClassicRank> rank2Map = Pair.of(rank, rank2);
+				neighborCountsAllDir.put(rank2Map, 0);
 			}
-			neighborCountsProb.put(rank, posProbMap);
 		}
 		
-		return neighborCountsProb;
+		for(ClassicRank rank : neighborCounts.keySet()) {
+			for(RelativePosition pos : neighborCounts.get(rank).keySet()) {
+				for(ClassicRank rank2 : neighborCounts.get(rank).get(pos).keySet()) {
+					Pair<ClassicRank, ClassicRank> pair = Pair.of(rank, rank2);
+					int count = neighborCounts.get(rank).get(pos).get(rank2);
+					neighborCountsAllDir.put(pair, neighborCountsAllDir.get(pair) + count);
+				}
+			}
+		}
+
+		return neighborCountsAllDir;
 	}
 
 	public enum RelativePosition {
@@ -205,22 +245,32 @@ public class GeneralTools {
 			this.xTransformation = xTransformation;
 			this.yTransformation = yTransformation;
 		}
-		
+
 		int xTransformation;
 		int yTransformation;
-		
-		int transformX(int x) {
+
+		/**
+		 * Returns true if x and y transformed are a valid position on the Quick Battle field
+		 * @param x
+		 * @param y
+		 * @return true if position is valid
+		 */
+		public boolean qbValid(int x, int y) {
+			return transformX(x) >= 0 && transformX(x) < 8 && transformY(y) >= 0 && transformY(y) < 3;
+		}
+
+		public int transformX(int x) {
 			return x + xTransformation;
 		}
-		
-		int transformY(int y) {
+
+		public int transformY(int y) {
 			return y + yTransformation;
 		}
-		
+
 		int getXTransformation() {
 			return this.xTransformation;
 		}
-		
+
 		int getYTransformation() {
 			return this.yTransformation;
 		}

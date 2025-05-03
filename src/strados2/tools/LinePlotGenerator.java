@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.knowm.xchart.XYChart;
 
-import strados2.classic.ClassicPiece;
-import strados2.classic.ClassicPiece.ClassicRank;
+import strados2.classic_board_representation.ClassicPiece;
+import strados2.classic_board_representation.ClassicPiece.ClassicRank;
 
 /**
  * Generates xy charts from {@link ClassicPiece} board arrays,

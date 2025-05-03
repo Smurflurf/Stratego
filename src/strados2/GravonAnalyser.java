@@ -5,23 +5,27 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.Map;
 
-import strados2.classic.ClassicPiece;
-import strados2.classic.ClassicPiece.ClassicRank;
-import strados2.classic.XmlParser;
+import it.unimi.dsi.fastutil.Pair;
+import strados2.classic_board_representation.ClassicPiece;
+import strados2.classic_board_representation.XmlParser;
+import strados2.classic_board_representation.ClassicPiece.ClassicRank;
 import strados2.tools.CompressedMapIO;
 import strados2.tools.GeneralTools;
 import strados2.tools.HeatMapGenerator;
 import strados2.tools.LinePlotGenerator;
 import strados2.tools.NeighborIO;
 import strados2.tools.Scraper;
+import strados2.tools.GeneralTools.RelativePosition;
 
 /**
  * Analyses the Stratego Games downloaded from Gravon.
  * If the files are not downloaded yet, it calls the downloader {@link Scraper}.
  */
 public class GravonAnalyser extends GeneralTools {
-	static String mode = "classic";
+	static String mode = "barrage";
 	static String modeName = mode.substring(0, 1).toUpperCase() + mode.substring(1);
 	static String title = "";
 	static ClassicRank[] ranks = null;
@@ -41,32 +45,43 @@ public class GravonAnalyser extends GeneralTools {
 				ClassicRank.GENERAL,
 				ClassicRank.MARSCHALL
 		};
-		
+
 		/**
 		 * Generates neighbor count Maps and saves them for later use in Heuristics.
 		 * If commented in, prints neighbor counts to console and/or prints a Table containing commonly placed together Pieces.
 		 **/
-		/*NeighborIO.saveNeighborCounts(mode, neighborCounts(relevantBoards, mode));
-		var neighborCounts = NeighborIO.loadNeighborCounts(mode);
-		NeighborIO.printNeighborCounts(neighborCounts);
-		NeighborIO.printNeighborTable(ranks, neighborCounts);*/
-
-
+//		NeighborIO.saveNeighborCounts(mode, neighborCounts(relevantBoards, mode));
+//		var neighborCounts = NeighborIO.loadClassicNeighborCounts(mode);
+//		var neighborCounts = neighborCounts(relevantBoards, mode);
+//		NeighborIO.printNeighborCounts(neighborCounts);
+		
+		/**
+		 * Difference Heatmap between Piece relations.
+		 * xChart labels are bugged so using strados2.py.DifferenceHeatMap is recommended.
+		 * Instructions in READMY in py package.
+		 */
+		/*var probMap1 = NeighborIO.printNeighborTable(ranks, relevantBoards);
+		String mode1 = mode;
+		mode = "barrage"; //"barrage"; "classic"; "duell";
+		init();
+		var probMap2 = NeighborIO.printNeighborTable(ranks, relevantBoards);
+		HeatMapGenerator.createDifferenceHeatmapChart(probMap1, probMap2, ranks, mode1 + "_" + mode + "_Differenz", mode1 + "_" + mode + "_Differenz");*/
+		
 		/**
 		 * Generate Heat Maps based on the Piece distributions in %. Saves them for later use in Heuristics.
 		 **/
 		/*int[][][] maps = percentageHeatMap();
 		compressDistributionsHeatMaps(maps);*/
 
-		
-		
+
+
 		// Saves the Piece distributions on x and y axis as xyChart
 		/*analyseLinePlotX();
 		analyseLinePlotY();*/
-		
+
 		// Saves Heat Maps with total Piece counts instead of probabilities
 		/*analyseHeatMap();*/
-	
+
 		// DEPRECATED due to inaccuracy, use percentageHeatMap() and compressDistributionsHeatMaps()
 		/*compressRelevantX(maps);
 		compressRelevantY(maps);*/

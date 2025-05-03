@@ -1,18 +1,15 @@
 package core.placing.barrage;
 
-import core.Piece;
-import core.PieceType;
-import core.placing.Placer;
+import core.placing.deboer.HeuristicDeBoer;
+import strados2.tools.NeighborIO;
 
-public class HeuristicBarrage extends Placer {
+public class HeuristicBarrage extends HeuristicDeBoer {
 
 	public HeuristicBarrage(boolean team) {
-		super(team);
-	}
-
-	@Override
-	public Piece[] place() {
-		// TODO Auto-generated method stub
-		return null;
+		super(team,
+				strados2.tools.CompressedMapIO.loadCompressedMaps("barrage"),
+				NeighborIO.loadNeighborCounts("barrage"));
+		
+		useNeighbors = true;
 	}
 }

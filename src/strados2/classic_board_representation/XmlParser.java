@@ -1,4 +1,4 @@
-package strados2.classic;
+package strados2.classic_board_representation;
 
 import java.io.BufferedReader;
 import java.io.IOException;

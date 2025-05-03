@@ -12,6 +12,19 @@ import core.placing.random.RandomAI;
 public abstract class Placer {
 	protected SplittableRandom random;
 	public boolean team;
+	/**
+	 * Hard Coded Indexes:
+	 * 0 MARSCHALL
+	 * 1 GENERAL
+	 * 2 MINEUR
+	 * 3 MINEUR
+	 * 4 SPAEHER
+	 * 5 SPAEHER
+	 * 6 SPIONIN
+	 * 7 BOMBE
+	 * 8 BOMBE
+	 * 9 FLAGGE
+	 */
 	public Piece[] pieces;
 
 	public Placer(boolean team) {
@@ -117,6 +130,20 @@ public abstract class Placer {
 		return pieces;
 	}
 
+	/**
+	 * Deep Clone Times Hundred.
+	 * Deep clones array and multiplies all entries with 100,
+	 * @param array to clone
+	 * @return cloned array
+	 */
+	public static int[][] deepCloneTH(int[][] array){
+		int[][] clone = new int[array.length][array[0].length];
+		for(int i=0; i<array.length; i++)
+			for(int ii=0; ii<array[i].length; ii++)
+				clone[i][ii] = array[i][ii] * 100;
+		return clone;
+	}
+	
 	/**
 	 * Different AI Placer Types to place the Pieces on the board
 	 */

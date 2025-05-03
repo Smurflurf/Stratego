@@ -23,16 +23,16 @@ public class Runner {
 	public static boolean use_UI;
 
 	public static void main(String[] args) {
-		use_UI = false;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
+		use_UI = true;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
 		printGame = false;
 		printResults = false;
 		
-		int UI_delay = 100;
-		Placer.Type redPlacement = Placer.Type.RANDOM;
-		Placer.Type bluePlacement = Placer.Type.DEBOER;
+		int UI_delay = 500;
+		Placer.Type redPlacement = Placer.Type.PREBUILT;
+		Placer.Type bluePlacement = Placer.Type.PREBUILT;
 		AI.Type bluePlayer = AI.Type.RANDOM;
 		AI.Type redPlayer = AI.Type.RANDOM;
-		int simulations = 10_000;
+		int simulations = 1;
 
 		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay);
 		printResults();
@@ -64,7 +64,8 @@ public class Runner {
 			long simTime= 0;
 			long startTime;
 			long endTime;
-
+			
+			Utils.sleep(delay);
 			while(!mediator.isGameOver()) {
 				Move move;
 				if(mediator.getCurrentTeam() == red.getTeam()) {

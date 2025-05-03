@@ -1,0 +1,8 @@
+,Flagge,Bombe,Spionin,Spaeher,Mineur,General,Marschall
+Flagge,0,15,2,-14,3,-3,-3;
+Bombe,-3,15,1,-9,2,-4,-3;
+Spionin,1,8,0,-7,9,-6,-3;
+Spaeher,-8,6,0,-7,12,-2,-2;
+Mineur,-6,0,0,-4,9,0,0;
+General,-4,6,-2,-7,10,0,-3;
+Marschall,-5,3,0,-7,13,-5,0;

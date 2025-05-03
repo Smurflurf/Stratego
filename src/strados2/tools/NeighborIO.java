@@ -6,12 +6,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
-import strados2.classic.ClassicPiece;
-import strados2.classic.ClassicPiece.ClassicRank;
+import core.PieceType;
+import it.unimi.dsi.fastutil.Pair;
+import strados2.classic_board_representation.ClassicPiece;
+import strados2.classic_board_representation.ClassicPiece.ClassicRank;
 import strados2.tools.GeneralTools.RelativePosition;
 
 /**
@@ -24,10 +27,17 @@ public class NeighborIO {
 	public static final String pyLocation = "src" + File.separator + "strados2" + File.separator + "py" + File.separator + "piece_distributions_";
 	public static final String filename = location + "neighborCounts_";
 
+
 	/**
 	 * Saves loaded neighbor distributions, {@link #loadNeighborCounts(String)} will always return a clone of the here loaded map to minimize IO time.
 	 */
-	private static HashMap<String, Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>>> loadedNeighbors 
+	private static HashMap<String, Map<PieceType, Map<RelativePosition, Map<PieceType, Double>>>> loadedNeighbors 
+	= new HashMap<String, Map<PieceType, Map<RelativePosition, Map<PieceType, Double>>>>();
+	
+	/**
+	 * Saves loaded neighbor distributions, {@link #loadClassicNeighborCounts(String)} will always return a clone of the here loaded map to minimize IO time.
+	 */
+	private static HashMap<String, Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>>> loadedClassicNeighbors 
 	= new HashMap<String, Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>>>();
 
 
@@ -50,13 +60,19 @@ public class NeighborIO {
 
 	/**
 	 * Prints a LaTeX ready table containing the probabilities that one piece is next to another.
+	 * Normalizes the values to add up to 1.
+	 * Returns a Map containing the probabilities as Integers for later analysis.
 	 * @param ranks
 	 * @param relevantBoards
 	 * @param neighborCounts
 	 */
-	public static void printNeighborTable(
-			ClassicRank[] ranks,
-			Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> neighborCounts) {
+	public static Map <Pair <ClassicRank, ClassicRank>, Integer> printNeighborTable(ClassicRank[] ranks, ArrayList<ClassicPiece[][]> relevantBoards) {
+		Map<ClassicRank, Map<RelativePosition, Map<ClassicRank, Integer>>> neighborCountsInt = new EnumMap<>(ClassicRank.class);
+		GeneralTools.fillNeighborCounts(relevantBoards, neighborCountsInt);
+		var neighborCountsAllDirections = GeneralTools.neighborCountsAllDirections(neighborCountsInt);
+		Map <Pair <ClassicRank, ClassicRank>, Integer> probMap = new HashMap<Pair <ClassicRank, ClassicRank>, Integer> ();
+		
+		
 		System.out.print("\n& ");
 		for(ClassicRank rank2 : ranks)
 			System.out.print((rank2.getName().substring(0,3) + (rank2 == ClassicRank.MARSCHALL ? " \\\\" : " & ")));
@@ -64,22 +80,22 @@ public class NeighborIO {
 
 		for(ClassicRank rank : ranks) {
 			System.out.print("\n" + rank.getName() + " & ");
+			double max = 0;
 			for(ClassicRank rank2 : ranks) {
-				double count = 0;
-				for(GeneralTools.RelativePosition pos : GeneralTools.RelativePosition.values()) {
-					if(!neighborCounts.containsKey(rank2) 
-							|| !neighborCounts.get(rank).containsKey(pos) 
-							|| !neighborCounts.get(rank).get(pos).containsKey(rank2)) continue;
-					if(neighborCounts.get(rank).get(pos).get(rank2) != null)
-						count += neighborCounts.get(rank).get(pos).get(rank2);
-				}
-				double prob = Math.round(count* 100.) / 100.;
+				max += neighborCountsAllDirections.get(Pair.of(rank, rank2));
+			}
+			for(ClassicRank rank2 : ranks) {
+//				System.out.println("es " + count+ " " + max + " " +(count/max));
+				double prob = Math.round((neighborCountsAllDirections.get(Pair.of(rank, rank2))/max)* 100. ) / 100.;
+				probMap.put(Pair.of(rank, rank2), (int)(prob * 100));
 				System.out.print((
 						(prob == 0.0 ? "0" : prob)
 						+ (rank2 == ClassicRank.MARSCHALL ? " \\\\" : " & "))
 						);
 			}
 		}
+		
+		return probMap;
 	}
 
 	/**
@@ -144,17 +160,109 @@ public class NeighborIO {
 		}
 	}
 
+
 	/**
-	 * Lädt die Nachbarschaftszählungen aus einer Datei.
-	 *
-	 * @param filename Der Dateiname.
-	 * @return Die geladene Map oder null bei Fehlern.
+	 * Loads neighbor counts from a file.
+	 * @param filename without .txt
+	 * @return loaded map or null if error
 	 */
-	public static Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> loadNeighborCounts(String mode) {
+	public static Map<PieceType, Map<RelativePosition, Map<PieceType, Double>>> loadNeighborCounts(String mode) {
 		String filename = NeighborIO.filename + mode + ".txt";
 		if(loadedNeighbors.containsKey(mode)) {
 			var loadedNeighbor = loadedNeighbors.get(mode);
 			return deepCloneMap(loadedNeighbor);
+		}
+
+		Map<PieceType, Map<RelativePosition, Map<PieceType, Double>>> loadedCounts =
+				new EnumMap<>(PieceType.class);
+		PieceType currentRank1 = null;
+		RelativePosition currentPosition = null;
+		Map<RelativePosition, Map<PieceType, Double>> currentPositionMap = null;
+		Map<PieceType, Double> currentRank2Map = null;
+
+		try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+			String line;
+			int lineNumber = 0;
+			while ((line = reader.readLine()) != null) {
+				lineNumber++;
+				String trimmedLine = line.trim();
+				if (trimmedLine.isEmpty()) continue; // Leere Zeilen überspringen
+
+				try {
+					if (line.startsWith("\t\t")) { // Rank2 Count Zeile
+						if (currentRank1 == null || currentPosition == null || currentRank2Map == null) {
+							throw new IOException("Invalid file format: Rank2/Count line found without preceding Rank1/Position at line " + lineNumber);
+						}
+						String[] parts = trimmedLine.split("\\s+"); // Trenne bei Leerzeichen
+						if (parts.length != 2) {
+							throw new IOException("Invalid file format: Expected Rank2 Name and Count at line " + lineNumber + ", found: '" + trimmedLine + "'");
+						}
+						PieceType rank2 = PieceType.valueOf(parts[0]);
+						double count = Double.parseDouble(parts[1]);
+						currentRank2Map.put(rank2, count);
+
+					} else if (line.startsWith("\t")) { // Position Zeile
+						if (currentRank1 == null || currentPositionMap == null) {
+							throw new IOException("Invalid file format: Position line found without preceding Rank1 at line " + lineNumber);
+						}
+						currentPosition = RelativePosition.valueOf(trimmedLine);
+						currentRank2Map = currentPositionMap.computeIfAbsent(currentPosition, k -> new EnumMap<>(PieceType.class));
+
+					} else { // Rank1 Zeile
+						currentRank1 = PieceType.valueOf(trimmedLine);
+						currentPositionMap = loadedCounts.computeIfAbsent(currentRank1, k -> new EnumMap<>(RelativePosition.class));
+						currentPosition = null; // Reset position/rank2 map for new rank1
+						currentRank2Map = null;
+					}
+				} catch (IllegalArgumentException |ArrayIndexOutOfBoundsException e) {
+					throw new IOException("Invalid enum name or format error at line " + lineNumber + ": '" + trimmedLine + "'", e);
+				} catch (Exception e) { // Catch other potential errors during parsing/map access
+					throw new IOException("Error processing line " + lineNumber + ": '" + line + "'", e);
+				}
+			}
+			return loadedCounts;
+		} catch (IOException e) {
+			System.err.println("Error reading neighbor counts from file '" + filename + "': " + e.getMessage());
+			return null;
+		}
+	}
+
+	private static Map<PieceType, Map<RelativePosition, Map<PieceType, Double>>> deepCloneMap(
+			Map<PieceType, Map<RelativePosition, Map<PieceType, Double>>> neighborCounts){
+
+		Map<PieceType, Map<RelativePosition, Map<PieceType, Double>>> clone = new EnumMap<>(PieceType.class);
+
+		for(PieceType rank : neighborCounts.keySet()) {
+			HashMap<RelativePosition, Map<PieceType, Double>> posProbMap = new HashMap<RelativePosition, Map<PieceType, Double>>();
+
+			for(RelativePosition pos : neighborCounts.get(rank).keySet()) {
+				Map<PieceType, Double> probMap = new HashMap<PieceType, Double>();
+
+				for(PieceType rank2 : neighborCounts.get(rank).get(pos).keySet()) {
+
+					double count = neighborCounts.get(rank).get(pos).get(rank2);
+					probMap.put(rank2, count);
+					posProbMap.put(pos, probMap);
+				}
+			}
+			clone.put(rank, posProbMap);
+		}
+
+		return clone;
+	}
+
+	
+	/**
+	 * Loads neighbor counts from a file.
+	 * Uses ClassicPieces and ClassicRank, use only in strados2 package, otherwise {@link #loadNeighborCounts(String)}.
+	 * @param filename without .txt
+	 * @return loaded map or null if error
+	 */
+	public static Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> loadClassicNeighborCounts(String mode) {
+		String filename = NeighborIO.filename + mode + ".txt";
+		if(loadedClassicNeighbors.containsKey(mode)) {
+			var loadedNeighbor = loadedClassicNeighbors.get(mode);
+			return deepCloneClassicMap(loadedNeighbor);
 		}
 
 		Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> loadedCounts =
@@ -204,7 +312,6 @@ public class NeighborIO {
 					throw new IOException("Error processing line " + lineNumber + ": '" + line + "'", e);
 				}
 			}
-			System.out.println("Successfully loaded neighbor counts from: " + filename);
 			return loadedCounts;
 		} catch (IOException e) {
 			System.err.println("Error reading neighbor counts from file '" + filename + "': " + e.getMessage());
@@ -213,7 +320,7 @@ public class NeighborIO {
 	}
 
 
-	private static Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> deepCloneMap(
+	private static Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> deepCloneClassicMap(
 			Map<ClassicPiece.ClassicRank, Map<RelativePosition, Map<ClassicPiece.ClassicRank, Double>>> neighborCounts){
 
 		Map<ClassicRank, Map<RelativePosition, Map<ClassicRank, Double>>> clone = new EnumMap<>(ClassicRank.class);
@@ -237,3 +344,4 @@ public class NeighborIO {
 		return clone;
 	}
 }
+
