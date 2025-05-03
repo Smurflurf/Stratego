@@ -11,12 +11,14 @@ Das Projekt implementiert die Spielmechanik und nutzt analysierte Spieldaten von
 *   **Simulation & Profiler:** `Runner` zum Ausführen von Simulationen, `Mediator` zur Spielzustandsverwaltung (nimmt die Rolle eines Servers ein) und  `Profiler` um den Speicherverbrauch der Klassen zu analysieren
 *   **UI:** `ui.UI` beinhaltet eine einfache Swing-UI zur Visualisierung eines einzigen Spiels.
 *   **Datenanalyse (`strados2`):** Werkzeuge zum Download (`Scraper`), Parsen (`XmlParser`) und Analysieren (`GravonAnalyser`) von Gravon-Spieldaten. Generiert Platzierungsverteilungen und Nachbarschaftsanalysen. Speichert/lädt Analysedaten (`CompressedMapIO`, `NeighborIO`). Generiert Grafiken mithilfe von xChart.
-*   **Python (`strados2/py`):** Python-Skripte für Datenanalyse. Zurzeit (`ProbabilityDifferenceCalculator.py`) zur Berechnung der Earth Mover's Distance (EMD) zwischen Platzierungsverteilungen verschiedener Modi mithilfe von `numpy` und `scipy`.
+*   **Python (`strados2/py`):** Python-Skripte für Datenanalyse:
+       `ProbabilityDifferenceCalculator.py` zur Berechnung der Earth Mover's Distance (EMD) zwischen Platzierungsverteilungen verschiedener Modi mithilfe von `numpy` und `scipy`.
+       `DifferenceHeatMap.py` zum Generieren von Differenz Heatmaps die vorher in `GravonAnalyser` textlich erstellt wurden (xChart kann Achsenlabels nicht korrekt darstellen). Nutzt `numpy`, `matplotlib` und `seaborn`.
 
 ## Setup
 
 1.  **Java:** JDK 21 oder neuer empfohlen. Alle verwendeten Java Bibliotheken sind in `lib` enthalten.
-2.  **Python:** Python 3 mit `numpy` und `scipy` (`pip install numpy scipy`).
+2.  **Python:** Python 3 mit `numpy`, `scipy`, `matplotlib` und `seaborn`: (`pip install numpy scipy matplotlib seaborn`).
 
 ## Benutzung
 
@@ -34,5 +36,5 @@ Das Projekt implementiert die Spielmechanik und nutzt analysierte Spieldaten von
 *   Aufbauend auf Vincent de Boers "Invincible" (2007).
 *   Spieldaten von [Gravon.de](https://www.gravon.de/strados2/files/).
 *   Verwendete Java Bibliotheken: XChart, fastutil, jol-cli, VectorGraphics2D.
-*   Verwendete Python Bibliotheken: NumPy, SciPy.
+*   Verwendete Python Bibliotheken: NumPy, SciPy, matplotlib und seaborn.
 *   Coding unterstützt von Gemini 2.5 Pro Preview 03-25, maßgeblich für Python Code und IO Code verantwortlich.
