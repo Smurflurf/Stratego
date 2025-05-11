@@ -1,0 +1,59 @@
+Anzahl der zu testenden Rang-Permutationen: 5040
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 26,26%): [FLAGGE, SPAEHER, BOMBE, GENERAL, MARSCHALL, MINEUR, SPIONIN]
+  (Rot: 28,01%, Blau: 24,52%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 26,29%): [FLAGGE, SPAEHER, BOMBE, MARSCHALL, GENERAL, MINEUR, SPIONIN]
+  (Rot: 28,19%, Blau: 24,39%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 26,29%): [FLAGGE, SPAEHER, BOMBE, SPIONIN, MARSCHALL, MINEUR, GENERAL]
+  (Rot: 28,05%, Blau: 24,53%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 26,39%): [FLAGGE, SPAEHER, GENERAL, BOMBE, MINEUR, SPIONIN, MARSCHALL]
+  (Rot: 27,90%, Blau: 24,89%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 27,03%): [FLAGGE, SPAEHER, GENERAL, MARSCHALL, MINEUR, BOMBE, SPIONIN]
+  (Rot: 28,67%, Blau: 25,39%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 27,29%): [FLAGGE, SPAEHER, GENERAL, MARSCHALL, MINEUR, SPIONIN, BOMBE]
+  (Rot: 28,62%, Blau: 25,97%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 27,52%): [FLAGGE, SPAEHER, GENERAL, MINEUR, BOMBE, SPIONIN, MARSCHALL]
+  (Rot: 28,56%, Blau: 26,49%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 27,53%): [FLAGGE, SPAEHER, MARSCHALL, GENERAL, MINEUR, SPIONIN, BOMBE]
+  (Rot: 27,95%, Blau: 27,12%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 27,56%): [FLAGGE, SPAEHER, MINEUR, MARSCHALL, SPIONIN, GENERAL, BOMBE]
+  (Rot: 29,51%, Blau: 25,62%)
+ at 100
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 27,79%): [FLAGGE, SPAEHER, SPIONIN, MARSCHALL, MINEUR, BOMBE, GENERAL]
+  (Rot: 29,06%, Blau: 26,52%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 28,05%): [FLAGGE, BOMBE, GENERAL, MARSCHALL, SPAEHER, SPIONIN, MINEUR]
+  (Rot: 28,47%, Blau: 27,64%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 28,26%): [FLAGGE, BOMBE, GENERAL, MARSCHALL, MINEUR, SPIONIN, SPAEHER]
+  (Rot: 28,57%, Blau: 27,96%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 28,31%): [FLAGGE, BOMBE, MARSCHALL, GENERAL, MINEUR, SPIONIN, SPAEHER]
+  (Rot: 28,48%, Blau: 28,13%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 28,39%): [FLAGGE, BOMBE, MARSCHALL, SPIONIN, SPAEHER, MINEUR, GENERAL]
+  (Rot: 29,32%, Blau: 27,47%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 28,63%): [FLAGGE, BOMBE, MARSCHALL, SPIONIN, MINEUR, GENERAL, SPAEHER]
+  (Rot: 28,96%, Blau: 28,29%)
+ at 200
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 28,73%): [FLAGGE, GENERAL, BOMBE, MARSCHALL, MINEUR, SPIONIN, SPAEHER]
+  (Rot: 28,77%, Blau: 28,68%)
+ at 300- at 400
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 28,74%): [FLAGGE, MARSCHALL, SPIONIN, BOMBE, MINEUR, GENERAL, SPAEHER]
+  (Rot: 29,19%, Blau: 28,29%)
+ at 500 at 600 at 700 at 800 at 900 at 1000 at 1100 at 1200 at 1300 at 1400 at 1500 at 1600 at 1700 at 1800 at 1900 at 2000 at 2100 at 2200 at 2300 at 2400 at 2500 at 2600 at 2700 at 2800 at 2900 at 3000 at 3100 at 3200 at 3300 at 3400 at 3500 at 3600 at 3700 at 3800 at 3900 at 4000 at 4100 at 4200 at 4300
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 29,12%): [SPIONIN, FLAGGE, BOMBE, MARSCHALL, MINEUR, GENERAL, SPAEHER]
+  (Rot: 29,79%, Blau: 28,45%)
+ at 4400 at 4500 at 4600 at 4700 at 4800 at 4900 at 5000
+Optimierung abgeschlossen.
+Beste gefundene Reihenfolge: [SPIONIN, FLAGGE, BOMBE, MARSCHALL, MINEUR, GENERAL, SPAEHER]
+Beste erreichte Gesamtgenauigkeit: 29,12%

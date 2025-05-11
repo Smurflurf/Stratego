@@ -25,7 +25,7 @@ import strados2.tools.GeneralTools.RelativePosition;
  * If the files are not downloaded yet, it calls the downloader {@link Scraper}.
  */
 public class GravonAnalyser extends GeneralTools {
-	static String mode = "barrage";
+	static String mode = "duell";
 	static String modeName = mode.substring(0, 1).toUpperCase() + mode.substring(1);
 	static String title = "";
 	static ClassicRank[] ranks = null;
@@ -47,6 +47,13 @@ public class GravonAnalyser extends GeneralTools {
 		};
 
 		/**
+		 * Generate Heat Maps based on the Piece distributions in %. Saves them for later use in Heuristics.
+		 **/
+		int[][][] maps = percentageHeatMap();
+		compressDistributionsHeatMaps(maps);
+		
+		
+		/**
 		 * Generates neighbor count Maps and saves them for later use in Heuristics.
 		 * If commented in, prints neighbor counts to console and/or prints a Table containing commonly placed together Pieces.
 		 **/
@@ -67,11 +74,6 @@ public class GravonAnalyser extends GeneralTools {
 		var probMap2 = NeighborIO.printNeighborTable(ranks, relevantBoards);
 		HeatMapGenerator.createDifferenceHeatmapChart(probMap1, probMap2, ranks, mode1 + "_" + mode + "_Differenz", mode1 + "_" + mode + "_Differenz");*/
 		
-		/**
-		 * Generate Heat Maps based on the Piece distributions in %. Saves them for later use in Heuristics.
-		 **/
-		/*int[][][] maps = percentageHeatMap();
-		compressDistributionsHeatMaps(maps);*/
 
 
 
@@ -132,6 +134,10 @@ public class GravonAnalyser extends GeneralTools {
 			return x;
 	}
 
+	/**
+	 * Transforms {@link #relevantBoards} into int[][][] percentage Arrays.
+	 * @return
+	 */
 	static int[][][] percentageHeatMap() {
 		int[][][] maps = new int[ranks.length][][];
 		for(int r=0; r<ranks.length; r++) {

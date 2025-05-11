@@ -7,6 +7,7 @@ import core.Move;
 import core.Piece;
 import core.Utils;
 import core.placing.Placer;
+import core.placing.deboer.HeuristicDeBoer;
 import core.playing.AI;
 import ui.UI;
 
@@ -14,7 +15,7 @@ import ui.UI;
  * Runs simulations, execute the main method for doing so
  */
 public class Runner {
-	public static record WinnerEntry(Placer.Type redPlacement, Placer.Type bluePlacement, AI.Type redType, AI.Type blueType, boolean winner, long moves, long nanoTime) {};
+	public static record WinnerEntry(Placer.Type redPlacement, Placer.Type bluePlacement, AI.Type redType, AI.Type blueType, int winner, long moves, long nanoTime) {};
 	public static ArrayList<WinnerEntry> winList = new ArrayList<WinnerEntry>();
 	public static UI ui;
 	public static boolean ui_initialized = false; 
@@ -26,12 +27,12 @@ public class Runner {
 		use_UI = true;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
 		printGame = false;
 		printResults = false;
+		int UI_delay = 50;
 		
-		int UI_delay = 500;
 		Placer.Type redPlacement = Placer.Type.PREBUILT;
 		Placer.Type bluePlacement = Placer.Type.PREBUILT;
+		AI.Type redPlayer = AI.Type.MCTS;
 		AI.Type bluePlayer = AI.Type.RANDOM;
-		AI.Type redPlayer = AI.Type.RANDOM;
 		int simulations = 1;
 
 		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay);
@@ -52,7 +53,10 @@ public class Runner {
 		if(simulations > 1) { if(use_UI) { printGame = true; printResults = true; } use_UI = false;}
 		long start = System.currentTimeMillis();
 		while(simulations-- > 0) {
-			initUI();
+			if (use_UI && !ui_initialized) {
+				initUI(redType, blueType);
+            }
+			
 			Piece[] redPieces = Placer.placePiecesWith(true, redPlacement);
 			Piece[] bluePieces = Placer.placePiecesWith(false, bluePlacement);
 			Mediator mediator = new Mediator(new GameState(redPieces, bluePieces));
@@ -65,7 +69,9 @@ public class Runner {
 			long startTime;
 			long endTime;
 			
-			Utils.sleep(delay);
+			if(use_UI)
+				Utils.sleep(delay);
+			
 			while(!mediator.isGameOver()) {
 				Move move;
 				if(mediator.getCurrentTeam() == red.getTeam()) {
@@ -80,7 +86,6 @@ public class Runner {
 					simTime += endTime - startTime;
 				}
 				if(!mediator.makeMove(move)) {
-					// TODO wenn ein Piece angegriffen wird soll es nicht mehr obfuscated werden 
 					System.err.println("error while executing move " + move + "\n" + Utils.fieldToString(mediator.getGameState().getField()));
 					System.err.println(mediator.getGameState().isInChase() + " " + mediator.getGameState().getInChase() + " " + mediator.getGameState().getChasedFields().size() + "\n" +
 							blue.gameState.isInChase() + " " + blue.gameState.getInChase() + " " + blue.gameState.getChasedFields().size() + " \n" +
@@ -93,8 +98,8 @@ public class Runner {
 
 				moves++;
 
-				red.update(mediator.obfuscateFor(true));
-				blue.update(mediator.obfuscateFor(false));
+				red.update(mediator.getAIInformer(true));
+				blue.update(mediator.getAIInformer(false));
 			}
 
 			showWinner(mediator, simTime);
@@ -107,7 +112,8 @@ public class Runner {
 	public static void showWinner(Mediator mediator, long simTime) {
 		if(printResults) 
 			System.out.println(
-					(mediator.getWinnerTeam() ? "Red" : "Blue") + 
+					(mediator.getWinnerTeam() == 0 ? "Red" : 
+						(mediator.getWinnerTeam() == 1 ? "Blue" : "nobody, it's a draw.")) + 
 					" won in " +
 					new DecimalFormat("0.000").format(((simTime) * 0.000001)) +
 					" ms");
@@ -128,10 +134,10 @@ public class Runner {
 		} 
 	}
 
-	public static void initUI() {
+	public static void initUI(AI.Type red, AI.Type blue) {
 		if(use_UI) {
 			SwingUtilities.invokeLater(() -> {
-				ui = new UI();
+				ui = new UI(red, blue);
 				ui_initialized = true;
 			});
 			while(use_UI && !ui_initialized) {Utils.sleep(1);};
@@ -145,15 +151,18 @@ public class Runner {
 		long leastMoves = Long.MAX_VALUE;
 		double winsRed = 0;
 		double winsBlue = 0;
+		double draws = 0;
 		for(WinnerEntry entry : winList) {
 			time += entry.nanoTime;
 			moves += entry.moves;
 			mostMoves = mostMoves < entry.moves ? entry.moves : mostMoves;
 			leastMoves = leastMoves > entry.moves ? entry.moves : leastMoves;
-			if(entry.winner)
+			if(entry.winner == 0)
 				winsRed++;
-			else
+			else if (entry.winner == 1)
 				winsBlue++;
+			else
+				draws++;
 		}
 		winList.sort((o1, o2) -> (int)(o1.nanoTime - o2.nanoTime));
 		long median = winList.get(winList.size() / 2).nanoTime;
@@ -164,6 +173,7 @@ public class Runner {
 						"blue placed with " + winList.get(0).bluePlacement + ", played as " + winList.get(0).blueType + "\n" +
 						"Win rate red:  \t" + (winsRed / winList.size()) * 100 + "%\n" +
 						"Win rate blue: \t" + (winsBlue / winList.size()) * 100 + "%\n" + 
+						"Draws: \t" + (draws / winList.size()) * 100 + "%\n" + 
 						"Average time:  \t" + String.format("%,d", (time / winList.size())) + "ns\n" + 
 						"Median time: \t" + String.format("%,d", median) +  "ns\n" + 
 						"Average moves: \t" + (moves / winList.size() + " longest Game: " + mostMoves + ", shortest Game: " + leastMoves));

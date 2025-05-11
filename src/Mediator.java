@@ -1,6 +1,8 @@
 import core.GameState;
 import core.Move;
+import core.PieceType;
 import core.Utils;
+import core.playing.AI.AIInformer;
 
 /**
  * Manages the GameState while simulating games.
@@ -9,10 +11,17 @@ import core.Utils;
 public class Mediator {
 	private GameState gameState;
 	private Move lastMove;
-	
+	private boolean wasLastMoveAnAttack;
+	private PieceType attacker;
+	private PieceType defender;
+
 	public Mediator(GameState gameState) {
 		this.gameState = gameState;
-		setLastMove(null);
+		setLastMove(null, false, null, null);
+	}
+
+	public AIInformer getAIInformer(boolean obfuscateFor) {
+		return new AIInformer(gameState.obfuscateFor(obfuscateFor), getObfuscatedLastMove(), wasLastMoveAnAttack, attacker, defender);
 	}
 
 	/**
@@ -23,11 +32,11 @@ public class Mediator {
 	}
 
 	/**
-	 * Gives false information if game is not over yet, use after {@link #isGameOver()}.
-	 * @return true if team red, false if team blue won
+	 * If game is not over yet, use after {@link #isGameOver()}.
+	 * @return 0: red wins, 1: blue wins, 2: draw, 3: game is not over
 	 */
-	public boolean getWinnerTeam() {
-		return !gameState.getTeam();
+	public int getWinnerTeam() {
+		return Utils.getWinner(gameState);
 	}
 
 	/**
@@ -55,16 +64,21 @@ public class Mediator {
 	 */
 	public boolean makeMove(Move move) {
 		move.normalize(gameState);
-		
+
 		if(move.getStartX() == move.getEndX() &&
 				move.getStartY() == move.getEndY()) {
 			System.err.println("Move ain't moving -> Mediator:62");
 			return false;
 		}
-		
+
+		boolean isAttack = Utils.isAttack(gameState, move);
+		PieceType attacker = gameState.inspect(move.getStartX(), move.getStartY()) != null 
+				? gameState.inspect(move.getStartX(), move.getStartY()).getType() : null;
+		PieceType defender = gameState.inspect(move.getEndX(), move.getEndY()) != null 
+				? gameState.inspect(move.getEndX(), move.getEndY()).getType() : null;
 		boolean moved = Utils.checkAndExecute(gameState, move);
 		if(moved)
-			setLastMove(move);
+			setLastMove(move, isAttack, attacker, defender);
 		return moved;
 	}
 
@@ -84,8 +98,29 @@ public class Mediator {
 	public Move getLastMove() {
 		return lastMove;
 	}
+	
+	public Move getObfuscatedLastMove() {
+		if(lastMove == null) return null;
+		Move lastMove = this.lastMove.cloneWithoutNormalize();
+		lastMove.getPiece().setType(PieceType.UNKNOWN.getByte());
+		return lastMove;
+	}
 
-	public void setLastMove(Move lastMove) {
-		this.lastMove = lastMove;
+	public void setLastMove(Move lastMove, boolean isAttack, PieceType attacker, PieceType defender) {
+		if(lastMove != null)  {
+			lastMove = lastMove.cloneWithoutNormalize();
+			if(isAttack) {
+				lastMove.getPiece().setKnown(true);
+				this.wasLastMoveAnAttack = true;
+				this.attacker = attacker;
+				this.defender = defender;
+			} else {
+//				lastMove.getPiece().setType(PieceType.UNKNOWN.getByte());
+				this.wasLastMoveAnAttack = false;
+				this.attacker = null;
+				this.defender = null;
+			}
+			this.lastMove = lastMove;
+		}
 	}
 }

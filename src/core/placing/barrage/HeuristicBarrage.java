@@ -11,5 +11,6 @@ public class HeuristicBarrage extends HeuristicDeBoer {
 				NeighborIO.loadNeighborCounts("barrage"));
 		
 		useNeighbors = true;
+		useControlHeuristic = true;
 	}
 }

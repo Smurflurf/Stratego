@@ -16,7 +16,7 @@ public class Move {
 	 * @param fields
 	 */
 	public Move(Piece piece, Direction direction, int fields) {
-		this.piece = piece;;
+		this.piece = piece;
 		start = piece.getPos();
 		calculateEndPos(direction, fields);
 		this.fields = (byte)fields;
@@ -24,21 +24,22 @@ public class Move {
 	}
 	
 	/**
-	 * Clone constructor
+	 * Constructor for very specific use cases.
+	 * For example moving a Piece with GameState.move.
+	 * Does NOT set {@link #fields} and {@link #direction}, only start and end positions.
 	 * @param piece
-	 * @param firstMove
 	 * @param startX
 	 * @param startY
 	 * @param endX
 	 * @param endY
 	 */
-	/*public Move(Piece piece, int startX, int startY, int endX, int endY) {
-		setPiece(piece);
+	public Move(Piece piece, int startX, int startY, int endX, int endY) {
+		this.piece = piece;
 		setStartX(startX);
 		setStartY(startY);
 		setEndX(endX);
 		setEndY(endY);
-	}*/
+	}
 	
 	/**
 	 * Clone constructor
@@ -65,7 +66,6 @@ public class Move {
 		Piece piece = state.getField()[getStartX()][getStartY()];
 		if(piece != null && piece.getTeam() == this.piece.getTeam())
 			this.piece = piece;
-		
 		return this;
 	}
 	
@@ -108,9 +108,13 @@ public class Move {
 	
 	public Move clone(GameState state) {
 		Move clone = null;
-		clone = new Move(piece, start, end, direction, fields);
+		clone = new Move(piece.clone(), start, end, direction, fields);
 		clone.normalize(state);
 		return clone;
+	}
+	
+	public Move cloneWithoutNormalize() {
+		return new Move(piece.clone(), start, end, direction, fields);
 	}
 	
 	@Override
@@ -154,7 +158,7 @@ public class Move {
 	}
 
 	public void setStartX(int startX) {
-		ByteMapper.setX(start, startX);
+		start = ByteMapper.setX(start, startX);
 	}
 
 	public int getStartY() {
@@ -162,7 +166,7 @@ public class Move {
 	}
 
 	public void setStartY(int startY) {
-		ByteMapper.setY(start, startY);
+		start = ByteMapper.setY(start, startY);
 	}
 
 	public int getEndX() {
@@ -170,7 +174,7 @@ public class Move {
 	}
 
 	public void setEndX(int endX) {
-		ByteMapper.setX(end, endX);
+		end = ByteMapper.setX(end, endX);
 	}
 
 	public int getEndY() {
@@ -178,6 +182,6 @@ public class Move {
 	}
 
 	public void setEndY(int endY) {
-		ByteMapper.setY(end, endY);
+		end = ByteMapper.setY(end, endY);
 	}
 }

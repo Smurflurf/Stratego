@@ -193,15 +193,11 @@ class UtilsTest extends Utils {
 
 	@Test
 	void testOutOfBounds() {
-		assertTrue(outOfBounds(new int[] {-1, 0}));
-		assertTrue(outOfBounds(new int[] {0, -1}));
-		assertTrue(outOfBounds(new int[] {-1, -1}));
-		assertTrue(outOfBounds(new int[] {10, 0}));
-		assertTrue(outOfBounds(new int[] {0, 10}));
-		assertTrue(outOfBounds(new int[] {10, 10}));
+		assertTrue(outOfBounds(-1));
+		assertTrue(outOfBounds(10));
 		for(int x=0; x<8; x++)
 			for(int y=0; y<8; y++)
-				assertFalse(outOfBounds(new int[] {x, y}));
+				assertFalse(outOfBounds(x) || outOfBounds(y));
 	}
 	
 	@Test

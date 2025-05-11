@@ -10,14 +10,17 @@ import core.Utils;
 import core.placing.Placer;
 import core.playing.AI;
 
+/**
+ * Contains diverse Methods to test xxx
+ */
 public class Profiler {
 	public static void main(String[] args) {
-		memoryFootprint(Class.GameState);
+//		memoryFootprint(Class.GameState);
 
 		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
 		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
 		AI ai = AI.Type.RANDOM.createAI(true, new GameState(redPieces, bluePieces));
-//		nextMoves(ai, 10000000);
+		//		nextMoves(ai, 10000000);
 	}
 
 	public static void nextMoves(AI ai, int repetitions) {
@@ -48,7 +51,7 @@ public class Profiler {
 		}
 
 		System.out.println(ClassLayout.parseInstance(object).toPrintable());
-//		System.out.println(GraphLayout.parseInstance(object).toPrintable());
+		//		System.out.println(GraphLayout.parseInstance(object).toPrintable());
 		System.out.println(GraphLayout.parseInstance(object).toFootprint());
 	}
 

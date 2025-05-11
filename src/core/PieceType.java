@@ -12,7 +12,8 @@ public enum PieceType {
 	SPIONIN(1, 1, 1, (byte)2), 
 	BOMBE(0, 0, 2, (byte)1), 
 	FLAGGE(0, 0, 1, (byte)0),
-	UNKNOWN(7, 10, 10, (byte)-1);
+	UNKNOWN(7, 10, 10, (byte)7),
+	;
 	
 	private final int moves;
 	private final int strength;
@@ -29,11 +30,11 @@ public enum PieceType {
 	public int getMoves() {
 		return moves;
 	}
-
+	
 	public int getStrength() {
 		return strength;
 	}
-
+	
 	public int getPieceCount() {
 		return pieceCount;
 	}
@@ -70,8 +71,8 @@ public enum PieceType {
 	public boolean attack(PieceType type2) {
 		if(type2 == BOMBE) {
 			return this == MINEUR;
-		} else if(this == SPIONIN) {
-			return (type2 == MARSCHALL);
+		} else if(type2 == MARSCHALL) {
+			return this == SPIONIN;
 		}
 		
 		return getStrength() > type2.getStrength();

@@ -13,27 +13,34 @@ import core.playing.AI;
  * AI that returns random Moves
  */
 public class RandomAI extends AI {
-	SplittableRandom random;
+	static SplittableRandom random = new SplittableRandom();
 
 	ArrayList<Piece> pieces = new ArrayList<Piece>(8);
 	ArrayList<int[]> dirMap = new ArrayList<int[]>();
+	static ArrayList<Piece> staticPieces = new ArrayList<Piece>(8);
+	static ArrayList<int[]> staticDirMap = new ArrayList<int[]>();
 
 	public RandomAI(boolean team, GameState gameState) {
 		super(team, gameState);
-		random = new SplittableRandom();
 	}
 
+	@Override
+	public void update(AIInformer informer) {
+		super.update(informer);
+	}
+	
 	/**
 	 * Selects a random Move and returns it
 	 * @return a random valid Move, wrong Moves or null if no Move is possible
 	 */
+	@Override
 	public Move nextMove() {
 		Move move = null;
 		pieces.clear();
 
 		for(int i=0; i<8; i++)
 			if(myPieces[i] != null && myPieces[i].getType().getMoves() > 0) pieces.add(myPieces[i]);
-
+		
 		while(pieces.size() > 0) {
 			int randomInt = random.nextInt(pieces.size());
 			Piece picked = pieces.get(randomInt);
@@ -47,6 +54,40 @@ public class RandomAI extends AI {
 				}
 			}
 			pieces.remove(randomInt);
+		}
+
+		System.err.println("first move not possible, see RandomAI.java#136");
+		return null;
+	}
+	
+	/**
+	 * Selects a random Move and returns it
+	 * @param state the GameState to pick a Move from
+	 * @return a random valid Move, wrong Moves or null if no Move is possible
+	 */
+	public static Move nextMove(GameState state) {
+		//TODO obfuscated pieces shufflen, hier nicht nur die ersten 8 pieces prüfen
+		Move move = null;
+		staticPieces.clear();
+
+		for(int i=0; i<state.getCurrentPieces().length; i++)
+			if(state.getCurrentPieces()[i] != null 
+			&& state.getCurrentPieces()[i].getType().getMoves() > 0) 
+				staticPieces.add(state.getCurrentPieces()[i]);
+
+		while(staticPieces.size() > 0) {
+			int randomInt = random.nextInt(staticPieces.size());
+			Piece picked = staticPieces.get(randomInt);
+
+			fillDirectionMap(state, picked, staticDirMap);
+			while (staticDirMap.size() > 0) {
+				move = getDirectionMove(staticDirMap, picked);
+
+				if(isMovePossible(state, move)) {
+					return move;
+				}
+			}
+			staticPieces.remove(randomInt);
 		}
 
 		System.err.println("first move not possible, see RandomAI.java#136");
@@ -87,7 +128,7 @@ public class RandomAI extends AI {
 	 * @param picked Piece responsible for the possible direction-reach pairs in dirMap
 	 * @return a Move created by a random direction-reach pair from dirMap
 	 */
-	public Move getDirectionMove(ArrayList<int[]> dirMap, Piece picked) {
+	public static Move getDirectionMove(ArrayList<int[]> dirMap, Piece picked) {
 		int[] directionFields = dirMap.get(random.nextInt(dirMap.size()));
 		dirMap.remove(directionFields);
 		return new Move(picked, Direction.get(directionFields[0]), directionFields[1]);

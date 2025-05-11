@@ -92,7 +92,7 @@ public class Piece implements Cloneable {
 	}
 
 	public boolean getKnown() {
-		return -1 == (knownAndType | 0b01111111);
+		return 0b11111111 == (0b01111111 | knownAndType);
 	}
 	
 	public void setKnown(boolean known) {
@@ -108,7 +108,7 @@ public class Piece implements Cloneable {
 	 * @param type
 	 */
 	public void setType(byte type) {
-		this.knownAndType = (byte) (0b10000000 | type);
+		this.knownAndType = (byte) (knownAndType & 0b10000000 | type);
 	}
 
 	public boolean getTeam() {

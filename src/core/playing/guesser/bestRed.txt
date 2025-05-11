@@ -1,0 +1,29 @@
+Anzahl der zu testenden Rang-Permutationen: 5040
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 13,75%): [FLAGGE, SPAEHER, BOMBE, GENERAL, MARSCHALL, MINEUR, SPIONIN]
+  (Rot: 27,49%, Blau: 0,00%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 14,16%): [FLAGGE, SPAEHER, BOMBE, GENERAL, MARSCHALL, SPIONIN, MINEUR]
+  (Rot: 28,31%, Blau: 0,00%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 14,30%): [FLAGGE, SPAEHER, BOMBE, MARSCHALL, SPIONIN, GENERAL, MINEUR]
+  (Rot: 28,59%, Blau: 0,00%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 14,60%): [FLAGGE, SPAEHER, MARSCHALL, MINEUR, SPIONIN, BOMBE, GENERAL]
+  (Rot: 29,19%, Blau: 0,00%)
+
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 14,77%): [FLAGGE, SPAEHER, MINEUR, SPIONIN, MARSCHALL, GENERAL, BOMBE]
+  (Rot: 29,54%, Blau: 0,00%)
+ at 100
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 14,90%): [FLAGGE, BOMBE, SPAEHER, MINEUR, MARSCHALL, SPIONIN, GENERAL]
+  (Rot: 29,81%, Blau: 0,00%)
+ at 200 at 300
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 15,01%): [FLAGGE, MARSCHALL, SPAEHER, MINEUR, BOMBE, SPIONIN, GENERAL]
+  (Rot: 30,02%, Blau: 0,00%)
+ at 400	 at 500 at 600
+Neue beste Reihenfolge gefunden (Gesamtgenauigkeit: 15,07%): [FLAGGE, SPIONIN, MARSCHALL, MINEUR, BOMBE, GENERAL, SPAEHER]
+  (Rot: 30,13%, Blau: 0,00%)
+ at 700 at 800 at 900 at 1000 at 1100 at 1200 at 1300 at 1400 at 1500 at 1600 at 1700 at 1800 at 1900 at 2000 at 2100 at 2200 at 2300 at 2400 at 2500 at 2600 at 2700 at 2800 at 2900 at 3000 at 3100 at 3200 at 3300 at 3400 at 3500 at 3600 at 3700 at 3800 at 3900 at 4000 at 4100 at 4200 at 4300 at 4400 at 4500 at 4600 at 4700 at 4800 at 4900 at 5000
+Optimierung abgeschlossen.
+Beste gefundene Reihenfolge: [FLAGGE, SPIONIN, MARSCHALL, MINEUR, BOMBE, GENERAL, SPAEHER]
+Beste erreichte Gesamtgenauigkeit: 15,07%

@@ -1,19 +1,27 @@
 package core.playing;
 
-import core.Utils;
-import core.playing.random.RandomAI;
 import core.GameState;
 import core.Move;
 import core.Piece;
+import core.PieceType;
+import core.Utils;
+import core.playing.guesser.Guesser;
+import core.playing.human.HumanInput;
+import core.playing.mcts.MCTS;
+import core.playing.random.RandomAI;
 
 public abstract class AI extends Utils {
 	private boolean team;
 	public Piece[] myPieces;
 	protected Piece[] enemyPieces;
 	public GameState gameState;
+	public Guesser guesser;
+	public Move lastMove;
 
 	public AI(boolean player, GameState gameState) {
 		team = player;
+		guesser = new Guesser(gameState, null);
+		gameState = guesser.converge(team);
 		setArraysAndGameState(gameState);
 	};
 
@@ -22,11 +30,16 @@ public abstract class AI extends Utils {
 	}
 
 	/**
-	 * updates the GameState and the Pieces Arrays.
+	 * Updates the GameState and the Pieces Arrays.
+	 * Override in more sophisticated AIs.
+	 * Due to shuffle the Piece indexes in the state enemy Piece array won't stay the same.
 	 * @param state new GameState
 	 */
-	public void update(GameState state) {
-		setArraysAndGameState(state);
+	public void update(AIInformer informer) {
+		guesser.update(informer);
+		GameState newState = guesser.converge(team);
+		this.lastMove = guesser.getLastMove(newState);
+		setArraysAndGameState(newState);
 	}
 	
 	protected void setArraysAndGameState(GameState gameState) {
@@ -51,13 +64,19 @@ public abstract class AI extends Utils {
 	 * Different AI Types to simulate with
 	 */
 	public enum Type {
-		RANDOM;
+		RANDOM, HUMAN, MCTS;
 
 		public AI createAI(boolean team, GameState gameState) {
 			AI ai; 
 			switch(this) {
 			case RANDOM:  
 				ai = new RandomAI(team, gameState);
+				break;
+			case HUMAN:
+				ai = new HumanInput(team, gameState);
+				break;
+			case MCTS:
+				ai = new MCTS(team, gameState);
 				break;
 			default: 
 				ai = new RandomAI(team, gameState);
@@ -66,4 +85,6 @@ public abstract class AI extends Utils {
 			return ai;
 		}
 	}
+
+	public record AIInformer(GameState obfuscatedGameState, Move lastMove, boolean wasAttack, PieceType attacker, PieceType defender) {};
 }

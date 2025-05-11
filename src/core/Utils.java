@@ -10,9 +10,30 @@ import java.util.ArrayList;
 public class Utils {
 	public static boolean checkAndExecute(GameState state, Move move) {
 		if(!isMovePossible(state, move)) return false;
+		return execute(state, move);
+	}
+	
+	/**
+	 * Checks if a Move is an attacking Move
+	 * @param state
+	 * @param move
+	 * @return
+	 */
+	public static boolean isAttack(GameState state, Move move) {
+		return state.inspect(move.getEndX(), move.getEndY()) instanceof Piece;
+	}
+
+	/**
+	 * Executes move on state without checking if the Move is possible
+	 * @param state GameState
+	 * @param move Move
+	 * @return true after execution
+	 */
+	public static boolean execute(GameState state, Move move) {
 		state.updateChase(move);
 		state.updateLastMove(move);	
-		makeMove(state, move);
+		if(!makeMove(state, move))
+			return false;
 		state.changeTeam();
 		return true;
 	}
@@ -37,20 +58,29 @@ public class Utils {
 	 * @param state GameState to execute move on
 	 * @param move move being executed on state
 	 */
-	private static void makeMove(GameState state, Move move) {
-		if(!(state.inspect(move.getEndX(), move.getEndY()) instanceof Piece piece)) {
+	private static boolean makeMove(GameState state, Move move) {
+		if(!(state.inspect(move.getEndX(), move.getEndY()) instanceof Piece defender)) {
 			state.move(move);
 		} else {
-			Piece loser = move.getPiece().attack(piece);
+			Piece loser = move.getPiece().attack(defender);
 			if(loser == null) {	
-				state.removePiece(move.getPiece());
-				state.removePiece(state.inspect(move.getEndX(), move.getEndY()));
+				defender.setKnown(true);
+				if(!state.removePiece(move.getPiece()))
+					return false;
+				if(!state.removePiece(defender))
+					return false;
 			} else {
-				state.removePiece(loser);
-				if(loser != move.getPiece())
+				if(!state.removePiece(loser))
+					return false;
+				if(loser != move.getPiece()) {
+					move.getPiece().setKnown(true);
 					state.move(move);
+				} else {
+					defender.setKnown(true);
+				}
 			}
 		}
+		return true;
 	}
 
 	public static boolean isMovePossible(GameState state, Move move) {
@@ -266,18 +296,6 @@ public class Utils {
 	}
 
 	/**
-	 * Checks if a given set of coordinates is out of bounds
-	 * @param coordinates coordinates to check
-	 * @return true if the coordinates are out of bounds, i.e. smaller than 0 or bigger than 7
-	 */
-	public static boolean outOfBounds(int[] coordinates) {
-		if(coordinates[0] < 0 || coordinates[0] > 7 ||
-				coordinates[1] < 0 || coordinates[1] > 7)
-			return true;
-		return false;
-	}
-
-	/**
 	 * Checks if a given integer is out of bounds
 	 * @param i integer to check
 	 * @return true if the integer is out of bounds, i.e. smaller than 0 or bigger than 7
@@ -294,7 +312,8 @@ public class Utils {
 	 */
 	public static boolean twoSquaresRule(GameState state, Move move) {
 		return state.getCurrentRepetitions() > 2
-				&& state.inMoveBounds(move);
+				&& state.inMoveBounds(move) 
+				&& state.getFirstRepetitionMove(move.getPiece().getTeam()).getPiece().equals(move.getPiece());
 	}
 
 	/**
@@ -319,8 +338,34 @@ public class Utils {
 	 */
 	public static Move[] getAllPossibleMoves(GameState state) {
 		ArrayList<Move> moves = new ArrayList<Move>();
-		for(int i=0; i<8; i++) {
+		for(int i=0; i<10; i++) {
 			if(state.getCurrentPieces()[i] == null) continue;
+			for(int reach=0; reach<state.getCurrentPieces()[i].getType().getMoves(); reach++) {
+				for(int dir=0; dir<4; dir++) {
+					Move move = new Move(state.getCurrentPieces()[i], Direction.get(dir), reach+1);
+					if(isMovePossible(state, move)) {
+						moves.add(move);
+					} else {
+						continue;
+					}
+				}
+			}
+		}
+		return moves.toArray(Move[]::new);
+	}
+
+	/**
+	 * Generates a list of all possible Moves for piece.
+	 * piece's team must be state's current team.
+	 * Does not check if the game is still going i.e. no checks for the existence of flags are done here.
+	 * @param state the gameState to analyze. Its team attribute is considered.
+	 * @return all possible moves for piece in gameState
+	 */
+	public static Move[] getPiecePossibleMoves(GameState state, Piece piece) {
+		ArrayList<Move> moves = new ArrayList<Move>();
+		for(int i=0; i<8; i++) {
+			if(state.getCurrentPieces()[i] == null
+					|| !state.getCurrentPieces()[i].equals(piece)) continue;
 			for(int dir=0; dir<4; dir++) {
 				for(int reach=0; reach<state.getCurrentPieces()[i].getType().getMoves(); reach++) {
 					Move move = new Move(state.getCurrentPieces()[i], Direction.get(dir), reach+1);
@@ -363,6 +408,45 @@ public class Utils {
 		Piece[] pieces = gameState.getCurrentPieces();
 		return flagGoneCheck(pieces) || piecesGoneCheck(pieces) || !anyMovePossible(gameState);
 	}
+
+	/**
+	 * Returns the winner, in case there is one.
+	 * More sophisticated check than {@link #isGameOver(GameState)}, supports draw.
+	 * @param gameState to check
+	 * @return 0: red wins, 1: blue wins, 2: draw, 3: game is not over
+	 */
+	public static int getWinner(GameState gameState) {
+		if(flagGoneCheck(gameState.getRedPieces()))			//flag gone check red and blue
+			return 1;
+		else if(flagGoneCheck(gameState.getBluePieces()))
+			return 0;
+
+		if(piecesGoneCheck(gameState.getRedPieces()))		//pieces gone check red + draw check
+			if(piecesGoneCheck(gameState.getBluePieces()))
+				return 2;
+			else
+				return 1;
+
+		if(piecesGoneCheck(gameState.getBluePieces()))		//pieces gone check blue + draw check
+			if(piecesGoneCheck(gameState.getRedPieces()))
+				return 2;
+			else
+				return 0;
+
+		if(!anyMovePossible(gameState)) {
+			gameState.changeTeam();
+			if(!anyMovePossible(gameState)) {
+				gameState.changeTeam();
+				return 2;
+			}
+			gameState.changeTeam();
+			return gameState.getTeam() ? 0 : 1;
+		}
+
+		return 3;
+	}
+
+
 
 	/**
 	 * Checks if all Pieces are gone from one teams pieces

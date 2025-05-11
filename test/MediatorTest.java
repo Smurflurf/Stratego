@@ -15,6 +15,7 @@ import core.PieceType;
 import core.Utils;
 import core.placing.Placer;
 import core.playing.AI;
+import core.playing.AI.AIInformer;
 import core.playing.random.RandomAI;
 
 class MediatorTest {
@@ -118,7 +119,6 @@ class MediatorTest {
 		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
 		GameState state = new GameState(redPieces, bluePieces);
 		Mediator mediator = new Mediator(state);	
-		
 		Move move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.DOWN, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// first rep red
@@ -128,7 +128,6 @@ class MediatorTest {
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// first rep blue
 		assertEquals(1, mediator.getGameState().getCurrentRepetitions());
-		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.UP, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// second rep red
@@ -148,7 +147,6 @@ class MediatorTest {
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// third rep blue
 		assertEquals(3, mediator.getGameState().getCurrentRepetitions());
-		
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.UP, 1);
 		assertTrue(Utils.twoSquaresRule(state, move));
@@ -261,58 +259,74 @@ class MediatorTest {
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 right
 		assertEquals(1, mediator.getGameState().getRepetitionsBlue());
-		red.update(mediator.obfuscateFor(true));
-		blue.update(mediator.obfuscateFor(false));
+		AIInformer inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+		red.update(inform);
+		AIInformer inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+		blue.update(inform2);
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[0], Direction.LEFT, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move red Marschall 1 
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
-		red.update(mediator.obfuscateFor(true));
-		blue.update(mediator.obfuscateFor(false));
+		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+		red.update(inform);
+		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+		blue.update(inform2);
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.DOWN, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 down
 		assertEquals(1, mediator.getGameState().getRepetitionsBlue());
-		red.update(mediator.obfuscateFor(true));
-		blue.update(mediator.obfuscateFor(false));
+		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+		red.update(inform);
+		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+		blue.update(inform2);
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[0], Direction.DOWN, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move red Marshall 1 down
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
-		red.update(mediator.obfuscateFor(true));
-		blue.update(mediator.obfuscateFor(false));
+		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+		red.update(inform);
+		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+		blue.update(inform2);
 
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.UP, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 up, REP: 2
 		assertEquals(2, mediator.getGameState().getRepetitionsBlue());
-		red.update(mediator.obfuscateFor(true));
-		blue.update(mediator.obfuscateFor(false));
+		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+		red.update(inform);
+		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+		blue.update(inform2);
 	
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[2], Direction.RIGHT, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move red Mineur 1 right
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
-		red.update(mediator.obfuscateFor(true));
-		blue.update(mediator.obfuscateFor(false));
+		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+		red.update(inform);
+		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+		blue.update(inform2);
 
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.DOWN, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 down, REP: 3
 		assertEquals(3, mediator.getGameState().getRepetitionsBlue());
-		red.update(mediator.obfuscateFor(true));
-		blue.update(mediator.obfuscateFor(false));
+		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+		red.update(inform);
+		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+		blue.update(inform2);
 
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[0], Direction.LEFT, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move red Marshall 1 left
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
-		red.update(mediator.obfuscateFor(true));
-		blue.update(mediator.obfuscateFor(false));
+		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+		red.update(inform);
+		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+		blue.update(inform2);
 
 		
 		for(int i=0; i<10000; i++) {
