@@ -1,6 +1,7 @@
 package core.playing.guesser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,11 +112,9 @@ public class Guesser {
 	 */
 	public GameState converge(boolean myTeam) {
 		GameState cloneWithPieces = legacySearch ? convergeToStartStateLegacy(!myTeam ? 1 : 2) : convergeToStartState(!myTeam ? 1 : 2);
-		this.mapStartToCurrent(cloneWithPieces);
-
+		mapStartToCurrent(cloneWithPieces);
 		GameState cloneWithEverythingElse = currentState.clone();
 		cloneWithEverythingElse.setPiecesAndField(cloneWithPieces.getPieces(), cloneWithPieces.getField());
-
 		return cloneWithEverythingElse;
 	}
 
@@ -140,10 +139,10 @@ public class Guesser {
 	 */
 	private void mapStartToCurrent(GameState clone) {
 		ArrayList<Move> alterClone = new ArrayList<Move>();
-
 		for(int team=0; team<2; team++) {
 			for(Piece clonePiece : clone.getPieces()[team]) {
 				for(Piece startPiece : startState.getPieces()[team]) {
+					
 					if(clonePiece.getPos() == startPiece.getPos()) {
 						Piece current = startToCurrentStateMap.get(startPiece);
 						if(currentState.inspect(current.getX(), current.getY()) == null || 
@@ -165,6 +164,9 @@ public class Guesser {
 		for(Move move : alterClone) {
 			clone.getField()[move.getEndX()][move.getEndY()] = move.getPiece();
 			move.getPiece().setPos(move.getEndX(), move.getEndY());
+			
+			if(move.getPiece().getType()==PieceType.FLAGGE)
+				System.out.println(move);
 		}
 	}
 
@@ -209,7 +211,7 @@ public class Guesser {
 
 				if (bestPieceToAssign != null && bestRankToAssign != null) {	// normaler Weg, sollte in 99.9% genommen weerden
 					bestPieceToAssign.setType(bestRankToAssign.getByte());
-					bestPieceToAssign.setKnown(true);
+//					bestPieceToAssign.setKnown(true);
 					unassignedPieces.remove(bestPieceToAssign);
 					remainingRankCounts.put(bestRankToAssign, remainingRankCounts.get(bestRankToAssign) - 1);
 				} else {	// bei Fehlern. Sehr selten, eigentlich nur bei Laden der classic Probabilities bei mit Barrage platziert
@@ -222,7 +224,7 @@ public class Guesser {
 						}
 					}
 					fallbackPiece.setType(fallbackRank.getByte());
-					fallbackPiece.setKnown(true);
+//					fallbackPiece.setKnown(true);
 					unassignedPieces.remove(fallbackPiece);
 					remainingRankCounts.put(fallbackRank, remainingRankCounts.get(fallbackRank) - 1);
 				}
@@ -242,16 +244,24 @@ public class Guesser {
 			var aliveRanks = getRankCounts();
 			List<Piece> pieces = new ArrayList<Piece>();
 			for(Piece p : clone.getPieces()[teamIndex]) if(p != null) pieces.add(p);
+			
 			for(int rank=0; rank<RANKS.length; rank++) {
-				for(int alive=aliveRanks.get(RANKS[rank]); alive>0; alive--) {
-					guess(pieces, rank);
+				for(int leftToGuess=aliveRanks.get(RANKS[rank]); leftToGuess>0; leftToGuess--) {
+					guess(pieces, rank, leftToGuess);
 				}
 			}
 		}
 		return unshuffle(clone);
 	}
 
-	private void guess(List<Piece> pieces, int rank) {
+	private void guess(List<Piece> pieces, int rank, int leftToGuess) {
+		for(Piece p : pieces) {
+			if(p.getKnown() && p.getType() == RANKS[rank]) {
+				pieces.remove(p);
+					return;
+			}
+		}
+		
 		Piece best = null;
 		double max = -1.;
 		for(Piece piece : pieces) {
@@ -475,7 +485,6 @@ public class Guesser {
 	 * @param type
 	 */
 	private void revealPiece(Piece piece, PieceType type) {
-		//		piece.setKnown(true);
 		piece.setType(type.getByte());
 		setRankProbability(piece, type, true);
 	}
@@ -510,6 +519,8 @@ public class Guesser {
 		for(int team=0; team<2; team++) {
 			List<Piece> pieces = new ArrayList<Piece>();
 			Stream.of(state.getPieces()[team]).forEach(p -> pieces.add(p));
+			Arrays.fill(state.getPieces()[team], null);
+			
 			int doubleCountBombe = 0;
 			int doubleCountScout = 0;
 			int doubleCountMineur = 0;

@@ -67,14 +67,13 @@ public class Utils {
 		} else {
 			Piece loser = move.getPiece().attack(defender);
 			if(loser == null) {	
+				revealPiece(move.getPiece(), state);
+				if(!state.removePiece(move.getPiece())) return false;
 				revealPiece(defender, state);
-				if(!state.removePiece(move.getPiece()))
-					return false;
-				if(!state.removePiece(defender))
-					return false;
+				if(!state.removePiece(defender)) return false;
 			} else {
-				if(!state.removePiece(loser))
-					return false;
+				revealPiece(loser, state);
+				if(!state.removePiece(loser)) return false;
 				if(loser != move.getPiece()) {
 					revealPiece(move.getPiece(), state);
 					state.move(move);

@@ -43,5 +43,11 @@ class PieceTest {
 		assertEquals(PieceType.GENERAL, piece.getType());
 		assertFalse(piece.getKnown());
 		assertFalse(piece.getTeam());
+		
+		piece.setType(PieceType.UNKNOWN.getByte());
+		assertEquals(ByteMapper.toByte(5, 3), piece.getPos());
+		assertEquals(PieceType.UNKNOWN, piece.getType());
+		assertFalse(piece.getKnown());
+		assertFalse(piece.getTeam());
 	}
 }

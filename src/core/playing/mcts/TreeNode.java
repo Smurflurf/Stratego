@@ -64,7 +64,7 @@ public class TreeNode {
 				bestChild = child;
 			}
 		}
-		
+
 		return bestChild;
 	}
 
@@ -85,22 +85,30 @@ public class TreeNode {
 
 		TreeNode childNode = new TreeNode(nextState, this, move);
 		children.put(move, childNode); 
-		
+
 		return childNode;
 	}
 
+	public void backpropagate(boolean winner) {
+		TreeNode parent = this;
+		while(parent != null) {
+			parent.updateWins(winner);
+			parent.updateUct();
+			parent = parent.parent;
+		}
+	}
+	
 	/**
 	 * Updates this node's statistics during backpropagation.
 	 * @param winnerTeam True if Red won the simulation, False if Blue won.
 	 */
-	public void updateStats(boolean winner) {
+	private void updateWins(boolean winner) {
 		if(winner) {
 			winsP1++;
 		} else {
 			winsP2++;
 		}
 		visitCount++;
-		updateUct();
 	}
 
 	public GameState getGameState() {
@@ -139,7 +147,7 @@ public class TreeNode {
 	 * @return total simulations played from this node
 	 */
 	public int getNK() {
-//		return winsP1 + winsP2;
+		//		return winsP1 + winsP2;
 		return visitCount;
 	}
 
@@ -186,5 +194,5 @@ public class TreeNode {
 			uct = v + Constants.C * (float)Math.sqrt((float)Math.log(parent.getNK()) / nk);
 		}
 	}
-	
-	}
+
+}

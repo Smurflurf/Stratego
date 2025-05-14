@@ -271,12 +271,12 @@ public class GameState implements Cloneable {
 		Piece[] blueClone = new Piece[10];
 		Piece[] redClone = new Piece[10];
 		if(team) {
-			for(int i=0;i<10;i++) if(getBluePieces()[i] != null) blueClone[i] = getBluePieces()[i].clone((byte)-1);	
+			for(int i=0;i<10;i++) if(getBluePieces()[i] != null) blueClone[i] = getBluePieces()[i].clone(PieceType.UNKNOWN.getByte());	
 			for(int i=0; i<10; i++) if(getRedPieces()[i] != null) redClone[i] = getRedPieces()[i].clone();
 			Collections.shuffle(Arrays.asList(blueClone));
 		} else {
 			for(int i=0;i<10;i++) if(getBluePieces()[i] != null) blueClone[i] = getBluePieces()[i].clone();	
-			for(int i=0; i<10; i++) if(getRedPieces()[i] != null) redClone[i] = getRedPieces()[i].clone((byte)-1);
+			for(int i=0; i<10; i++) if(getRedPieces()[i] != null) redClone[i] = getRedPieces()[i].clone(PieceType.UNKNOWN.getByte());
 			Collections.shuffle(Arrays.asList(redClone));
 		}
 		

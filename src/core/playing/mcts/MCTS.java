@@ -7,8 +7,11 @@ import java.util.stream.Stream;
 
 import core.GameState;
 import core.Move;
+import core.Piece;
+import core.PieceType;
 import core.Utils;
 import core.playing.AI;
+import core.playing.Heuristic;
 import core.playing.random.RandomAI;
 import executable.Runner;
 import ui.UI;
@@ -17,7 +20,8 @@ import ui.UI;
 public class MCTS extends AI {
 	protected static final SplittableRandom rand = new SplittableRandom();
 	public TreeNode root;
-//	UI ui;
+	public Heuristic terminalHeuristic;
+	UI ui;
 	public int simulationCounter;	
 	public int heuristicCounter;
 	public int expansionCounter;
@@ -25,37 +29,37 @@ public class MCTS extends AI {
 
 	public MCTS(boolean team, GameState gameState) {
 		super(team, gameState);
+		ui = new UI(null, null);
 		root = new TreeNode(gameState.clone(), null, null);
 		simulationCounter = 0;
 		heuristicCounter = 0;
 		expansionCounter = 0;
-//		ui = new UI(null, null);
-//		ui.updateBoard(gameState, lastMove);
+		
+		terminalHeuristic = new core.playing.heuristic.Heuristic(team);
 	}
 
 	@Override
 	public Move nextMove() {
-//		ui.updateBoard(gameState, lastMove);
-//		ui.setTitle("MCTS perspective");
-		
+				ui.updateBoard(gameState, lastMove);
+				ui.setTitle("MCTS perspective");
+
 		this.heuristicCounter = 0;
 		this.expansionCounter = 0;
 		this.simulationCounter = 0;
-		
+
 		long start = System.currentTimeMillis();
 		long end = start + Constants.TIME_IN_MS;
 
 
 		root = new TreeNode(gameState.clone(), null, null);
-		ArrayList<TreeNode> backpropagateNodes = new ArrayList<TreeNode>();
-		
+
 		while(System.currentTimeMillis() < end){
 			//Schritte des UCT abarbeiten
 			TreeNode selected = selectAndExpand(root);
-			backpropagate(selected, simulate(selected, 0));
+			selected.backpropagate(simulate(selected, 0));
 		}
 
-//		TreeNode bestChild = bestChildNoLoops(root);
+		//		TreeNode bestChild = bestChildNoLoops(root);
 		TreeNode bestChild = bestRootChild(root);
 
 		if (bestChild == null || bestChild.getMoveThatLedToThisNode() == null) {
@@ -66,7 +70,7 @@ public class MCTS extends AI {
 		printResults(bestChild.getMoveThatLedToThisNode());
 		System.gc();
 		// TODO: -XX:+UseParallelGC, funktioniert am besten in dieser Umgebung
-		
+
 		return bestChild.getMoveThatLedToThisNode();
 	}
 
@@ -144,6 +148,8 @@ public class MCTS extends AI {
 	 */
 	// TODO isTerminal nur 3
 	boolean simulate(TreeNode simulateOn, int step){
+
+
 		boolean isTerminal = simulateOn.isTerminal();
 		TreeNode clone = null;
 
@@ -157,53 +163,33 @@ public class MCTS extends AI {
 			isTerminal = clone.isTerminal();
 		}
 
+
 		if(isTerminal) {
-//			UI ui = new UI(null, null);
-//			ui.updateBoard(clone.getGameState(), clone.getMoveThatLedToThisNode());
-//			System.out.println(clone.isTerminal());
-//			Utils.sleep(2000);
 			switch(Utils.getWinner(clone.getGameState())) {
-			
+
 			case 0:	// red wins
 				simulationCounter++;
 				return true;
 			case 1:	// blue wins
 				simulationCounter++;
-//				System.out.println("Bluee");
+				//				System.out.println("Bluee");
 				return false;
 			case 2:	// draw
 				simulationCounter++;
-//				System.out.println("Draw");
+				//				System.out.println("Draw");
 				return !getTeam();
 			default:
 				heuristicCounter++;
-				int score = terminalHeuristic(simulateOn);
+				int score = terminalHeuristic.evaluate(simulateOn.getGameState());
 				return score == 0 ? !root.getGameState().getTeam() : score > 0;			// TODO test behaviour
 
 			}
 		} else {
 			heuristicCounter++;
-			int score = terminalHeuristic(simulateOn);
+			int score = terminalHeuristic.evaluate(simulateOn.getGameState());
 			return score == 0 ? !root.getGameState().getTeam() : score > 0;			// TODO test behaviour
 		}
 	}
-
-	/**
-	 * a heuristic to evaluate the winner of a given nodes gameState.
-	 * @param node which will be analyzed
-	 * @return an Integer the describes the game,
-	 * 			>0:	team red got a better position
-	 * 			<0: team blue got a better position
-	 * 
-	 * TODO bessere Heuristik
-	 */
-	int terminalHeuristic(TreeNode node) {
-		GameState state = node.getGameState();
-		return (getTeam() ? 1 : -1) *
-				((state.getKnownRed() + state.getDeadRed()) 
-				- (state.getKnownBlue() + state.getDeadBlue()));
-	}
-
 
 	/**
 	 * Picks a (random) Move
@@ -213,18 +199,6 @@ public class MCTS extends AI {
 	Move pickField(TreeNode simulateOn) {
 		Move move = RandomAI.nextMove(simulateOn.getGameState());
 		return move;
-	}
-
-	/**
-	 * propagates the simulation result up the tree until the root element is reached
-	 * @param node on which the simulation was executed
-	 * @param winner of the simulation, winner == true if team A won
-	 */
-	void backpropagate(TreeNode child, boolean winner){
-		while(child != null) {
-			child.updateStats(winner);
-			child = child.getParent();
-		}
 	}
 
 	/**
@@ -247,8 +221,8 @@ public class MCTS extends AI {
 	 */
 	TreeNode bestRootChild(TreeNode parent) {
 		return root.getChildren().values().stream()
-                .max(Comparator.comparingInt(TreeNode::getNK))
-                .orElse(null);
+				.max(Comparator.comparingInt(TreeNode::getNK))
+				.orElse(null);
 	}
 
 	/**
