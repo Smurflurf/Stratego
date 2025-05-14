@@ -1,3 +1,4 @@
+package executable;
 import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.info.GraphLayout;
 
@@ -19,8 +20,8 @@ public class Profiler {
 
 		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
 		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
-		AI ai = AI.Type.RANDOM.createAI(true, new GameState(redPieces, bluePieces));
-		//		nextMoves(ai, 10000000);
+		AI ai = AI.Type.MCTS.createAI(true, new GameState(redPieces, bluePieces));
+		nextMoves(ai, 1000);
 	}
 
 	public static void nextMoves(AI ai, int repetitions) {

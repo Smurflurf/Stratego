@@ -1,3 +1,4 @@
+package executable;
 import core.GameState;
 import core.Move;
 import core.PieceType;

@@ -38,7 +38,7 @@ public class RandomAI extends AI {
 		Move move = null;
 		pieces.clear();
 
-		for(int i=0; i<8; i++)
+		for(int i=0; i<7; i++)
 			if(myPieces[i] != null && myPieces[i].getType().getMoves() > 0) pieces.add(myPieces[i]);
 		
 		while(pieces.size() > 0) {
@@ -66,11 +66,10 @@ public class RandomAI extends AI {
 	 * @return a random valid Move, wrong Moves or null if no Move is possible
 	 */
 	public static Move nextMove(GameState state) {
-		//TODO obfuscated pieces shufflen, hier nicht nur die ersten 8 pieces prüfen
 		Move move = null;
 		staticPieces.clear();
 
-		for(int i=0; i<state.getCurrentPieces().length; i++)
+		for(int i=0; i<7; i++)
 			if(state.getCurrentPieces()[i] != null 
 			&& state.getCurrentPieces()[i].getType().getMoves() > 0) 
 				staticPieces.add(state.getCurrentPieces()[i]);
@@ -95,6 +94,31 @@ public class RandomAI extends AI {
 	}
 	
 	/**
+	 * At least in the Starting position faster than {@link #nextMove(GameState)}
+	 * @param state
+	 * @return
+	 */
+	public static Move nextMoveSimple(GameState state) {
+		Move move = null;
+		staticPieces.clear();
+		for(int i=0; i<state.getCurrentPieces().length; i++)
+			if(state.getCurrentPieces()[i] != null 
+			&& state.getCurrentPieces()[i].getType().getMoves() > 0) 
+				staticPieces.add(state.getCurrentPieces()[i]);
+		
+//		if(!anyMovePossible(gameState)) return move;
+		do {
+			Piece picked = staticPieces.get(random.nextInt(staticPieces.size()));
+			if(picked == null || picked.getType().getMoves() == 0) continue;
+			Direction dir = Direction.get(random.nextInt(4));
+			int fields = random.nextInt(picked.getType().getMoves()) + 1;
+			move = new Move(picked, dir, fields);
+		} while (move == null || !isMovePossible(state, move));
+
+		return move;
+	}
+	
+	/**
 	 * Returns the next Move only relying on randomness, without structures to inhibit potential repetitions
 	 * @return a random valid Move, null if no Move is possible.
 	 */
@@ -102,7 +126,7 @@ public class RandomAI extends AI {
 		Move move = null;
 //		if(!anyMovePossible(gameState)) return move;
 		do {
-			Piece picked = myPieces[random.nextInt(10)];
+			Piece picked = myPieces[random.nextInt(7)];
 			if(picked == null || picked.getType().getMoves() == 0) continue;
 			Direction dir = Direction.get(random.nextInt(4));
 			int fields = random.nextInt(picked.getType().getMoves()) + 1;

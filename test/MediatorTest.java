@@ -17,6 +17,7 @@ import core.placing.Placer;
 import core.playing.AI;
 import core.playing.AI.AIInformer;
 import core.playing.random.RandomAI;
+import executable.Mediator;
 
 class MediatorTest {
 

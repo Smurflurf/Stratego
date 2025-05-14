@@ -1,3 +1,4 @@
+package executable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import javax.swing.SwingUtilities;
@@ -24,7 +25,7 @@ public class Runner {
 	public static boolean use_UI;
 
 	public static void main(String[] args) {
-		use_UI = true;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
+		use_UI = false;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
 		printGame = false;
 		printResults = false;
 		int UI_delay = 50;
@@ -33,7 +34,7 @@ public class Runner {
 		Placer.Type bluePlacement = Placer.Type.PREBUILT;
 		AI.Type redPlayer = AI.Type.MCTS;
 		AI.Type bluePlayer = AI.Type.RANDOM;
-		int simulations = 1;
+		int simulations = 10;
 
 		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay);
 		printResults();

@@ -3,20 +3,21 @@ package core.playing.mcts;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.SplittableRandom;
+import java.util.stream.Stream;
 
 import core.GameState;
 import core.Move;
-import core.PieceType;
 import core.Utils;
 import core.playing.AI;
 import core.playing.random.RandomAI;
+import executable.Runner;
 import ui.UI;
 
 
 public class MCTS extends AI {
 	protected static final SplittableRandom rand = new SplittableRandom();
 	public TreeNode root;
-
+//	UI ui;
 	public int simulationCounter;	
 	public int heuristicCounter;
 	public int expansionCounter;
@@ -28,10 +29,19 @@ public class MCTS extends AI {
 		simulationCounter = 0;
 		heuristicCounter = 0;
 		expansionCounter = 0;
+//		ui = new UI(null, null);
+//		ui.updateBoard(gameState, lastMove);
 	}
 
 	@Override
 	public Move nextMove() {
+//		ui.updateBoard(gameState, lastMove);
+//		ui.setTitle("MCTS perspective");
+		
+		this.heuristicCounter = 0;
+		this.expansionCounter = 0;
+		this.simulationCounter = 0;
+		
 		long start = System.currentTimeMillis();
 		long end = start + Constants.TIME_IN_MS;
 
@@ -53,7 +63,9 @@ public class MCTS extends AI {
 		}
 
 		printResults(bestChild.getMoveThatLedToThisNode());
-
+		System.gc();
+		// TODO: -XX:+UseParallelGC, funktioniert am besten in dieser Umgebung
+		
 		return bestChild.getMoveThatLedToThisNode();
 	}
 
@@ -65,7 +77,7 @@ public class MCTS extends AI {
 	void printResults(Move move) {
 		System.out.println(
 				"\t- - # # * *\t" + this.getClass().getCanonicalName() 
-				+ "  :  "+ Math.round(root.getWinRate() * 100)
+				+ "  :  "+ Math.round(root.getV() * 100)
 				+ "%\t* * # # - -\t"
 				);
 		System.out.println(
@@ -115,8 +127,6 @@ public class MCTS extends AI {
 			} else {
 				// Node is fully expanded, move down via UCT
 				node = node.bestChild();
-				// Handle case where selection might fail (e.g., all children terminal?)
-				//TODO if thats the case check this later. removed handling.
 			}
 		}
 		return node;
@@ -133,7 +143,7 @@ public class MCTS extends AI {
 	 */
 	// TODO isTerminal nur 3
 	boolean simulate(TreeNode simulateOn, int step){
-		boolean isTerminal = isTerminal(simulateOn, false);
+		boolean isTerminal = simulateOn.isTerminal();
 		TreeNode clone = null;
 
 		if(!isTerminal)
@@ -142,21 +152,27 @@ public class MCTS extends AI {
 			clone = simulateOn;
 
 		while(!isTerminal && step++ < Constants.MAX_STEPS) {
-			clone = oneMove(clone, pickField(clone), false);
-			isTerminal = isTerminal(clone, false);
+			oneMove(clone, pickField(clone));
+			isTerminal = clone.isTerminal();
 		}
 
 		if(isTerminal) {
-			simulationCounter++;
+//			UI ui = new UI(null, null);
+//			ui.updateBoard(clone.getGameState(), clone.getMoveThatLedToThisNode());
+//			System.out.println(clone.isTerminal());
+//			Utils.sleep(2000);
 			switch(Utils.getWinner(clone.getGameState())) {
-			case 0:
+			
+			case 0:	// red wins
 				simulationCounter++;
 				return true;
-			case 1:
+			case 1:	// blue wins
 				simulationCounter++;
+//				System.out.println("Bluee");
 				return false;
-			case 2:
+			case 2:	// draw
 				simulationCounter++;
+//				System.out.println("Draw");
 				return !getTeam();
 			default:
 				heuristicCounter++;
@@ -176,13 +192,15 @@ public class MCTS extends AI {
 	 * the heuristics choice depends on the games phase: start-, middle- or end-game
 	 * @param a node which will be analyzed
 	 * @return an Integer the describes the game,
-	 * 			>0:	team A got a better position
-	 * 			<0: team B got a better position
+	 * 			>0:	team red got a better position
+	 * 			<0: team blue got a better position
 	 * 
 	 * TODO anpassen an eigene Heuristiken
 	 */
 	int terminalHeuristic(TreeNode node) {
-		return 0;
+		int redKnown = Stream.of(node.getGameState().getRedPieces()).mapToInt(p -> p == null ? 1 : p.getKnown() ? 1 : 0).sum();
+		int blueKnown = Stream.of(node.getGameState().getBluePieces()).mapToInt(p -> p == null ? 1 : p.getKnown() ? 1 : 0).sum();
+		return (getTeam() ? 1 : -1) * (redKnown - blueKnown);
 	}
 
 
@@ -217,17 +235,6 @@ public class MCTS extends AI {
 	}
 
 	/**
-	 * TODO optimise later
-	 * checks if a game is in a terminal state.
-	 * @param a node to check if it is terminal
-	 * @param isExpanding true is the method gets called from expand. false if its called from simulate
-	 * @return true if terminal
-	 */
-	public boolean isTerminal(TreeNode node, boolean isExpanding) {
-		return Utils.isGameOver(node.getGameState());
-	}
-
-	/**
 	 * Simulates one move and returns a new node containing the new state.
 	 * also adds the new node to the parent nodes children, its place in the Array
 	 * is the move made to get from the parent to the child (= field %6)
@@ -236,15 +243,16 @@ public class MCTS extends AI {
 	 * @param isExpanding true if oneMove gets called from the expand method. false if its from simulate. depending on that less calculations are made for simulations
 	 * @return a child node containing the simulation result
 	 */
-	TreeNode oneMove(TreeNode parent, Move move, boolean isExpanding) {
-		GameState clone = parent.getGameState().clone();
-		if(!Utils.execute(clone, move.normalize(clone))) {
-			UI ui = new UI(AI.Type.HUMAN, AI.Type.HUMAN);
-			ui.updateBoard(clone, move);
-			System.out.println("err");
-			Utils.sleep(50000);
-		}
-		return new TreeNode(clone, parent, move);
+	void oneMove(TreeNode parent, Move move) {
+//		GameState clone = parent.getGameState().clone();
+//		if(!Utils.execute(clone, move.normalize(clone))) {
+//			UI ui = new UI(AI.Type.HUMAN, AI.Type.HUMAN);
+//			ui.updateBoard(clone, move);
+//			System.out.println("err");
+//			Utils.sleep(50000);
+//		}
+//		return new TreeNode(clone, parent, move);
+		Utils.execute(parent.getGameState(), move);
 	}	
 
 	/**
@@ -277,18 +285,5 @@ public class MCTS extends AI {
 
 		goodChildren.sort((e1, e2) -> bestPathDepth(e1) - bestPathDepth(e2));
 		return goodChildren.get(0);
-	}
-	
-	
-	/**
-	 * Sets .
-	 * @param state new GameState
-	 */
-	@Override
-	public void setArraysAndGameState(GameState state) {
-		super.setArraysAndGameState(state);
-		this.heuristicCounter = 0;
-		this.expansionCounter = 0;
-		this.simulationCounter = 0;
 	}
 }

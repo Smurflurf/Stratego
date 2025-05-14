@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 import core.GameState;
 import core.Move;
@@ -114,7 +115,7 @@ public class Guesser {
 
 		GameState cloneWithEverythingElse = currentState.clone();
 		cloneWithEverythingElse.setPiecesAndField(cloneWithPieces.getPieces(), cloneWithPieces.getField());
-		
+
 		return cloneWithEverythingElse;
 	}
 
@@ -126,10 +127,10 @@ public class Guesser {
 	public GameState converge() {
 		GameState cloneWithPieces = legacySearch ? convergeToStartStateLegacy(0) : convergeToStartState(0);
 		mapStartToCurrent(cloneWithPieces);
-		
+
 		GameState cloneWithEverythingElse = currentState.clone();
 		cloneWithEverythingElse.setPiecesAndField(cloneWithPieces.getPieces(), cloneWithPieces.getField());
-		
+
 		return cloneWithEverythingElse;
 	}
 
@@ -227,7 +228,7 @@ public class Guesser {
 				}
 			}
 		}
-		return clone;
+		return unshuffle(clone);
 	}
 
 	/**
@@ -247,7 +248,7 @@ public class Guesser {
 				}
 			}
 		}
-		return clone;
+		return unshuffle(clone);
 	}
 
 	private void guess(List<Piece> pieces, int rank) {
@@ -264,7 +265,7 @@ public class Guesser {
 
 		if(best == null)	// Für sehr seltenen Fall dass eine Piece an einer Stelle steht, die nicht durch probabilities abgedeckt wird.
 			best = pieces.removeFirst();
-		
+
 		pieces.remove(best);
 		best.setType(RANKS[rank].getByte());
 	}
@@ -468,12 +469,13 @@ public class Guesser {
 	}
 
 	/**
-	 * Sets a Pieces rank to type, declares it as known and sets is probability to 1 at {@link #RANKS}[type].
+	 * Sets a Pieces rank to type and sets is probability to 1 at {@link #RANKS}[type].
+	 * The Piece won't be declared as known to use that information within the AI.
 	 * @param piece
 	 * @param type
 	 */
 	private void revealPiece(Piece piece, PieceType type) {
-		piece.setKnown(true);
+		//		piece.setKnown(true);
 		piece.setType(type.getByte());
 		setRankProbability(piece, type, true);
 	}
@@ -498,9 +500,49 @@ public class Guesser {
 	}
 
 	public Move getLastMove(GameState state) {
-		return lastMove.clone(state);
+		if(lastMove != null)
+			return lastMove.clone(state);
+		return lastMove;
 	}
 
+	@SuppressWarnings("incomplete-switch")
+	private GameState unshuffle(GameState state) {
+		for(int team=0; team<2; team++) {
+			List<Piece> pieces = new ArrayList<Piece>();
+			Stream.of(state.getPieces()[team]).forEach(p -> pieces.add(p));
+			int doubleCountBombe = 0;
+			int doubleCountScout = 0;
+			int doubleCountMineur = 0;
+			while(pieces.size() > 0) {
+				Piece piece = pieces.removeFirst();
+				switch(piece.getType()) {
+				case FLAGGE:
+					state.getPieces()[team][9] = piece;
+					break;
+				case BOMBE:
+					state.getPieces()[team][8 - doubleCountBombe++] = piece;
+					break;
+				case SPIONIN:
+					state.getPieces()[team][6] = piece;
+					break;
+				case SPAEHER:
+					state.getPieces()[team][5 - doubleCountScout++] = piece;
+					break;
+				case MINEUR:
+					state.getPieces()[team][3 - doubleCountMineur++] = piece;
+					break;
+				case GENERAL:
+					state.getPieces()[team][1] = piece;
+					break;
+				case MARSCHALL:
+					state.getPieces()[team][0] = piece;
+					break;
+				}
+			}
+		}
+
+		return state;
+	}
 
 	/**
 	 * Returns how accurately the Pieces of team got guessed.
