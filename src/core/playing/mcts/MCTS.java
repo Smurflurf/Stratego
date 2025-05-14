@@ -1,19 +1,17 @@
 package core.playing.mcts;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.SplittableRandom;
-import java.util.stream.Stream;
 
 import core.GameState;
+import core.Mediator;
 import core.Move;
-import core.Piece;
-import core.PieceType;
 import core.Utils;
 import core.playing.AI;
 import core.playing.Heuristic;
 import core.playing.random.RandomAI;
-import executable.Runner;
 import ui.UI;
 
 
@@ -40,8 +38,10 @@ public class MCTS extends AI {
 
 	@Override
 	public Move nextMove() {
-				ui.updateBoard(gameState, lastMove);
-				ui.setTitle("MCTS perspective");
+//		if(Mediator.stateGame != null)
+//		gameState = Mediator.stateGame;
+		ui.updateBoard(gameState, lastMove);
+		ui.setTitle("MCTS perspective");
 
 		this.heuristicCounter = 0;
 		this.expansionCounter = 0;
@@ -59,7 +59,7 @@ public class MCTS extends AI {
 			selected.backpropagate(simulate(selected, 0));
 		}
 
-		//		TreeNode bestChild = bestChildNoLoops(root);
+//		TreeNode bestChild = bestChildNoLoops(root);
 		TreeNode bestChild = bestRootChild(root);
 
 		if (bestChild == null || bestChild.getMoveThatLedToThisNode() == null) {
@@ -67,7 +67,7 @@ public class MCTS extends AI {
 			return RandomAI.nextMove(gameState);
 		}
 
-		printResults(bestChild.getMoveThatLedToThisNode());
+		printResults(bestChild);
 		System.gc();
 		// TODO: -XX:+UseParallelGC, funktioniert am besten in dieser Umgebung
 
@@ -79,38 +79,41 @@ public class MCTS extends AI {
 	 * 
 	 * @param bestChild
 	 */
-	void printResults(Move move) {
+	void printResults(TreeNode bestChild) {
 		System.out.println(
 				"\t- - # # * *\t" + this.getClass().getCanonicalName() 
-				+ "  :  "+ Math.round(root.getV() * 100)
+				+ "  :  "+ Math.round(bestChild.getV() * 100)
 				+ "%\t* * # # - -\t"
 				);
 		System.out.println(
 				"Knoten expandiert: " + expansionCounter +
-				", Tiefe bester Pfad: " + /*bestPathDepth(root) +*/
+				", Tiefe bester Pfad: " + bestPathDepth(root) +
 				"\nSimulationen bis zum Ende: " + simulationCounter + 
 				", Heuristik angewendet: " + heuristicCounter + 
-				", Move: " + move
+				", Move: " + bestChild.getMoveThatLedToThisNode()
 				);
-		/*for(int i=0; i<root.children.length; i++) {
-			if(root.children[i] != null)
+
+		TreeNode[] children = root.getChildren().values().toArray(TreeNode[]::new);
+		Arrays.sort(children, Comparator.comparingDouble(c -> ((TreeNode) c).getV()).reversed());
+		for(int i=0; i<(children.length > 5 ? 5 : children.length); i++) {
 				System.out.println(
 						"\tchild "+ i + 
-						" Gewinnchance: " + Math.round(root.children[i].getV()* 1000000)/10000. + 
-						"% bei " + root.children[i].getNK() + " Spielen"
+						" Gewinnchance: " + Math.round(children[i].getV()* 1000000)/10000. + 
+						"% bei " + children[i].getNK() + " Spielen"
 						);
-		}*/
+		}
 
 		System.out.println("\n");
 	}
 
-	/** @return the chosen paths depth (best childs best child, ... , ... best child = null) */
+	/** 
+	 * @return the chosen paths depth (best childs best child, ... , ... best child = null) 
+	 */
 	int bestPathDepth(TreeNode node) {
 		int depth = 0;
 		while(node != null) {
 			depth ++;
 			node = node.bestChild();
-			node = this.bestRootChild(node); 
 		}
 		return depth;
 	}
@@ -148,8 +151,6 @@ public class MCTS extends AI {
 	 */
 	// TODO isTerminal nur 3
 	boolean simulate(TreeNode simulateOn, int step){
-
-
 		boolean isTerminal = simulateOn.isTerminal();
 		TreeNode clone = null;
 
@@ -172,11 +173,9 @@ public class MCTS extends AI {
 				return true;
 			case 1:	// blue wins
 				simulationCounter++;
-				//				System.out.println("Bluee");
 				return false;
-			case 2:	// draw
+			case 2:	// draw, win for my Team
 				simulationCounter++;
-				//				System.out.println("Draw");
 				return !getTeam();
 			default:
 				heuristicCounter++;

@@ -1,4 +1,4 @@
-package strados2;
+package executable;
 
 import java.io.File;
 import java.io.IOException;

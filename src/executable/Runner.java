@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import javax.swing.SwingUtilities;
 
 import core.GameState;
+import core.Mediator;
 import core.Move;
 import core.Piece;
 import core.Utils;
@@ -28,7 +29,7 @@ public class Runner {
 		use_UI = true;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
 		printGame = false;
 		printResults = false;
-		int UI_delay = 5000;
+		int UI_delay = 50;
 		
 		Placer.Type redPlacement = Placer.Type.PREBUILT;
 		Placer.Type bluePlacement = Placer.Type.PREBUILT;

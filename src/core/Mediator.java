@@ -1,8 +1,4 @@
-package executable;
-import core.GameState;
-import core.Move;
-import core.PieceType;
-import core.Utils;
+package core;
 import core.playing.AI.AIInformer;
 
 /**
@@ -78,11 +74,14 @@ public class Mediator {
 		PieceType defender = gameState.inspect(move.getEndX(), move.getEndY()) != null 
 				? gameState.inspect(move.getEndX(), move.getEndY()).getType() : null;
 		boolean moved = Utils.checkAndExecute(gameState, move);
+		stateGame = gameState;
 		if(moved)
 			setLastMove(move, isAttack, attacker, defender);
 		return moved;
 	}
-
+	public static GameState stateGame;
+	
+	
 	/**
 	 * Obfuscates the GameState for a given player.
 	 * Replaces all known PieceTypes of the enemy team in {@link #gameState} with the UNKNOWN type.

@@ -1,3 +1,4 @@
+package core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import core.ByteMapper;
 import core.Direction;
 import core.GameState;
+import core.Mediator;
 import core.Move;
 import core.Piece;
 import core.PieceType;
@@ -17,7 +19,6 @@ import core.placing.Placer;
 import core.playing.AI;
 import core.playing.AI.AIInformer;
 import core.playing.random.RandomAI;
-import executable.Mediator;
 
 class MediatorTest {
 

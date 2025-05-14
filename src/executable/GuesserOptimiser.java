@@ -1,4 +1,4 @@
-package core.playing.guesser;
+package executable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +8,7 @@ import core.GameState;
 import core.Piece;
 import core.PieceType;
 import core.placing.Placer;
+import core.playing.guesser.Guesser;
 import it.unimi.dsi.fastutil.Pair;
 
 public class GuesserOptimiser {
