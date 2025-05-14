@@ -11,19 +11,30 @@ import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
 public class GameState implements Cloneable {
 	private boolean team;
 	/**
-	 * Shows if a Piece is currently chasing another Piece
+	 * Represents inChase, the red repetitions and blue repetitions in one byte.
+	 * In Chase:
 	 * 0 = no chase, 
 	 * 1 = red chases blue, 
 	 * 2 = blue chases red.
+	 * 
+	 * Repetitions will never exceed 3 so they can be mapped onto two bits.
+	 * inChase only takes two bits but uses the first four.
+	 * The bitmap is the following, where c are inChase bits, r are repetition reds bits and b are repetition blues bits.
+	 * ccccrrbb
 	 */
-	private byte inChase;
+	private byte chaseAndRepetitions;
 	/**
-	 * represents the red repetitions and blue repetitions in one byte.
-	 * repetitions will never exceed 3 so they can be mapped onto two bits.
-	 * the bitmap is the following, where r are repetition reds bits and b are repetition blues bits.
-	 * 0000rrbb
+	 * Represents how many Pieces are dead.
+	 * Left is the value for red Pieces, right for blue Pieces:
+	 * rrrrbbbb
 	 */
-	private byte repetitions;
+	private byte deadPieces;
+	/**
+	 * Represents how many Pieces are known.
+	 * Left is the value for red Pieces, right for blue Pieces:
+	 * rrrrbbbb
+	 */
+	private byte knownPieces;
 	private short repetitionRedFields;
 	private short repetitionBlueFields;
 	private Move firstRepetitionRedMove;
@@ -44,12 +55,14 @@ public class GameState implements Cloneable {
 		setChasedFields(new ShortOpenHashSet());
 	}
 
-	public GameState(Piece[] redPieces, Piece[] bluePieces, boolean team, byte inChase, byte repetitions, Move firstRepetitionRedMove, Move firstRepetitionBlueMove,
+	public GameState(Piece[] redPieces, Piece[] bluePieces, boolean team, byte chaseAndRepetitions, byte knownPieces, byte deadPieces,
+			Move firstRepetitionRedMove, Move firstRepetitionBlueMove,
 			short repetitionRedFields, short repetitionBlueFields, ShortOpenHashSet chasedFields) {
 		field = new Piece[8][8];
 		setTeam(team);
-		setInChase(inChase);
-		setRepetitions(repetitions);
+		setKnown(knownPieces);
+		setDead(deadPieces);
+		setChaseAndRepetitions(chaseAndRepetitions);
 		setPieces(redPieces, bluePieces);
 		createField();
 		setFirstRepetitionRedMove(firstRepetitionRedMove);
@@ -91,8 +104,10 @@ public class GameState implements Cloneable {
 
 	public boolean equals(GameState state2) {
 		if(state2.getTeam() != getTeam()) return false;
-		if(state2.getInChase() != getInChase()) return false;
-		if(state2.getRepetitions() != getRepetitions()) return false;
+		if(state2.getChaseAndRepetitions() != getChaseAndRepetitions()) return false;
+		if(state2.getKnown() != getKnown()) return false;
+		if(state2.getDead() != getDead()) return false;
+		
 		for(int x=0; x<8; x++)
 			for(int y=0; y<8; y++) {
 				if(getField()[x][y] == null) {
@@ -102,6 +117,7 @@ public class GameState implements Cloneable {
 					continue;
 				}
 				if(!getField()[x][y].equals(state2.getField()[x][y])) {
+					getField()[x][y].equals(state2.getField()[x][y]);
 					return false;
 				}
 			}
@@ -227,8 +243,9 @@ public class GameState implements Cloneable {
 						redClone, 
 						blueClone, 
 						team,
-						inChase,
-						repetitions,
+						chaseAndRepetitions,
+						knownPieces,
+						deadPieces,
 						firstRepetitionRedMove, 
 						firstRepetitionBlueMove, 
 						repetitionRedFields, 
@@ -268,8 +285,9 @@ public class GameState implements Cloneable {
 						redClone, 
 						blueClone, 
 						this.team, 
-						inChase,
-						repetitions,
+						chaseAndRepetitions,
+						knownPieces,
+						deadPieces,
 						firstRepetitionRedMove, 
 						firstRepetitionBlueMove, 
 						repetitionRedFields, 
@@ -285,6 +303,7 @@ public class GameState implements Cloneable {
 	 * @param piece Piece to Thanos snap
 	 */
 	public boolean removePiece(Piece piece) {
+		this.incrementDead(piece.getTeam());
 		var pieces = (piece.getTeam() ? getRedPieces() : getBluePieces());
 		for(int i=0; i<10; i++) {
 			if(pieces[i] == piece) {
@@ -310,7 +329,76 @@ public class GameState implements Cloneable {
 			if(piece != null)
 				field[piece.getX()][piece.getY()] = piece;
 	}
+	
+	
+	
+	
+	
+	
+	/*/////////////////////////////////////////////////////////////
+	/// Getter and Setter
+	/////////////////////////////////////////////////////////////*/
 		
+	public void setKnown(byte knownPieces) {
+		this.knownPieces = knownPieces;
+	}
+	
+	public int getKnown() {
+		return knownPieces;
+	}
+	
+	public int getKnownRed() {
+		return (knownPieces & 0b11110000) >> 4;
+	}
+	public int getKnownBlue() {
+		return (knownPieces & 0b00001111);
+	}
+	
+	public void incrementKnown(boolean team) {
+		if(team) {
+			incrementKnownRed();
+		} else {
+			incrementKnownBlue();
+		}
+	}
+	
+	public void incrementKnownRed() {
+		knownPieces = ((byte) ((knownPieces & 0b00001111) | ((getKnownRed() +1) << 4)));
+	}
+	public void incrementKnownBlue() {
+		knownPieces = ((byte) ((knownPieces & 0b11110000) | (getKnownBlue() +1)));
+	}
+	
+	public void setDead(byte deadPieces) {
+		this.deadPieces = deadPieces;
+	}
+	
+	public int getDead() {
+		return deadPieces;
+	}
+	
+	public int getDeadRed() {
+		return (deadPieces & 0b11110000) >> 4;
+	}
+	public int getDeadBlue() {
+		return (deadPieces & 0b00001111);
+	}
+	
+	public void incrementDead(boolean team) {
+		if(team) {
+			incrementDeadRed();
+		} else {
+			incrementDeadBlue();
+		}
+	}
+	
+	public void incrementDeadRed() {
+		deadPieces = ((byte) ((deadPieces & 0b00001111) | ((getDeadRed() +1) << 4)));
+	}
+	public void incrementDeadBlue() {
+		deadPieces = ((byte) ((deadPieces & 0b11110000) | (getDeadBlue() +1)));
+	}
+	
 	/**
 	 * If {@link #pieces} and {@link #field} want to be set, call this.
 	 * Also normalizes all related Moves.
@@ -324,6 +412,14 @@ public class GameState implements Cloneable {
 			firstRepetitionBlueMove.normalize(this);
 		if(firstRepetitionRedMove != null)
 			firstRepetitionRedMove.normalize(this);
+	}
+	
+	public int getChaseAndRepetitions() {
+		return chaseAndRepetitions;
+	}
+	
+	public void setChaseAndRepetitions(byte chaseAndRepetitions) {
+		this.chaseAndRepetitions = chaseAndRepetitions;
 	}
 	
 	/**
@@ -345,11 +441,11 @@ public class GameState implements Cloneable {
 	}
 
 	public void setInChase(byte inChase) {
-		this.inChase = inChase;
+		chaseAndRepetitions = (byte) ((chaseAndRepetitions & 0b00001111) | (inChase << 4));
 	}
 
-	public byte getInChase() {
-		return inChase;
+	public int getInChase() {
+		return (chaseAndRepetitions & 0b11110000) >> 4;
 	}
 	
 	public void incrementCurrentRepetitions(boolean team) {
@@ -377,26 +473,22 @@ public class GameState implements Cloneable {
 	}
 	
 	public byte getRepetitions() {
-		return repetitions;
+		return (byte)(chaseAndRepetitions & 0b00001111);
 	}
-	
-	public void setRepetitions(byte repetitions) {
-		this.repetitions = repetitions;
-	}
-	
+
 	public void setRepetitionsRed(int repetitionsRed) {
-		setRepetitions((byte) ((repetitions & 0b11110011) | (repetitionsRed << 2)));
+		setChaseAndRepetitions((byte) ((chaseAndRepetitions & 0b11110011) | (repetitionsRed << 2)));
 	}
 
 	public int getRepetitionsRed() {
-		return (repetitions & 0b00001100) >> 2;
+		return (chaseAndRepetitions & 0b00001100) >> 2;
 	}
 
 	public void setRepetitionsBlue(int repetitionsBlue) {
-		setRepetitions((byte) ((repetitions & 0b11111100) | repetitionsBlue));
+		setChaseAndRepetitions((byte) ((chaseAndRepetitions & 0b11111100) | repetitionsBlue));
 	}
 	public int getRepetitionsBlue() {
-		return repetitions & 0b00000011;
+		return chaseAndRepetitions & 0b00000011;
 	}
 
 	/**

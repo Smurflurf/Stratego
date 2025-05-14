@@ -61,10 +61,13 @@ public class Utils {
 	private static boolean makeMove(GameState state, Move move) {
 		if(!(state.inspect(move.getEndX(), move.getEndY()) instanceof Piece defender)) {
 			state.move(move);
+			if(move.getFields() > 1) {
+				revealPiece(move.getPiece(), state);
+			}
 		} else {
 			Piece loser = move.getPiece().attack(defender);
 			if(loser == null) {	
-				defender.setKnown(true);
+				revealPiece(defender, state);
 				if(!state.removePiece(move.getPiece()))
 					return false;
 				if(!state.removePiece(defender))
@@ -73,14 +76,21 @@ public class Utils {
 				if(!state.removePiece(loser))
 					return false;
 				if(loser != move.getPiece()) {
-					move.getPiece().setKnown(true);
+					revealPiece(move.getPiece(), state);
 					state.move(move);
 				} else {
-					defender.setKnown(true);
+					revealPiece(defender, state);
 				}
 			}
 		}
 		return true;
+	}
+	
+	private static void revealPiece(Piece piece, GameState state) {
+		if(!piece.getKnown()) {
+			piece.setKnown(true);
+			state.incrementKnown(piece.getTeam());
+		}
 	}
 
 	public static boolean isMovePossible(GameState state, Move move) {

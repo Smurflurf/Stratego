@@ -47,7 +47,8 @@ public class MCTS extends AI {
 
 
 		root = new TreeNode(gameState.clone(), null, null);
-
+		ArrayList<TreeNode> backpropagateNodes = new ArrayList<TreeNode>();
+		
 		while(System.currentTimeMillis() < end){
 			//Schritte des UCT abarbeiten
 			TreeNode selected = selectAndExpand(root);
@@ -189,18 +190,18 @@ public class MCTS extends AI {
 
 	/**
 	 * a heuristic to evaluate the winner of a given nodes gameState.
-	 * the heuristics choice depends on the games phase: start-, middle- or end-game
-	 * @param a node which will be analyzed
+	 * @param node which will be analyzed
 	 * @return an Integer the describes the game,
 	 * 			>0:	team red got a better position
 	 * 			<0: team blue got a better position
 	 * 
-	 * TODO anpassen an eigene Heuristiken
+	 * TODO bessere Heuristik
 	 */
 	int terminalHeuristic(TreeNode node) {
-		int redKnown = Stream.of(node.getGameState().getRedPieces()).mapToInt(p -> p == null ? 1 : p.getKnown() ? 1 : 0).sum();
-		int blueKnown = Stream.of(node.getGameState().getBluePieces()).mapToInt(p -> p == null ? 1 : p.getKnown() ? 1 : 0).sum();
-		return (getTeam() ? 1 : -1) * (redKnown - blueKnown);
+		GameState state = node.getGameState();
+		return (getTeam() ? 1 : -1) *
+				((state.getKnownRed() + state.getDeadRed()) 
+				- (state.getKnownBlue() + state.getDeadBlue()));
 	}
 
 
@@ -211,15 +212,7 @@ public class MCTS extends AI {
 	// TODO anderes als Random
 	Move pickField(TreeNode simulateOn) {
 		Move move = RandomAI.nextMove(simulateOn.getGameState());
-		if(move == null)
-		{
-			UI ui = new UI(AI.Type.HUMAN, AI.Type.HUMAN);
-			ui.updateBoard(simulateOn.getGameState(), move);
-			System.out.println("err");
-//			Utils.sleep(50000);
-			RandomAI.nextMove(simulateOn.getGameState());
-		}
-			return move;
+		return move;
 	}
 
 	/**
@@ -244,14 +237,6 @@ public class MCTS extends AI {
 	 * @return a child node containing the simulation result
 	 */
 	void oneMove(TreeNode parent, Move move) {
-//		GameState clone = parent.getGameState().clone();
-//		if(!Utils.execute(clone, move.normalize(clone))) {
-//			UI ui = new UI(AI.Type.HUMAN, AI.Type.HUMAN);
-//			ui.updateBoard(clone, move);
-//			System.out.println("err");
-//			Utils.sleep(50000);
-//		}
-//		return new TreeNode(clone, parent, move);
 		Utils.execute(parent.getGameState(), move);
 	}	
 
@@ -262,7 +247,7 @@ public class MCTS extends AI {
 	 */
 	TreeNode bestRootChild(TreeNode parent) {
 		return root.getChildren().values().stream()
-                .max(Comparator.comparingInt(TreeNode::getVisitCount))
+                .max(Comparator.comparingInt(TreeNode::getNK))
                 .orElse(null);
 	}
 

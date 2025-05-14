@@ -36,12 +36,12 @@ class UtilsTest extends Utils {
 	void testRepetitions() {
 		assertEquals(0, state.getRepetitions());
 		
-		state.setRepetitions((byte)0b00001111);
+		state.setChaseAndRepetitions((byte)0b00001111);
 		assertEquals(0b00001111, state.getRepetitions());
 		assertEquals(0b11, state.getRepetitionsRed());
 		assertEquals(0b11, state.getRepetitionsBlue());
 		
-		state.setRepetitions((byte)0);
+		state.setChaseAndRepetitions((byte)0);
 		state.setRepetitionsRed(2);
 		assertEquals(2, state.getRepetitionsRed());		//xxxx1000
 		assertEquals(0, state.getRepetitionsBlue());	//xxxx1000

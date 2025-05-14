@@ -10,6 +10,8 @@ import core.PieceType;
 import core.Utils;
 import core.placing.Placer;
 import core.playing.AI;
+import core.playing.mcts.TreeNode;
+import core.playing.random.RandomAI;
 
 /**
  * Contains diverse Methods to test xxx
@@ -42,13 +44,18 @@ public class Profiler {
 		switch(c) {
 		case GameState:
 			object = new GameState(Placer.placePiecesWith(true, Placer.Type.PREBUILT), Placer.placePiecesWith(false, Placer.Type.PREBUILT));
-			Utils.checkAndExecute((GameState) object, AI.Type.RANDOM.createAI(true, (GameState) object).nextMove());
+			Utils.checkAndExecute((GameState) object, RandomAI.nextMove((GameState) object));
 			break;
 		case Piece:
 			object = new Piece(PieceType.MARSCHALL, true);
 			break;
 		case Move:
 			object = new Move(new Piece(PieceType.SPAEHER, true), Direction.UP, 1);
+		case TreeNode:
+			GameState state = new GameState(Placer.placePiecesWith(true, Placer.Type.PREBUILT), Placer.placePiecesWith(false, Placer.Type.PREBUILT));
+			Move move = RandomAI.nextMove(state);
+			Utils.checkAndExecute(state, move);
+			object = new TreeNode(state, null, move);
 		}
 
 		System.out.println(ClassLayout.parseInstance(object).toPrintable());
@@ -59,6 +66,7 @@ public class Profiler {
 	enum Class {
 		GameState,
 		Piece,
-		Move;
+		Move,
+		TreeNode;
 	};
 }

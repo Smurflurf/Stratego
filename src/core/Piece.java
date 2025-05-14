@@ -92,7 +92,7 @@ public class Piece implements Cloneable {
 	}
 
 	public boolean getKnown() {
-		return 0b11111111 == (0b01111111 | knownAndType);
+		return -1 == (knownAndType >> 7);
 	}
 	
 	public void setKnown(boolean known) {

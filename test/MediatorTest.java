@@ -253,85 +253,86 @@ class MediatorTest {
 		GameState state = new GameState(redPieces, bluePieces);
 		state.setTeam(false);
 		Mediator mediator = new Mediator(state);	
-		AI red = new RandomAI(true, mediator.obfuscateFor(true));
-		AI blue = new RandomAI(false, mediator.obfuscateFor(false));
+//		AI red = new RandomAI(true, mediator.obfuscateFor(true));
+//		AI blue = new RandomAI(false, mediator.obfuscateFor(false));
 		
 		Move move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.RIGHT, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 right
 		assertEquals(1, mediator.getGameState().getRepetitionsBlue());
-		AIInformer inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
-		red.update(inform);
-		AIInformer inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
-		blue.update(inform2);
+//		AIInformer inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+//		red.update(inform);
+//		AIInformer inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+//		blue.update(inform2);
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[0], Direction.LEFT, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move red Marschall 1 
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
-		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
-		red.update(inform);
-		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
-		blue.update(inform2);
+//		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+//		red.update(inform);
+//		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+//		blue.update(inform2);
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.DOWN, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 down
 		assertEquals(1, mediator.getGameState().getRepetitionsBlue());
-		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
-		red.update(inform);
-		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
-		blue.update(inform2);
+//		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+//		red.update(inform);
+//		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+//		blue.update(inform2);
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[0], Direction.DOWN, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move red Marshall 1 down
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
-		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
-		red.update(inform);
-		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
-		blue.update(inform2);
+//		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+//		red.update(inform);
+//		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+//		blue.update(inform2);
 
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.UP, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 up, REP: 2
 		assertEquals(2, mediator.getGameState().getRepetitionsBlue());
-		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
-		red.update(inform);
-		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
-		blue.update(inform2);
+//		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+//		red.update(inform);
+//		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+//		blue.update(inform2);
 	
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[2], Direction.RIGHT, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move red Mineur 1 right
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
-		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
-		red.update(inform);
-		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
-		blue.update(inform2);
+//		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+//		red.update(inform);
+//		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+//		blue.update(inform2);
 
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.DOWN, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 down, REP: 3
 		assertEquals(3, mediator.getGameState().getRepetitionsBlue());
-		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
-		red.update(inform);
-		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
-		blue.update(inform2);
+//		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+//		red.update(inform);
+//		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+//		blue.update(inform2);
 
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[0], Direction.LEFT, 1);
 		assertFalse(Utils.twoSquaresRule(state, move));
 		assertTrue(mediator.makeMove(move));								// move red Marshall 1 left
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
-		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
-		red.update(inform);
-		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
-		blue.update(inform2);
+//		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
+//		red.update(inform);
+//		inform2 = new AIInformer(mediator.obfuscateFor(false), move, false, null, null);
+//		blue.update(inform2);
 
 		
 		for(int i=0; i<10000; i++) {
-			move = blue.nextMove();
+			move = RandomAI.nextMove(mediator.getGameState());
+//			move = blue.nextMove();
 			if(move.getEndY() == 6) {
 				fail("RandomAI not knowing twoSquaresRule!");
 			}

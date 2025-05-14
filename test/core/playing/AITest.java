@@ -21,7 +21,7 @@ class AITest {
 		ui2.updateBoard(ai.gameState, null);
 		ui2.setTitle("Guessed");
 		
-		Utils.sleep(10000);
+//		Utils.sleep(10000);
 	}
 
 }
