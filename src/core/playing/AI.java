@@ -6,6 +6,7 @@ import core.Piece;
 import core.PieceType;
 import core.Utils;
 import core.playing.guesser.Guesser;
+import core.playing.heuristic.HeuristicAI;
 import core.playing.human.HumanInput;
 import core.playing.mcts.MCTS;
 import core.playing.random.RandomAI;
@@ -64,7 +65,7 @@ public abstract class AI extends Utils {
 	 * Different AI Types to simulate with
 	 */
 	public enum Type {
-		RANDOM, HUMAN, MCTS;
+		RANDOM, HUMAN, MCTS, HEURISTIC;
 
 		public AI createAI(boolean team, GameState gameState) {
 			AI ai; 
@@ -77,6 +78,9 @@ public abstract class AI extends Utils {
 				break;
 			case MCTS:
 				ai = new MCTS(team, gameState);
+				break;
+			case HEURISTIC:
+				ai = new HeuristicAI(team, gameState);
 				break;
 			default: 
 				ai = new RandomAI(team, gameState);

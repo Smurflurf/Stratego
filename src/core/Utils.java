@@ -2,6 +2,8 @@ package core;
 
 import java.util.ArrayList;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+
 /**
  * Useful utilities for the whole project.
  * The methods do not alter their parameters.
@@ -9,7 +11,8 @@ import java.util.ArrayList;
  */
 public class Utils {
 	public static boolean checkAndExecute(GameState state, Move move) {
-		if(!isMovePossible(state, move)) return false;
+		if(!isMovePossible(state, move.getPiece(), move.getEndX(), move.getEndY(), move.getDirection(), move.getFields())) 
+			return false;
 		return execute(state, move);
 	}
 	
@@ -92,17 +95,25 @@ public class Utils {
 		}
 	}
 
-	public static boolean isMovePossible(GameState state, Move move) {
-		if(state.getTeam() != move.getPiece().getTeam()) return false;	// is Pieces turn?
-		if(outOfBounds(move.getEndX()) || outOfBounds(move.getEndY())) return false;	// is Move out of bounds?
-		int blockState = blockedTeamSensitive(state.getField(), move.getEndX(), move.getEndY(), move.getPiece().getTeam());
-		if(blockState == -1 || blockState == 1) return false;	// is field blocked by lake or same team Piece?
-		if(!canReach(move.getPiece(), move.getEndX(), move.getEndY())) return false;	// is Piece reachable?
-		Direction dir = move.getDirection();
-		if(!sightLine(state.getField(), move.getPiece(), move.getFields(), dir)) return false;
+	/**
+	 * 
+	 * @param state
+	 * @param piece
+	 * @param x end x
+	 * @param y end y
+	 * @param dir
+	 * @param fields
+	 * @return
+	 */
+	public static boolean isMovePossible(GameState state, Piece piece, int x, int y, Direction dir, int fields) {
+		if(state.getTeam() != piece.getTeam()) return false;	// is Pieces turn?
+		if(isOutOfBoundsOrBlocked(state.getField(), x, y, piece.getTeam())) return false;
+		
+		if(!canReach(piece,x, y)) return false;	// is Piece reachable?
+		if(!sightLine(state.getField(), piece, fields, dir)) return false;
 
-		if(twoSquaresRule(state, move)) return false;
-		if(moreSquaresRule(state, move)) return false;
+		if(twoSquaresRule(state, piece, x, y)) return false;
+		if(moreSquaresRule(state, ByteMapper.toByte(x, y))) return false;
 
 		return true;
 	}
@@ -113,7 +124,7 @@ public class Utils {
 	 * @param picked
 	 * @param dirMap
 	 */
-	public static void fillDirectionMap(GameState state, Piece picked, ArrayList<int[]> dirMap){
+	public static void fillDirectionMap(GameState state, Piece picked, ObjectArrayList<int[]> dirMap){
 		dirMap.clear();
 		for(int direction=0; direction<4; direction++) {
 			int reach = reach(state.getField(), picked, direction, null);
@@ -245,6 +256,21 @@ public class Utils {
 	}
 
 	/**
+	 * Does the {@link #outOfBounds(int)} and {@link #blockedTeamSensitive(Piece[][], int, int, boolean)} check
+	 * @param field GameState field
+	 * @param x end x
+	 * @param y end y
+	 * @param team moving Piece team
+	 * @return true if the move is not valid
+	 */
+	public static boolean isOutOfBoundsOrBlocked(Piece[][] field, int x, int y, boolean team) {
+		if(outOfBounds(x) || outOfBounds(y)) return true;	// is Move out of bounds?
+		int blockState = blockedTeamSensitive(field, x, y, team);
+		if(blockState == -1 || blockState == 1) return true;	// is field blocked by lake or same team Piece?
+		return false;
+	}
+	
+	/**
 	 * Checks for different things blocking a field, returns what exactly is blocking
 	 * @param field
 	 * @param x
@@ -303,7 +329,7 @@ public class Utils {
 
 		return false;
 	}
-
+	
 	/**
 	 * Checks if a given integer is out of bounds
 	 * @param i integer to check
@@ -316,24 +342,26 @@ public class Utils {
 	/**
 	 * Tests if the two square rule applies, i.e. if there are more than 3 repetitions
 	 * @param state
-	 * @param move
+	 * @param piece
+	 * @param x end x
+	 * @param y end y
 	 * @return true if the rule applies, move is invalid
 	 */
-	public static boolean twoSquaresRule(GameState state, Move move) {
+	public static boolean twoSquaresRule(GameState state, Piece piece, int x, int y) {
 		return state.getCurrentRepetitions() > 2
-				&& state.inMoveBounds(move) 
-				&& state.getFirstRepetitionMove(move.getPiece().getTeam()).getPiece().equals(move.getPiece());
+				&& state.inMoveBounds(piece, x, y) 
+				&& state.getFirstRepetitionMove(piece.getTeam()).getPiece().equals(piece);
 	}
 
 	/**
 	 * Tests if the more square rule applies, i.e. if a chase  is happening and the chaser and chased are on positions that already happened once.
 	 * @param state
-	 * @param move
+	 * @param endPos endPosition
 	 * @return true if the rule applies, move is invalid
 	 */
-	public static boolean moreSquaresRule(GameState state, Move move) {
+	public static boolean moreSquaresRule(GameState state, byte endPos) {
 		if(state.isInChase()) {
-			return state.getChasedFields().contains(ByteMapper.hash(state.getLastMove().getEnd(), move.getEnd()));
+			return state.getChasedFields().contains(ByteMapper.hash(state.getLastMove().getEnd(), endPos));
 		} else {
 			return false;
 		}
@@ -345,22 +373,25 @@ public class Utils {
 	 * @param state the gameState to analyze. Its team attribute is considered.
 	 * @return all possible moves in gameState
 	 */
-	public static Move[] getAllPossibleMoves(GameState state) {
-		ArrayList<Move> moves = new ArrayList<Move>();
-		for(int i=0; i<10; i++) {
+	public static ObjectArrayList<Move> getAllPossibleMoves(GameState state) {
+		ObjectArrayList<Move> moves = new ObjectArrayList<Move>();
+		for(int i=0; i<7; i++) {
 			if(state.getCurrentPieces()[i] == null) continue;
 			for(int reach=0; reach<state.getCurrentPieces()[i].getType().getMoves(); reach++) {
-				for(int dir=0; dir<4; dir++) {
-					Move move = new Move(state.getCurrentPieces()[i], Direction.get(dir), reach+1);
-					if(isMovePossible(state, move)) {
-						moves.add(move);
+				for(Direction dir : Direction.values()) {
+					Piece piece = state.getCurrentPieces()[i];
+					if(isMovePossible(state, piece, 
+							Move.calcEndX(piece.getX(), dir, reach+1), 
+							Move.calcEndY(piece.getY(), dir, reach+1),
+							dir, reach+1)) {
+						moves.add(new Move(state.getCurrentPieces()[i], dir, reach+1));
 					} else {
 						continue;
 					}
 				}
 			}
 		}
-		return moves.toArray(Move[]::new);
+		return moves;
 	}
 
 	/**
@@ -375,11 +406,13 @@ public class Utils {
 		for(int i=0; i<8; i++) {
 			if(state.getCurrentPieces()[i] == null
 					|| !state.getCurrentPieces()[i].equals(piece)) continue;
-			for(int dir=0; dir<4; dir++) {
+			for(Direction dir : Direction.values()) {
 				for(int reach=0; reach<state.getCurrentPieces()[i].getType().getMoves(); reach++) {
-					Move move = new Move(state.getCurrentPieces()[i], Direction.get(dir), reach+1);
-					if(isMovePossible(state, move)) {
-						moves.add(move);
+					if(isMovePossible(state, piece, 
+							Move.calcEndX(piece.getX(), dir, reach+1), 
+							Move.calcEndY(piece.getY(), dir, reach+1),
+							dir, reach+1)) {
+						moves.add(new Move(state.getCurrentPieces()[i], dir, reach+1));
 					} else {
 						continue;
 					}
@@ -395,10 +428,14 @@ public class Utils {
 	 * @return false if no Move is possible in gameState
 	 */
 	public static boolean anyMovePossible(GameState state) {
-		for(int i=0; i<10; i++) {
+		for(int i=0; i<7; i++) {
 			if(state.getCurrentPieces()[i] == null) continue;
-			for(int dir=0; dir<4; dir++) {
-				if(isMovePossible(state, new Move(state.getCurrentPieces()[i], Direction.get(dir), 1))) {
+			for(Direction dir : Direction.values()) {
+				Piece piece = state.getCurrentPieces()[i];
+				if(isMovePossible(state, piece, 
+						Move.calcEndX(piece.getX(), dir, 1), 
+						Move.calcEndY(piece.getY(), dir, 1),
+						dir, 1)) {
 					return true;
 				}
 			}
@@ -408,7 +445,6 @@ public class Utils {
 
 	/**
 	 * Relies on the Fag being [9] in the Pieces array. 
-	 * TODO potentially use for loop starting from 9-- to find Flag. Not needed if it works without
 	 * Also relies on Bombs being [8] and [7] in the array
 	 * @param gameState
 	 * @return
@@ -449,7 +485,7 @@ public class Utils {
 				return 2;
 			}
 			gameState.changeTeam();
-			return gameState.getTeam() ? 0 : 1;
+			return gameState.getTeam() ? 1 : 0;
 		}
 
 		return 3;

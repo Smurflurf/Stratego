@@ -96,6 +96,36 @@ public class Move {
 		}
 	}
 	
+	/**
+	 * Calculates the end position X from startX, direction and fields
+	 * @param startX
+	 * @param direction
+	 * @param fields
+	 * @return
+	 */
+	public static int calcEndX(int startX, Direction direction, int fields) {
+		if(direction.getTranslation()[0] == 0) {
+			return startX;
+		} else {
+			return startX + direction.getOneDimTranslation() * fields;
+		}
+	}
+	
+	/**
+	 * Calculates the end position Y from startY, direction and fields
+	 * @param startY
+	 * @param direction
+	 * @param fields
+	 * @return
+	 */
+	public static int calcEndY(int startY, Direction direction, int fields) {
+		if(direction.getTranslation()[1] == 0) {
+			return startY;
+		} else {
+			return startY + direction.getOneDimTranslation() * fields;
+		}
+	}
+	
 	public boolean equals(Move move2) {
 		if(move2 == null) return false;
 		if(!piece.equals(move2.piece)) return false;

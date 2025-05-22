@@ -122,53 +122,53 @@ class MediatorTest {
 		GameState state = new GameState(redPieces, bluePieces);
 		Mediator mediator = new Mediator(state);	
 		Move move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// first rep red
 		assertEquals(0, mediator.getGameState().getCurrentRepetitions());
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[4], Direction.UP, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// first rep blue
 		assertEquals(1, mediator.getGameState().getCurrentRepetitions());
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.UP, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// second rep red
 		assertEquals(1, mediator.getGameState().getCurrentRepetitions());
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[4], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// second rep blue
 		assertEquals(2, mediator.getGameState().getCurrentRepetitions());
 
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// third rep red
 		assertEquals(2, mediator.getGameState().getCurrentRepetitions());
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[4], Direction.UP, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// third rep blue
 		assertEquals(3, mediator.getGameState().getCurrentRepetitions());
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.UP, 1);
-		assertTrue(Utils.twoSquaresRule(state, move));
+		assertTrue(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertFalse(mediator.makeMove(move));								// fourth rep red
 		assertEquals(3, mediator.getGameState().getCurrentRepetitions());
 
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[6], Direction.LEFT, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// breaking repetitions red
 		assertEquals(3, mediator.getGameState().getCurrentRepetitions());
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[4], Direction.DOWN, 1);
-		assertTrue(Utils.twoSquaresRule(state, move));
+		assertTrue(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertFalse(mediator.makeMove(move));								// fourth rep blue
 		assertEquals(3, mediator.getGameState().getCurrentRepetitions());
 		
-		assertTrue(Utils.twoSquaresRule(state, move));
+		assertTrue(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[5], Direction.UP, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// breaking repetitions blue
 		assertEquals(1, mediator.getGameState().getCurrentRepetitions());
 	}
@@ -183,44 +183,44 @@ class MediatorTest {
 		Mediator mediator = new Mediator(state);	
 		
 		Move move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// first rep red
 		assertEquals(0, mediator.getGameState().getCurrentRepetitions());
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[4], Direction.UP, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// first rep blue
 		assertEquals(1, mediator.getGameState().getCurrentRepetitions());
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.UP, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// second rep red
 		assertEquals(1, mediator.getGameState().getCurrentRepetitions());
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[4], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// second rep blue
 		assertEquals(2, mediator.getGameState().getCurrentRepetitions());
 
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// third rep red
 		assertEquals(2, mediator.getGameState().getCurrentRepetitions());
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[4], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// third rep blue
 		assertEquals(3, mediator.getGameState().getCurrentRepetitions());
 
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.UP, 1);
-		assertTrue(Utils.twoSquaresRule(state, move));
+		assertTrue(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertFalse(mediator.makeMove(move));								// breaking repetitions red
 		assertEquals(3, mediator.getGameState().getCurrentRepetitions());
 		
-		assertTrue(Utils.twoSquaresRule(state, move));
+		assertTrue(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[4], Direction.LEFT, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// breaking repetitions blue
 		assertEquals(1, mediator.getGameState().getCurrentRepetitions());
 	}
@@ -258,7 +258,7 @@ class MediatorTest {
 //		AI blue = new RandomAI(false, mediator.obfuscateFor(false));
 		
 		Move move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.RIGHT, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 right
 		assertEquals(1, mediator.getGameState().getRepetitionsBlue());
 //		AIInformer inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
@@ -267,7 +267,7 @@ class MediatorTest {
 //		blue.update(inform2);
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[0], Direction.LEFT, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// move red Marschall 1 
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
 //		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
@@ -276,7 +276,7 @@ class MediatorTest {
 //		blue.update(inform2);
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 down
 		assertEquals(1, mediator.getGameState().getRepetitionsBlue());
 //		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
@@ -285,7 +285,7 @@ class MediatorTest {
 //		blue.update(inform2);
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[0], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// move red Marshall 1 down
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
 //		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
@@ -294,7 +294,7 @@ class MediatorTest {
 //		blue.update(inform2);
 
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.UP, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 up, REP: 2
 		assertEquals(2, mediator.getGameState().getRepetitionsBlue());
 //		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
@@ -303,7 +303,7 @@ class MediatorTest {
 //		blue.update(inform2);
 	
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[2], Direction.RIGHT, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// move red Mineur 1 right
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
 //		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
@@ -312,7 +312,7 @@ class MediatorTest {
 //		blue.update(inform2);
 
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.DOWN, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// move blue Mineur 1 down, REP: 3
 		assertEquals(3, mediator.getGameState().getRepetitionsBlue());
 //		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
@@ -322,7 +322,7 @@ class MediatorTest {
 
 		
 		move = new Move(mediator.obfuscateFor(true).getCurrentPieces()[0], Direction.LEFT, 1);
-		assertFalse(Utils.twoSquaresRule(state, move));
+		assertFalse(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertTrue(mediator.makeMove(move));								// move red Marshall 1 left
 		assertEquals(1, mediator.getGameState().getRepetitionsRed());
 //		inform = new AIInformer(mediator.obfuscateFor(true), move, false, null, null);
@@ -340,7 +340,7 @@ class MediatorTest {
 		}
 		
 		move = new Move(mediator.obfuscateFor(false).getCurrentPieces()[3], Direction.UP, 1);
-		assertTrue(Utils.twoSquaresRule(state, move));
+		assertTrue(Utils.twoSquaresRule(state, move.getPiece(), move.getEndX(), move.getEndY()));
 		assertFalse(mediator.makeMove(move));								// move blue Mineur 1 left, REP: 4
 		assertEquals(3, mediator.getGameState().getRepetitionsBlue());
 	}

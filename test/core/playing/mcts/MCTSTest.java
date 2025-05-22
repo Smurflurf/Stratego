@@ -61,9 +61,9 @@ class MCTSTest {
 		for(Move move : moves)
 			mcts.guesser.currentState.move(move);
 		
-		mcts.ui.updateBoard(mcts.gameState, null);
-		mcts.nextMove();
-		Utils.sleep(10000);
+//		mcts.ui.updateBoard(mcts.gameState, null);
+//		mcts.nextMove();
+//		Utils.sleep(10000);
 	}
 
 }

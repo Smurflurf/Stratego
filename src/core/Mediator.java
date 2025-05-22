@@ -6,6 +6,7 @@ import core.playing.AI.AIInformer;
  * Obfuscated a teams pieces, updates the GameState and rejects impossible Moves.
  */
 public class Mediator {
+	private GameState startState;
 	private GameState gameState;
 	private Move lastMove;
 	private boolean wasLastMoveAnAttack;
@@ -14,6 +15,7 @@ public class Mediator {
 
 	public Mediator(GameState gameState) {
 		this.gameState = gameState;
+		this.startState = gameState.clone();
 		setLastMove(null, false, null, null);
 	}
 
@@ -91,6 +93,10 @@ public class Mediator {
 		return gameState.obfuscateFor(team);
 	}
 
+	public GameState getStartState() {
+		return startState;
+	}
+	
 	public GameState getGameState() {
 		return gameState;
 	}

@@ -1,6 +1,8 @@
 package executable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import javax.swing.SwingUtilities;
 
 import core.GameState;
@@ -9,7 +11,6 @@ import core.Move;
 import core.Piece;
 import core.Utils;
 import core.placing.Placer;
-import core.placing.deboer.HeuristicDeBoer;
 import core.playing.AI;
 import ui.UI;
 
@@ -17,7 +18,17 @@ import ui.UI;
  * Runs simulations, execute the main method for doing so
  */
 public class Runner {
-	public static record WinnerEntry(Placer.Type redPlacement, Placer.Type bluePlacement, AI.Type redType, AI.Type blueType, int winner, long moves, long nanoTime) {};
+	public static record WinnerEntry(
+			Placer.Type redPlacement, 
+			Placer.Type bluePlacement, 
+			AI.Type redType, 
+			AI.Type blueType, 
+			int winner, 
+			int moves,
+			HashMap<Integer, Double> redOnMoveGuessingAccuracy, 
+			HashMap<Integer, Double> blueOnMoveGuessingAccuracy, 
+			long nanoTime
+			) {};
 	public static ArrayList<WinnerEntry> winList = new ArrayList<WinnerEntry>();
 	public static UI ui;
 	public static boolean ui_initialized = false; 
@@ -31,9 +42,9 @@ public class Runner {
 		printResults = false;
 		int UI_delay = 50;
 		
-		Placer.Type redPlacement = Placer.Type.PREBUILT;
-		Placer.Type bluePlacement = Placer.Type.PREBUILT;
-		AI.Type redPlayer = AI.Type.MCTS;
+		Placer.Type redPlacement = Placer.Type.BARRAGE;
+		Placer.Type bluePlacement = Placer.Type.BARRAGE;
+		AI.Type redPlayer = AI.Type.RANDOM;
 		AI.Type bluePlayer = AI.Type.RANDOM;
 		int simulations = 1;
 
@@ -65,8 +76,10 @@ public class Runner {
 			showGame(mediator, 0);
 			AI red = redType.createAI(true, mediator.obfuscateFor(true));
 			AI blue = blueType.createAI(false, mediator.obfuscateFor(false));
+			HashMap<Integer, Double> redOnMoveGuessingAccuracy = new HashMap<Integer, Double>();
+			HashMap<Integer, Double> blueOnMoveGuessingAccuracy = new HashMap<Integer, Double>();
 
-			long moves = 0;
+			int moves = 0;
 			long simTime= 0;
 			long startTime;
 			long endTime;
@@ -87,6 +100,12 @@ public class Runner {
 					endTime = System.nanoTime();
 					simTime += endTime - startTime;
 				}
+				
+				redOnMoveGuessingAccuracy.put(moves, red.guesser.accuracy(mediator.getStartState(), red.getTeam()));
+				System.out.println(moves + " red: " +  redOnMoveGuessingAccuracy.get(moves) + " " + red.guesser.currentState.getKnownRed() + " " + red.guesser.currentState.getKnownBlue());
+				blueOnMoveGuessingAccuracy.put(moves, blue.guesser.accuracy(mediator.getStartState(), blue.getTeam()));
+				System.out.println(moves + " blue: " +  blueOnMoveGuessingAccuracy.get(moves) + " " + red.guesser.currentState.getKnownRed() + " " + red.guesser.currentState.getKnownBlue());
+				
 				if(!mediator.makeMove(move)) {
 					System.err.println("error while executing move " + move + "\n" + Utils.fieldToString(mediator.getGameState().getField()));
 					System.err.println(mediator.getGameState().isInChase() + " " + mediator.getGameState().getInChase() + " " + mediator.getGameState().getChasedFields().size() + "\n" +
@@ -97,7 +116,7 @@ public class Runner {
 				}
 
 				showGame(mediator, delay);
-
+				
 				moves++;
 
 				red.update(mediator.getAIInformer(true));
@@ -105,7 +124,16 @@ public class Runner {
 			}
 
 			showWinner(mediator, simTime);
-			winList.add(new WinnerEntry(redPlacement, bluePlacement, redType, blueType, mediator.getWinnerTeam(), moves, simTime));
+			winList.add(new WinnerEntry(
+					redPlacement, 
+					bluePlacement, 
+					redType, 
+					blueType, 
+					mediator.getWinnerTeam(), 
+					moves,
+					redOnMoveGuessingAccuracy, 
+					blueOnMoveGuessingAccuracy,
+					simTime));
 		}
 		long end = System.currentTimeMillis();
 		System.out.println("total time: " + (end - start) + "ms");

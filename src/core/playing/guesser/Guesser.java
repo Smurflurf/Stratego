@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
@@ -18,9 +19,11 @@ import core.PieceType;
 import core.Utils;
 import core.playing.AI.AIInformer;
 import strados2.tools.CompressedMapIO;
+import strados2.tools.GeneralTools.RelativePosition;
+import strados2.tools.NeighborIO;
 
 public class Guesser {
-	GameState startState;
+	public GameState startState;
 	public GameState currentState;
 	Move lastMove;
 	PieceType[] RANKS = {PieceType.SPIONIN, PieceType.FLAGGE, PieceType.BOMBE, PieceType.MARSCHALL, PieceType.MINEUR, PieceType.GENERAL, PieceType.SPAEHER};
@@ -30,13 +33,25 @@ public class Guesser {
 	Map<PieceType, Integer> redDeadPieces;
 	Map<PieceType, Integer> blueDeadPieces;
 	Map<PieceType, int[][]> probabilities;
+	Set<Piece> movable;
+	Map<PieceType, Map<RelativePosition, Map<PieceType, Double>>> neighborProbabilities;
 	Map<Piece, Piece> startToCurrentStateMap;
 	Map<Piece, Piece> currentToStartStateMap;
 	/**
 	 * Used in {@link #converge()}, decides if pieces get converged by rank or probability
 	 */
-	boolean legacySearch;
+	public boolean legacySearch;
+	/**
+	 * Used in {@link #normalize()}, applies neighbor counts to probabilities
+	 */
+	public boolean applyNeighborCounts;
 
+	public static String mode = "classic";
+	
+	public static double epsilon = 0.01;
+	public static double neighborBuffFactor = 1;
+	public static double neighborNerfFactor = 1;
+	
 	/**
 	 * Guesses team Pieces.
 	 * @param gameState starting position
@@ -45,20 +60,21 @@ public class Guesser {
 	public Guesser(GameState gameState, PieceType[] RANKS) {
 		if(RANKS != null)
 			this.RANKS = RANKS;
-		legacySearch = true;
-
+		legacySearch = false;
+		applyNeighborCounts = true;
 
 		redPieces = new HashMap<Piece, double[]> ();
 		bluePieces = new HashMap<Piece, double[]> ();
 		redDeadPieces = new HashMap<PieceType, Integer>();
 		blueDeadPieces = new HashMap<PieceType, Integer>();
-		probabilities = CompressedMapIO.loadCompressedMaps("barrage");
-		//		Map<PieceType, Map<RelativePosition, Map<PieceType, Double>>> neigbors = NeighborIO.loadNeighborCounts("barrage");
+		probabilities = CompressedMapIO.loadCompressedMaps(mode);
+		neighborProbabilities = NeighborIO.loadNeighborCounts(mode);
 		currentState = gameState.clone();
 		startState = gameState.clone();
 		startToCurrentStateMap = new HashMap<Piece, Piece>();
 		currentToStartStateMap = new HashMap<Piece, Piece>();
 		deadPieces = new HashSet<Piece>();
+		movable = new HashSet<Piece>();
 
 		for(int i=0; i<2; i++)
 			for(Piece startPiece : startState.getPieces()[i]) {
@@ -69,41 +85,93 @@ public class Guesser {
 					}
 				}
 			}
-
-		for(int i=0; i<2; i++)
-			for(Piece piece : startState.getPieces()[i]) {
-				initPiece(piece);
-			}
+		initPieces();
 		normalize();
 	}
 
+
 	/**
-	 * Initializes piece with start probabilities int {@link #redPieces} or {@link #bluePieces} depending on team.
+	 * Initializes all Pieces with start probabilities int {@link #redPieces} or {@link #bluePieces} depending on team.
 	 * Piece initialization is hard coded here!
-	 * @param piece Piece to init
 	 */
-	private void initPiece(Piece piece) {
-		int x = piece.getX();
-		int y = piece.getY() > 4 ? 7 - piece.getY() : piece.getY();
+	private void initPieces() {
+		redPieces.clear();
+		bluePieces.clear();
+		
+		for(int team=0; team<2; team++) {
+			// create probability arrays, put raw probabilities for unknown Pieces in there
+			for(Piece piece : startState.getPieces()[team]) {
+				int x = piece.getX();
+				int y = piece.getY() > 4 ? 7 - piece.getY() : piece.getY();
 
-		double[] probabilities = new double[RANKS.length];
+				double[] probabilities = new double[RANKS.length];
 
-		if(piece.getKnown()) {
-			for(int i=0; i<RANKS.length; i++)
-				if(piece.getType() == RANKS[i])
-					probabilities[i] = 1.0;
-		} else {
-			for(int i=0; i<RANKS.length; i++)
-				probabilities[i] = this.probabilities.get(RANKS[i])[x][y];
+				if(!piece.getKnown()) {
+					for(int i=0; i<RANKS.length; i++) {
+						if((RANKS[i] == PieceType.BOMBE 
+								|| RANKS[i] == PieceType.FLAGGE)
+								&& movable.contains(piece)) {
+							probabilities[i] = 0;
+						} else {
+							probabilities[i] = this.probabilities.get(RANKS[i])[x][y] + 1;
+//							probabilities[i] = Math.random() * 100 +1;  // TODO zufalls Test
+						}
+					}
+				}
+
+				(piece.getTeam() ? redPieces : bluePieces).put(piece, probabilities);
+			}
+			
+			// normalize the probabilities
+			for(Piece piece : startState.getPieces()[team]) {
+				double[] probabilities = (piece.getTeam() ? redPieces : bluePieces).get(piece);
+				double sum = DoubleStream.of(probabilities).sum();
+				for(int r=0; r<RANKS.length; r++)
+					probabilities[r] /= sum;
+			}
+			
+			// put known Pieces probabilities in there
+			for(Piece piece : startState.getPieces()[team]) {
+				int rank = 0;
+				if(piece.getKnown()) {
+					for(int r=0; r<RANKS.length; r++)
+						if(piece.getType() == RANKS[r])
+							rank = r;
+					(piece.getTeam() ? redPieces : bluePieces).get(piece)[rank] = 1;
+				}
+			}
+			
+			// remove rank probabilities for ranks which are already completely known
+			for(int r=0; r<RANKS.length; r++) {
+				int knownRankCount = 0;
+				for(Piece p : (team == 0 ? redPieces : bluePieces).keySet()) 
+					knownRankCount += (team == 0 ? redPieces : bluePieces).get(p)[r] == 1 ? 1 : 0;
+				
+				if(knownRankCount == 0) // no piece known
+					continue;
+				else if (knownRankCount != RANKS[r].getPieceCount()) { // 1 out of 2 Pieces known
+					double sum = -1;
+					for(Piece p : (team == 0 ? redPieces : bluePieces).keySet()) {
+						sum += (team == 0 ? redPieces : bluePieces).get(p)[r];
+					}
+					for(Piece p : (team == 0 ? redPieces : bluePieces).keySet()) {
+						double[] probs = (team == 0 ? redPieces : bluePieces).get(p);
+						probs[r] = probs[r] == 1 ? 1 : probs[r] / sum; 
+					}
+				} else { // both Pieces known
+					for(Piece p : (team == 0 ? redPieces : bluePieces).keySet()) {
+						double[] probs = (team == 0 ? redPieces : bluePieces).get(p);
+						probs[r] = probs[r] == 1 ? 1 : 0; 
+					}
+				}
+			}
 		}
-
-		if(piece.getTeam()) {
-			redPieces.put(piece, probabilities);
-		} else {
-			bluePieces.put(piece, probabilities);
-		}
+		
+//		System.out.println("\n\n\n in init \n");
+//		print();
 	}
 
+	
 	/**
 	 * Call to converge the GameState to a GameState without PieceType.UNKNOWN.
 	 * Call only after {@link #normalize()} normalized the GameState (happens in constructor).
@@ -142,7 +210,7 @@ public class Guesser {
 		for(int team=0; team<2; team++) {
 			for(Piece clonePiece : clone.getPieces()[team]) {
 				for(Piece startPiece : startState.getPieces()[team]) {
-					
+
 					if(clonePiece.getPos() == startPiece.getPos()) {
 						Piece current = startToCurrentStateMap.get(startPiece);
 						if(currentState.inspect(current.getX(), current.getY()) == null || 
@@ -164,9 +232,6 @@ public class Guesser {
 		for(Move move : alterClone) {
 			clone.getField()[move.getEndX()][move.getEndY()] = move.getPiece();
 			move.getPiece().setPos(move.getEndX(), move.getEndY());
-			
-			if(move.getPiece().getType()==PieceType.FLAGGE)
-				System.out.println(move);
 		}
 	}
 
@@ -211,7 +276,7 @@ public class Guesser {
 
 				if (bestPieceToAssign != null && bestRankToAssign != null) {	// normaler Weg, sollte in 99.9% genommen weerden
 					bestPieceToAssign.setType(bestRankToAssign.getByte());
-//					bestPieceToAssign.setKnown(true);
+					//					bestPieceToAssign.setKnown(true);
 					unassignedPieces.remove(bestPieceToAssign);
 					remainingRankCounts.put(bestRankToAssign, remainingRankCounts.get(bestRankToAssign) - 1);
 				} else {	// bei Fehlern. Sehr selten, eigentlich nur bei Laden der classic Probabilities bei mit Barrage platziert
@@ -224,7 +289,7 @@ public class Guesser {
 						}
 					}
 					fallbackPiece.setType(fallbackRank.getByte());
-//					fallbackPiece.setKnown(true);
+					//					fallbackPiece.setKnown(true);
 					unassignedPieces.remove(fallbackPiece);
 					remainingRankCounts.put(fallbackRank, remainingRankCounts.get(fallbackRank) - 1);
 				}
@@ -244,7 +309,7 @@ public class Guesser {
 			var aliveRanks = getRankCounts();
 			List<Piece> pieces = new ArrayList<Piece>();
 			for(Piece p : clone.getPieces()[teamIndex]) if(p != null) pieces.add(p);
-			
+
 			for(int rank=0; rank<RANKS.length; rank++) {
 				for(int leftToGuess=aliveRanks.get(RANKS[rank]); leftToGuess>0; leftToGuess--) {
 					guess(pieces, rank, leftToGuess);
@@ -258,10 +323,10 @@ public class Guesser {
 		for(Piece p : pieces) {
 			if(p.getKnown() && p.getType() == RANKS[rank]) {
 				pieces.remove(p);
-					return;
+				return;
 			}
 		}
-		
+
 		Piece best = null;
 		double max = -1.;
 		for(Piece piece : pieces) {
@@ -285,20 +350,50 @@ public class Guesser {
 	 * Calls {@link #normalizeRanks(Map, double)} and {@link #normalizePieces(Map, boolean, double)}
 	 * till the difference is smaller than the threshold epsilon.
 	 */
-	private void normalize() {
-		double epsilon = 0.01;
+	public void normalize() {
 		boolean updated = true;
 		long time = System.currentTimeMillis();
 
+//		initPieces();
+//		System.out.println("\n\nAfter Initialisation");
+//		print();
+		if(applyNeighborCounts)
+			applyNeighborCounts(neighborNerfFactor, neighborBuffFactor);
+//		System.out.println("After Neighbor Counts");
+//		print();
+		
+		int iterations=0;
 		while(updated) {
-			if(System.currentTimeMillis() - time > (epsilon * 100) * 100) {
-				System.out.println("Time threshold reached. "
-						+ "Probably wrong initialized pieces (Guesser.java). "
-						+ "Does not matter for big simulations. Use \"barrage\" probabilities.");
+			iterations++;
+			if(System.currentTimeMillis() - time > 100) {
+				System.out.println("Time threshold reached in (Guesser.java). "
+						+ " Placement does not represent the known probabilities.");
+				
+				double totalPiece = 0;
+				for(Piece piece : redPieces.keySet()) {
+					totalPiece += DoubleStream.of(redPieces.get(piece)).sum();
+//					System.out.println(piece + " " + DoubleStream.of(redPieces.get(piece)).sum());
+				}
+
+				double totalRank = 0;
+				for(int rank=0; rank<RANKS.length; rank++) {
+					double rankProb = 0;
+					for(Piece piece : redPieces.keySet()) {
+						rankProb += redPieces.get(piece)[rank];
+					}
+					totalRank += rankProb;
+//					System.out.println(RANKS[rank] + " " + rankProb);
+				}
+				print();
+				System.out.println("totalPieces: " + totalPiece);
+				System.out.println("totalRanks: " + totalRank);
+				System.out.println("iterations: " + iterations);
+				
 				return;
 			}
 
 			updated = false;
+			
 			for(int i=0; i<2; i++) {
 				Map<Piece, double[]> pieces = i==0 ? redPieces : bluePieces;
 				updated |= normalizeRanks(pieces, epsilon);
@@ -306,7 +401,86 @@ public class Guesser {
 			}
 		}
 	}
+   
+	/**
+	 * Applies neighbor relations to the probabilities
+	 * 
+	 * @param nerfFactor weight of the neighbor probabilities
+	 * @param buffFactor weight of the neighbor probabilities
+	 */
+	private void applyNeighborCounts(double nerfFactor, double buffFactor) {
+		for (int team = 0; team < 2; team++) {
+			for (Piece known : startState.getPieces()[team]) {
+				if(!known.getKnown()) continue;
+				buffDirectNeighbors(known, buffFactor);
+				nerfFarPieces(known, nerfFactor);
+			}
+		}
+	}
 
+	/**
+	 * Magnifies all rank probabilities for Pieces directly connected to known based on the {@link #neighborProbabilities} relation
+	 * @param known center Piece, PieceType is known
+	 * @param buffFactor weight of the neighbor probabilities
+	 */
+	private void buffDirectNeighbors(Piece known, double buffFactor) {
+		Map<Piece, double[]> rankProbs = (known.getTeam()) ? redPieces : bluePieces;
+		for (RelativePosition pos : RelativePosition.values()) {
+			if(!known.getTeam()) pos = pos.mirror();
+			int x = pos.transformX(known.getX());
+			int y = pos.transformY(known.getY());
+
+			if (x >= 0 && x < 8 && y >= 0 && y < 8) {
+				Piece neighbor = startState.inspect(x, y);
+				if (neighbor != null 
+						&& !neighbor.getKnown()
+						&& neighborProbabilities.get(known.getType()) != null
+						&& neighborProbabilities.get(known.getType()).get(pos) != null) {
+					Map<PieceType, Double> neighbors = neighborProbabilities.get(known.getType()).get(pos);
+					if (neighbors != null) {
+						double[] neighborProbs = rankProbs.get(neighbor);
+						
+						for (int r=0; r<RANKS.length; r++) {
+							if(neighbors.get(RANKS[r]) != null) {
+								neighborProbs[r] *= 1 + buffFactor * neighbors.get(RANKS[r]);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+		
+	/**
+	 * Calculates the euclidean distance between known location and all other unknown Pieces.
+	 * If the distance is smaller than 1.5, meaning the fields right around piece, nothing happens.
+	 * Otherwise the unknown Pieces rank possibilities get lowered by p percent, 
+	 * where p is the combined probability of the unknown Piece being knowns neighbor.
+	 * @param known center Piece, Pieces around it won't be nerfed
+	 * @param nerfFactor weight of the neighbor probabilities
+	 */
+	public void nerfFarPieces(Piece known, double nerfFactor) {
+		Map<Piece, double[]> rankProbs = (known.getTeam()) ? redPieces : bluePieces;
+		for(int r=0; r<RANKS.length; r++) {
+			double combinedProb = 0;
+			for(RelativePosition pos : RelativePosition.values()) {
+				if(		neighborProbabilities.get(known.getType()) != null
+						&& neighborProbabilities.get(known.getType()).get(pos) != null
+						&& neighborProbabilities.get(known.getType()).get(pos).get(RANKS[r]) != null) {
+					combinedProb += neighborProbabilities.get(known.getType()).get(pos).get(RANKS[r]);
+				}
+			}
+			
+			for(Piece notNeighbor : rankProbs.keySet()) {
+				if(!notNeighbor.getKnown()
+						&& Math.sqrt((known.getY() - notNeighbor.getY()) * (known.getY() - notNeighbor.getY()) 
+								+ (known.getX() - notNeighbor.getX()) * (known.getX() - notNeighbor.getX())) > 1.5) {
+					rankProbs.get(notNeighbor)[r] *= 1 - nerfFactor * combinedProb;
+				}
+			}
+		}
+	}
+	
 	/**
 	 * Normalizes the ranks probabilities for one Piece so the values add up to 1.
 	 * Only normalizes if the probabilities don't already add up to 1.
@@ -317,11 +491,16 @@ public class Guesser {
 	private boolean normalizeRanks(Map<Piece, double[]> pieces, double epsilon) {
 		boolean updated = false;
 		for(Piece p : pieces.keySet()) {
-			double sum = DoubleStream.of(pieces.get(p)).sum();
-			if(Math.abs(sum - 1.0) > epsilon) {
+			double sum = 0;
+			for(int d=0; d<pieces.get(p).length; d++) {
+				sum += pieces.get(p)[d];
+			}
+
+			if(Math.abs(1.0 - sum) > epsilon) {
 				updated = true;
-				for(int i=0; i<pieces.get(p).length; i++)
+				for(int i=0; i<pieces.get(p).length; i++) {
 					pieces.get(p)[i] /= sum;
+				}
 			}
 		}
 		return updated;
@@ -339,22 +518,22 @@ public class Guesser {
 
 		for(int i=0; i<RANKS.length; i++) {
 			double sum = 0;
-			for(Piece piece : pieces.keySet())
-				sum += pieces.get(piece)[i];
-
+			for(Piece piece : pieces.keySet()) {
+				double value = pieces.get(piece)[i];
+				sum += value;
+			}
+			
 			double targetRank = RANKS[i].getPieceCount();//ranksInGame.get(RANKS[i]);
-			if(Math.abs(sum - targetRank) > epsilon) {
+			if(Math.abs(targetRank - sum) > epsilon) {
 				updated = true;
 				double factor = targetRank / sum;
 				for(Piece piece : pieces.keySet())
-					if(pieces.get(piece)[i] < 1) 
-						pieces.get(piece)[i] *= factor;
+					pieces.get(piece)[i] *= factor;
 			}
 		}
 
 		return updated;
 	}
-
 
 	/**
 	 * Returns how many Pieces of each rank has
@@ -462,13 +641,23 @@ public class Guesser {
 			} else { // Moved one field, cannot be Bomb or Flag
 				setRankProbability(attackerInStartState, PieceType.FLAGGE, false);
 				setRankProbability(attackerInStartState, PieceType.BOMBE, false);
+				movable.add(attackerInStartState);
 			}
 		}
 
 		if (!Utils.execute(currentState, move))
 			System.err.println("Error in Guesser : update, Move not executed: " + move);
 
+		if(attackerInCurrentStateBeforeMove.getKnown()) {
+			attackerInStartState.setKnown(true);
+			if(defenderInStartState != null) { 
+				defenderInStartState.setKnown(true);
+			}
+		}
+		
+		
 		this.lastMove = move;
+		
 		this.normalize();
 	}
 
@@ -484,9 +673,38 @@ public class Guesser {
 	 * @param piece
 	 * @param type
 	 */
-	private void revealPiece(Piece piece, PieceType type) {
+	public void revealPiece(Piece piece, PieceType type) {
 		piece.setType(type.getByte());
 		setRankProbability(piece, type, true);
+
+		inferLastPiece(piece.getTeam());
+	}
+	
+	private void inferLastPiece(boolean team) {
+		if((team ? startState.getKnownRed() : startState.getKnownBlue()) == 9 ) {
+			PieceType missingRank = null;
+			for(PieceType rank : RANKS) {
+				int count = rank.getPieceCount();
+
+				for(Piece p: startState.getPieces()[team ? 0 : 1])
+					if(p.getType() == rank && p.getKnown()) {
+						count --;
+					}
+				if(count > 0) {
+					missingRank = rank;
+					break;
+				}
+			}
+			for(Piece p : startState.getPieces()[team ? 0 : 1]) {
+				if(!p.getKnown()) {
+					p.setKnown(true);
+					startToCurrentStateMap.get(p).setKnown(true);
+					startState.incrementKnown(team);
+					currentState.incrementKnown(team);
+					revealPiece(p, missingRank);
+				}
+			}
+		}
 	}
 
 	/**
@@ -520,7 +738,7 @@ public class Guesser {
 			List<Piece> pieces = new ArrayList<Piece>();
 			Stream.of(state.getPieces()[team]).forEach(p -> pieces.add(p));
 			Arrays.fill(state.getPieces()[team], null);
-			
+
 			int doubleCountBombe = 0;
 			int doubleCountScout = 0;
 			int doubleCountMineur = 0;

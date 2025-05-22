@@ -200,7 +200,7 @@ public class GameState implements Cloneable {
 		Move first = getRepMove(move.getPiece().getTeam());
 		if(first != null 
 				&& first.getPiece().equals(move.getPiece())
-				&& inMoveBounds(move)) {
+				&& inMoveBounds(move.getPiece(), move.getEndX(), move.getEndY())) {
 			incrementCurrentRepetitions(move.getPiece().getTeam());
 		} else {
 			resetCurrentRepetitions(move.getPiece().getTeam());
@@ -210,15 +210,17 @@ public class GameState implements Cloneable {
 
 	/**
 	 * Checks if a new Move is in the boundaries of the old Move, meaning a repetition takes place
-	 * @param move
+	 * @param piece
+	 * @param x end x
+	 * @param y end y
 	 * @return
 	 */
-	public boolean inMoveBounds(Move next) {
-		if(next.getPiece().getTeam()) {
-			if(ByteMapper.contains(repetitionRedFields, ByteMapper.toByte(next.getEndX(), next.getEndY())))
+	public boolean inMoveBounds(Piece piece, int x, int y) {
+		if(piece.getTeam()) {
+			if(ByteMapper.contains(repetitionRedFields, ByteMapper.toByte(x, y)))
 				return true;
 		} else {
-			if(ByteMapper.contains(repetitionBlueFields, ByteMapper.toByte(next.getEndX(), next.getEndY())))
+			if(ByteMapper.contains(repetitionBlueFields, ByteMapper.toByte(x, y)))
 				return true;
 		}
 		return false;

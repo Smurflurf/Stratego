@@ -27,7 +27,7 @@ public class HeuristicDeBoer extends Placer {
 		pieceDistributions = strados2.tools.CompressedMapIO.loadCompressedMaps("classic");
 		neighborCounts = NeighborIO.loadNeighborCounts("classic");
 
-		useNeighbors = true;
+		useNeighbors = false;
 		useControlHeuristic = true;
 	}
 
@@ -91,6 +91,9 @@ public class HeuristicDeBoer extends Placer {
 	 * @return probability distribution for piece, with modified probabilities to implement heuristics
 	 */
 	public int[][] getDistribution(Piece toPlace) {
+		double buffFactor = 1;
+		double nerfFactor = 1;
+		
 		int[][] distribution = lastType == toPlace.getType() ? lastDistrib :
 			deepCloneTH(pieceDistributions.get(toPlace.getType()));
 
@@ -101,10 +104,10 @@ public class HeuristicDeBoer extends Placer {
 			for(Piece standing: pieces) {
 				if(standing.getPos() != -1) {
 					//lowers all not connected distributions 
-					nerf(distribution, standing, toPlace);
+					nerf(distribution, standing, toPlace, nerfFactor);
 
 					//magnifies all connected distributions
-					buff(distribution, standing, toPlace);
+					buff(distribution, standing, toPlace, buffFactor);
 				}
 			}
 
@@ -128,15 +131,16 @@ public class HeuristicDeBoer extends Placer {
 	 * @param distrib probability distribution to modify
 	 * @param standing Piece already standing
 	 * @param toPlace Piece to be placed
+	 * @param buffFactor weight of the neighbor probabilities
 	 */
-	private void buff(int[][] distrib, Piece standing, Piece toPlace) {
+	private void buff(int[][] distrib, Piece standing, Piece toPlace, double buffFactor) {
 		for(RelativePosition pos : RelativePosition.values()) {
 			if(pos.qbValid(standing.getX(), standing.getY())) {
 				if(neighborCounts.get(standing.getType()) != null
 						&& neighborCounts.get(standing.getType()).get(pos) != null
 						&& neighborCounts.get(standing.getType()).get(pos).get(toPlace.getType()) != null) {
 					int originalDistrib = distrib[pos.transformX(standing.getX())][pos.transformY(standing.getY())];
-					originalDistrib += originalDistrib * neighborCounts.get(standing.getType()).get(pos).get(toPlace.getType());
+					originalDistrib *= (int) Math.round(1 + buffFactor * neighborCounts.get(standing.getType()).get(pos).get(toPlace.getType()));
 					distrib[pos.transformX(standing.getX())][pos.transformY(standing.getY())] = originalDistrib;
 				}
 			}
@@ -150,8 +154,9 @@ public class HeuristicDeBoer extends Placer {
 	 * @param distrib probability distribution to modify
 	 * @param standing Piece already standing
 	 * @param toPlace Piece to be placed
+	 * @param nerfFactor weight of the neighbor probabilities
 	 */
-	public void nerf(int[][] distrib, Piece standing, Piece toPlace) {
+	public void nerf(int[][] distrib, Piece standing, Piece toPlace, double nerfFactor) {
 		for(int x=0; x<distrib.length; x++) {
 			for(int y=0; y<distrib[0].length; y++) {
 				if(Math.sqrt((standing.getY() - y) * (standing.getY() - y) + (standing.getX() - x) * (standing.getX() - x)) > 1.5) {
@@ -162,7 +167,7 @@ public class HeuristicDeBoer extends Placer {
 						&& neighborCounts.get(standing.getType()).get(pos) != null
 						&& neighborCounts.get(standing.getType()).get(pos).get(toPlace.getType()) != null)
 							combinedProb += neighborCounts.get(standing.getType()).get(pos).get(toPlace.getType());
-					distrib[x][y] = (int) Math.round(distrib[x][y] * (1 - combinedProb));
+					distrib[x][y] *= (int) Math.round(1 - nerfFactor * combinedProb);
 				}
 			}
 		}

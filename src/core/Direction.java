@@ -8,6 +8,8 @@ public enum Direction {
 	
 	private final int[] translation;
 	private final int oneDimTranslation;
+	private static final Direction[] leftRight = {LEFT, RIGHT};
+	private static final Direction[] upDown = {LEFT, RIGHT};
 	
 	private Direction(int[] translation, int oneDimTranslation) {
 		this.translation = translation;
@@ -34,6 +36,14 @@ public enum Direction {
 		} else {
 			return ByteMapper.setY(position, (byte) (ByteMapper.getY(position) + translation[1] * modifier));
 		}
+	}
+	
+	public static Direction[] leftRight() {
+		return leftRight;
+	}
+	
+	public static Direction[] upDown() {
+		return upDown;
 	}
 	
 	public static Direction get(int dir) {

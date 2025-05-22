@@ -13,7 +13,6 @@ import core.playing.AI.AIInformer;
 import ui.UI;
 
 class GuesserTest {
-
 //	@Test
 	void testGuesserStartState() {
 		var RANKS = new PieceType[] {

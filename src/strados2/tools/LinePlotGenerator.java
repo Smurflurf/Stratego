@@ -61,13 +61,6 @@ public class LinePlotGenerator extends GeneralTools {
 		return occurances;
 	}
 	
-	/**
-	 * Creates and saves a heatmap with XChart
-	 *
-	 * @param counts array build with {@link #aggregatePlacementCounts(List, ClassicRank)}
-	 * @param title the heatmaps title, is located above the heatmap
-	 * @param seriesName name the heatmap gets saved as
-	 */
 	public static void createLinePlot(double[][] lineData, String title, ClassicPiece.ClassicRank[] ranks, String xTitle) {
 		XYChart chart = new org.knowm.xchart.XYChartBuilder()
 				.width(600)

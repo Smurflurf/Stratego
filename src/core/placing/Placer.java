@@ -119,7 +119,7 @@ public abstract class Placer {
 	 * @param team true for red
 	 * @return array with 8 Pieces, all placed on 0,0
 	 */
-	protected static Piece[] createPieceArray(boolean team) {
+	public static Piece[] createPieceArray(boolean team) {
 		Piece[] pieces = new Piece[10];
 		int piece = 0;
 		for(PieceType type : PieceType.values()) {

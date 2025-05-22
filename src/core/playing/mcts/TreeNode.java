@@ -4,10 +4,9 @@ import core.GameState;
 import core.Move;
 import core.Utils;
 import core.playing.AI;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import ui.UI;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +20,7 @@ public class TreeNode {
 	private TreeNode parent;
 	private Map<Move, TreeNode> children;
 	private Move moveThatLedToThisNode;
-	private ArrayList<Move> untriedMoves;
+	private ObjectArrayList<Move> untriedMoves;
 
 
 	/**
@@ -35,7 +34,8 @@ public class TreeNode {
 		this.parent = parent;
 		this.moveThatLedToThisNode = moveThatLedToThisNode;
 		this.children = new HashMap<>();
-		this.untriedMoves = new ArrayList<>(Arrays.asList(Utils.getAllPossibleMoves(gameState)));
+		
+		this.untriedMoves = Utils.getAllPossibleMoves(gameState);
 		this.winsP1 = 1;
 		this.winsP2 = 1;
 		this.visitCount = 2;
@@ -127,7 +127,7 @@ public class TreeNode {
 		return moveThatLedToThisNode;
 	}
 
-	public ArrayList<Move> getUntriedMoves() {
+	public ObjectArrayList<Move> getUntriedMoves() {
 		return untriedMoves;
 	}
 

@@ -22,8 +22,14 @@ public class Profiler {
 
 		Piece[] redPieces = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
 		Piece[] bluePieces = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
-		AI ai = AI.Type.MCTS.createAI(true, new GameState(redPieces, bluePieces));
-		nextMoves(ai, 1000);
+		AI ai = AI.Type.HEURISTIC.createAI(true, new GameState(redPieces, bluePieces));
+//		ai.gameState.removePiece(ai.gameState.getRedPieces()[0]);
+//		ai.gameState.removePiece(ai.gameState.getRedPieces()[1]);
+//		ai.gameState.removePiece(ai.gameState.getRedPieces()[2]);
+//		ai.gameState.removePiece(ai.gameState.getRedPieces()[3]);
+//		ai.gameState.removePiece(ai.gameState.getRedPieces()[4]);
+//		ai.gameState.removePiece(ai.gameState.getRedPieces()[5]);
+		nextMoves(ai, 100000);
 	}
 
 	public static void nextMoves(AI ai, int repetitions) {

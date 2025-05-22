@@ -274,5 +274,19 @@ public class GeneralTools {
 		int getYTransformation() {
 			return this.yTransformation;
 		}
+		
+		public RelativePosition mirror() {
+			switch(this) {
+			case ABOVE: return BELOW;
+			case BELOW: return ABOVE;
+			case LEFT: return LEFT;
+			case RIGHT: return RIGHT;
+			case ABOVE_LEFT: return BELOW_LEFT;
+			case ABOVE_RIGHT: return BELOW_RIGHT;
+			case BELOW_LEFT: return ABOVE_LEFT;
+			case BELOW_RIGHT: return ABOVE_RIGHT;
+			}
+			return null;
+		}
 	}
 }

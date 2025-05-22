@@ -297,7 +297,7 @@ public class UI {
 
 				Move move = new Move(selectedPiece, direction, fields);
 
-				if (Utils.isMovePossible(currentGameState, move)) {
+				if (Utils.isMovePossible(currentGameState, move.getPiece(), move.getEndX(), move.getEndY(), move.getDirection(), move.getFields())) {
 					try {
 						moveInputQueue.clear();
 						moveInputQueue.put(move);

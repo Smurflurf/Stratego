@@ -19,7 +19,7 @@ public class MCTS extends AI {
 	protected static final SplittableRandom rand = new SplittableRandom();
 	public TreeNode root;
 	public Heuristic terminalHeuristic;
-	UI ui;
+//	UI ui;
 	public int simulationCounter;	
 	public int heuristicCounter;
 	public int expansionCounter;
@@ -27,21 +27,21 @@ public class MCTS extends AI {
 
 	public MCTS(boolean team, GameState gameState) {
 		super(team, gameState);
-		ui = new UI(null, null);
+//		ui = new UI(null, null);
 		root = new TreeNode(gameState.clone(), null, null);
 		simulationCounter = 0;
 		heuristicCounter = 0;
 		expansionCounter = 0;
 		
-		terminalHeuristic = new core.playing.heuristic.Heuristic(team);
+		terminalHeuristic = new core.playing.heuristic.Heuristic();
 	}
 
 	@Override
 	public Move nextMove() {
 //		if(Mediator.stateGame != null)
 //		gameState = Mediator.stateGame;
-		ui.updateBoard(gameState, lastMove);
-		ui.setTitle("MCTS perspective");
+//		ui.updateBoard(gameState, lastMove);
+//		ui.setTitle("MCTS perspective " + (getTeam() ? " Red" : " Blue"));
 
 		this.heuristicCounter = 0;
 		this.expansionCounter = 0;
@@ -53,7 +53,7 @@ public class MCTS extends AI {
 
 		root = new TreeNode(gameState.clone(), null, null);
 
-		while(System.currentTimeMillis() < end){
+		while(System.currentTimeMillis() < end || simulationCounter + heuristicCounter < Constants.MAX_SIMULATIONS){
 			//Schritte des UCT abarbeiten
 			TreeNode selected = selectAndExpand(root);
 			selected.backpropagate(simulate(selected, 0));
@@ -67,7 +67,7 @@ public class MCTS extends AI {
 			return RandomAI.nextMove(gameState);
 		}
 
-		printResults(bestChild);
+//		printResults(bestChild);
 		System.gc();
 		// TODO: -XX:+UseParallelGC, funktioniert am besten in dieser Umgebung
 
@@ -81,7 +81,7 @@ public class MCTS extends AI {
 	 */
 	void printResults(TreeNode bestChild) {
 		System.out.println(
-				"\t- - # # * *\t" + this.getClass().getCanonicalName() 
+				"\t- - # # * *\t" + this.getClass().getCanonicalName() + (getTeam() ? " Red" : " Blue")
 				+ "  :  "+ Math.round(bestChild.getV() * 100)
 				+ "%\t* * # # - -\t"
 				);
@@ -93,15 +93,15 @@ public class MCTS extends AI {
 				", Move: " + bestChild.getMoveThatLedToThisNode()
 				);
 
-		TreeNode[] children = root.getChildren().values().toArray(TreeNode[]::new);
-		Arrays.sort(children, Comparator.comparingDouble(c -> ((TreeNode) c).getV()).reversed());
-		for(int i=0; i<(children.length > 5 ? 5 : children.length); i++) {
-				System.out.println(
-						"\tchild "+ i + 
-						" Gewinnchance: " + Math.round(children[i].getV()* 1000000)/10000. + 
-						"% bei " + children[i].getNK() + " Spielen"
-						);
-		}
+//		TreeNode[] children = root.getChildren().values().toArray(TreeNode[]::new);
+//		Arrays.sort(children, Comparator.comparingDouble(c -> ((TreeNode) c).getV()).reversed());
+//		for(int i=0; i<(children.length > 5 ? 5 : children.length); i++) {
+//				System.out.println(
+//						"\tchild "+ i + 
+//						" Gewinnchance: " + Math.round(children[i].getV()* 1000000)/10000. + 
+//						"% bei " + children[i].getNK() + " Spielen"
+//						);
+//		}
 
 		System.out.println("\n");
 	}
@@ -131,7 +131,6 @@ public class MCTS extends AI {
 			if (!node.isFullyExpanded()) {
 				expansionCounter++;
 				return node.expand();
-				//TODO might cause null pointers, check later
 			} else {
 				// Node is fully expanded, move down via UCT
 				node = node.bestChild();
