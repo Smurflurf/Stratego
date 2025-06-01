@@ -25,16 +25,16 @@ public class PrebuiltStates extends Placer {
 		switch(version) {
 		case 0:
 		default:
-			pieces[0].setPos(3, 7);
-			pieces[1].setPos(7, 5);
-			pieces[2].setPos(3, 5);
-			pieces[3].setPos(4, 5);
-			pieces[4].setPos(1, 5);
-			pieces[5].setPos(6, 5);
-			pieces[6].setPos(2, 6);
-			pieces[7].setPos(5, 7);
-			pieces[8].setPos(4, 6);
-			pieces[9].setPos(4, 7);
+			pieces[0].setStartPos(3, 7);
+			pieces[1].setStartPos(7, 5);
+			pieces[2].setStartPos(3, 5);
+			pieces[3].setStartPos(4, 5);
+			pieces[4].setStartPos(1, 5);
+			pieces[5].setStartPos(6, 5);
+			pieces[6].setStartPos(2, 6);
+			pieces[7].setStartPos(5, 7);
+			pieces[8].setStartPos(4, 6);
+			pieces[9].setStartPos(4, 7);
 		}
 
 	}
@@ -43,16 +43,16 @@ public class PrebuiltStates extends Placer {
 		switch(version) {
 		case 0:
 		default:
-			pieces[0].setPos(4, 0);
-			pieces[1].setPos(0, 2);
-			pieces[2].setPos(3, 2);
-			pieces[3].setPos(4, 2);
-			pieces[4].setPos(1, 2);
-			pieces[5].setPos(6, 2);
-			pieces[6].setPos(5, 1);
-			pieces[7].setPos(2, 0);
-			pieces[8].setPos(3, 1);
-			pieces[9].setPos(3, 0);
+			pieces[0].setStartPos(4, 0);
+			pieces[1].setStartPos(0, 2);
+			pieces[2].setStartPos(3, 2);
+			pieces[3].setStartPos(4, 2);
+			pieces[4].setStartPos(1, 2);
+			pieces[5].setStartPos(6, 2);
+			pieces[6].setStartPos(5, 1);
+			pieces[7].setStartPos(2, 0);
+			pieces[8].setStartPos(3, 1);
+			pieces[9].setStartPos(3, 0);
 		}
 	}
 }

@@ -288,5 +288,19 @@ public class GeneralTools {
 			}
 			return null;
 		}
+		
+		public RelativePosition invert() {
+			switch(this) {
+			case ABOVE: return BELOW;
+			case BELOW: return ABOVE;
+			case LEFT: return RIGHT;
+			case RIGHT: return LEFT;
+			case ABOVE_LEFT: return BELOW_RIGHT;
+			case ABOVE_RIGHT: return BELOW_LEFT;
+			case BELOW_LEFT: return ABOVE_RIGHT;
+			case BELOW_RIGHT: return ABOVE_LEFT;
+			}
+			return null;
+		}
 	}
 }

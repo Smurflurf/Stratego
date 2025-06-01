@@ -1,14 +1,15 @@
 package core.playing.mcts;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import core.GameState;
 import core.Move;
 import core.Utils;
 import core.playing.AI;
+import core.playing.heuristic.MoveHeuristic;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import ui.UI;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class TreeNode {
 	private int winsP1;
@@ -72,9 +73,16 @@ public class TreeNode {
 	 * Expands the current node by creating one child node for a randomly chosen untried move.
 	 * @return newly expanded child node
 	 */
-	public TreeNode expand() {
+	public TreeNode expand(boolean useHeuristic, MoveHeuristic mvh) {
 		GameState nextState = gameState.clone();
-		Move move = untriedMoves.remove(MCTS.rand.nextInt(untriedMoves.size())).normalize(nextState);
+
+		Move picked;
+		if(useHeuristic)
+			picked = mvh.getBestMove(untriedMoves, nextState);
+		else
+			picked = untriedMoves.remove(MCTS.rand.nextInt(untriedMoves.size()));
+
+		Move move = picked.normalize(nextState);
 
 		if(!Utils.execute(nextState, move)) {
 			UI ui = new UI(AI.Type.HUMAN, AI.Type.HUMAN);
@@ -89,11 +97,11 @@ public class TreeNode {
 		return childNode;
 	}
 
-	public void backpropagate(boolean winner) {
+	public void backpropagate(boolean winner, float C) {
 		TreeNode parent = this;
 		while(parent != null) {
 			parent.updateWins(winner);
-			parent.updateUct();
+			parent.updateUct(C);
 			parent = parent.parent;
 		}
 	}
@@ -187,11 +195,11 @@ public class TreeNode {
 		return winsP2;
 	}
 
-	private void updateUct() {
+	private void updateUct(float C) {
 		if(parent != null) {
 			float nk = getNK();
 			float v = !gameState.getTeam() ? winsP1 / nk : winsP2 / nk;
-			uct = v + Constants.C * (float)Math.sqrt((float)Math.log(parent.getNK()) / nk);
+			uct = v + C * (float)Math.sqrt((float)Math.log(parent.getNK()) / nk);
 		}
 	}
 

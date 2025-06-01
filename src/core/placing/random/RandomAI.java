@@ -23,7 +23,7 @@ public class RandomAI extends Placer {
 				x = random.nextInt(8);
 				y = random.nextInt(3);
 			} while (fieldIsOccupied(x, y));
-			piece.setPos(x, y);
+			piece.setStartPos(x, y);
 		}
 		mirrorPlacing();
 		return pieces;

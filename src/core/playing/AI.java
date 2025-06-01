@@ -19,13 +19,13 @@ public abstract class AI extends Utils {
 	public Guesser guesser;
 	public Move lastMove;
 
-	public AI(boolean player, GameState gameState) {
+	public AI(boolean player, GameState gameState, String ...guesserProbs ) {
 		team = player;
-		guesser = new Guesser(gameState, null);
+		guesser = new Guesser(gameState, null, guesserProbs);
 		gameState = guesser.converge(team);
 		setArraysAndGameState(gameState);
 	};
-
+	
 	public boolean getTeam() {
 		return team;
 	}
@@ -67,7 +67,7 @@ public abstract class AI extends Utils {
 	public enum Type {
 		RANDOM, HUMAN, MCTS, HEURISTIC;
 
-		public AI createAI(boolean team, GameState gameState) {
+		public AI createAI(boolean team, GameState gameState, String ... guesserProbs) {
 			AI ai; 
 			switch(this) {
 			case RANDOM:  
@@ -77,7 +77,7 @@ public abstract class AI extends Utils {
 				ai = new HumanInput(team, gameState);
 				break;
 			case MCTS:
-				ai = new MCTS(team, gameState);
+				ai = new MCTS(team, gameState, guesserProbs);
 				break;
 			case HEURISTIC:
 				ai = new HeuristicAI(team, gameState);

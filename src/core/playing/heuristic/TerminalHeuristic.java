@@ -4,7 +4,9 @@ import core.GameState;
 import core.Piece;
 import core.PieceType;
 
-public class Heuristic implements core.playing.Heuristic{
+public class TerminalHeuristic {
+	public boolean useEnhancedKnownDeadMultipliers = true;
+	
 	public int knownMultiplicator;
 	public int deadMultiplicator;
 
@@ -17,8 +19,8 @@ public class Heuristic implements core.playing.Heuristic{
 	
 	public int deadFlagValue;
 	public int deadBombValue;
-	public int deadSpyValueMarshallAlive;
-	public int deadSpyValueMarshallDead;
+	public int deadSpyValueEnemyMarshallAlive;
+	public int deadSpyValueEnemyMarshallDead;
 	public int deadScoutValue;
 	public int deadMineurValue;
 	public int deadGeneralValue;
@@ -26,17 +28,17 @@ public class Heuristic implements core.playing.Heuristic{
 
 	public int knownFlagValue;
 	public int knownBombValue;
-	public int knownSpyValueMarshallAlive;
-	public int knownSpyValueMarshallDead;
+	public int knownSpyValueEnemyMarshallAlive;
+	public int knownSpyValueEnemyMarshallDead;
 	public int knownScoutValue;
 	public int knownMineurValue;
 	public int knownGeneralValue;
 	public int knownMarshallValue;
 
 
-	public Heuristic() {
-		knownMultiplicator = 2;
-		deadMultiplicator = 4;
+	public TerminalHeuristic() {
+		knownMultiplicator = 1;
+		deadMultiplicator = 2;
 
 		bombNearFlagValue = 3;
 		generalFlagDefenderValue = 1;
@@ -46,26 +48,32 @@ public class Heuristic implements core.playing.Heuristic{
 		flagAttackerDistance = 3;
 
 		deadFlagValue = 10000;
-		deadBombValue = 5;
-		deadSpyValueMarshallDead = 1;
-		deadSpyValueMarshallAlive = 3;
+		deadBombValue = 2;
+		deadSpyValueEnemyMarshallDead = 1;
+		deadSpyValueEnemyMarshallAlive = 30;
 		deadScoutValue = 3;
 		deadMineurValue = 3;
-		deadGeneralValue = 4;
-		deadMarshallValue = 5;
+		deadGeneralValue = 20;
+		deadMarshallValue = 40;
 
-		knownFlagValue = 10;
-		knownBombValue = 5;
-		knownSpyValueMarshallDead = 1;
-		knownSpyValueMarshallAlive = 3;
-		knownScoutValue = 3;
-		knownMineurValue = 3;
-		knownGeneralValue = 4;
-		knownMarshallValue = 5;
+		knownFlagValue = 100;
+		knownBombValue = 6;
+		knownSpyValueEnemyMarshallDead = 2;
+		knownSpyValueEnemyMarshallAlive = 40;
+		knownScoutValue = 6;
+		knownMineurValue = 6;
+		knownGeneralValue = 30;
+		knownMarshallValue = 60;
 	}
 
 
-	@Override
+	/**
+	 * Evaluates a score representing the players winning chances.
+	 * @param state GameState to analyze
+	 * @return an Integer the describes the game,
+	 * 			>0:	team red got a better position
+	 * 			<0: team blue got a better position
+	 */
 	public int evaluate(GameState state) {
 		Piece[][] pieces = state.getPieces();
 		if(pieces[0][9] == null) return Integer.MIN_VALUE;
@@ -79,34 +87,31 @@ public class Heuristic implements core.playing.Heuristic{
 		blue = knownMultiplicator * state.getKnownRed() + 
 				deadMultiplicator * state.getDeadRed();
 
-		
-		// adds the exact dead and known piece values to the score
-		for(int i=0; i<10; i++) {
-			if(pieces[0][i] == null) {
-				// red dead pieces are good for blue
-				blue += getDeadPieceValue(pieces[0], i);
-			} else if(pieces[0][i].getKnown()) {
-				// red known pieces are good for blue
-				blue += getKnownPieceValue(pieces[0], i);
-			} else {
-				
-			}
+		if(useEnhancedKnownDeadMultipliers) {
+			// adds the exact dead and known piece values to the score
+			for(int i=0; i<10; i++) {
+				if(pieces[0][i] == null) {
+					// red dead pieces are good for blue
+					blue += getDeadPieceValue(pieces[0], i);
+				} else if(pieces[0][i].getKnown()) {
+					// red known pieces are good for blue
+					blue += getKnownPieceValue(pieces[0], i);
+				}
 
-			if(pieces[1][i] == null) {
-				// blue dead pieces are good for red
-				red += getDeadPieceValue(pieces[1], i);
-			} else if (pieces[1][i].getKnown()) {
-				// blue known pieces are good for red
-				red += getKnownPieceValue(pieces[1], i);
+				if(pieces[1][i] == null) {
+					// blue dead pieces are good for red
+					red += getDeadPieceValue(pieces[1], i);
+				} else if (pieces[1][i].getKnown()) {
+					// blue known pieces are good for red
+					red += getKnownPieceValue(pieces[1], i);
+				}
 			}
 		}
-		
 		
 		red += flagDefenders(pieces[0], pieces[0][9]);
 		red -= flagAttackers(pieces[1], pieces[0][9]);
 		blue += flagDefenders(pieces[1], pieces[1][9]);
 		blue -= flagAttackers(pieces[0], pieces[1][9]);
-
 
 		return red - blue;
 	}
@@ -171,7 +176,7 @@ public class Heuristic implements core.playing.Heuristic{
 		case 3: return deadMineurValue;
 		case 4: return deadScoutValue;
 		case 5: return deadScoutValue;
-		case 6: return enemyPieces[0] == null ? deadSpyValueMarshallDead: deadSpyValueMarshallAlive;
+		case 6: return enemyPieces[0] == null ? deadSpyValueEnemyMarshallDead: deadSpyValueEnemyMarshallAlive;
 		case 7: return deadBombValue;
 		case 8: return deadBombValue;
 		case 9: return deadFlagValue;
@@ -187,11 +192,15 @@ public class Heuristic implements core.playing.Heuristic{
 		case 3: return knownMineurValue;
 		case 4: return knownScoutValue;
 		case 5: return knownScoutValue;
-		case 6: return enemyPieces[0] == null ? knownSpyValueMarshallDead: knownSpyValueMarshallAlive;
+		case 6: return enemyPieces[0] == null ? knownSpyValueEnemyMarshallDead: knownSpyValueEnemyMarshallAlive;
 		case 7: return knownBombValue;
 		case 8: return knownBombValue;
 		case 9: return knownFlagValue;
 		default: return 0;
 		}
+	}
+	
+	public void disableEnhancedKnownDeadMultipliers() {
+		useEnhancedKnownDeadMultipliers = false;
 	}
 }

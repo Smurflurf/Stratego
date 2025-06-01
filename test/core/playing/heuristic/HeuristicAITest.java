@@ -20,6 +20,7 @@ class HeuristicAITest {
 		Piece[] blue = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
 		GameState state = new GameState(red, blue);
 		HeuristicAI ai = new HeuristicAI(true, state);
+		ai.disableTerminalHeuristic();
 
 		List<Move> moves = new ArrayList<Move>();
 		Piece piece = ai.guesser.currentState.getRedPieces()[6];
@@ -56,5 +57,29 @@ class HeuristicAITest {
 		assertEquals(ai.guesser.currentState.getBluePieces()[9].getPos(), move.getEnd());
 	
 	}
+	
+	
+	@Test
+	void testCaptureFlag2() {
+		Piece[] red = Placer.placePiecesWith(true, Placer.Type.PREBUILT);
+		Piece[] blue = Placer.placePiecesWith(false, Placer.Type.PREBUILT);
+		GameState state = new GameState(red, blue);
+		state.changeTeam();
+		HeuristicAI ai = new HeuristicAI(false, state);
+		ai.disableTerminalHeuristic();
 
+		List<Move> moves = new ArrayList<Move>();
+		Piece piece = ai.guesser.currentState.getBluePieces()[5];
+		moves.add(new Move(piece, piece.getX(), piece.getY(), 1, 7));
+		
+		ai.gameState = ai.guesser.currentState;
+		for(Move move : moves)
+			ai.guesser.currentState.move(move);
+
+		ai.guesser.currentState.removePiece(ai.guesser.currentState.getRedPieces()[0]);
+		
+		
+		Move move = ai.nextMove();
+		assertEquals(ai.guesser.currentState.getRedPieces()[9].getPos(), move.getEnd());
+	}
 }

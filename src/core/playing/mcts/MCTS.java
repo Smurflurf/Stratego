@@ -1,47 +1,55 @@
 package core.playing.mcts;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.SplittableRandom;
 
 import core.GameState;
-import core.Mediator;
 import core.Move;
 import core.Utils;
 import core.playing.AI;
-import core.playing.Heuristic;
+import core.playing.heuristic.MoveHeuristic;
+import core.playing.heuristic.TerminalHeuristic;
 import core.playing.random.RandomAI;
-import ui.UI;
 
 
 public class MCTS extends AI {
 	protected static final SplittableRandom rand = new SplittableRandom();
 	public TreeNode root;
-	public Heuristic terminalHeuristic;
-//	UI ui;
+	public TerminalHeuristic terminalHeuristic;
+	public MoveHeuristic moveHeuristic;
+	//	UI ui;
 	public int simulationCounter;	
 	public int heuristicCounter;
 	public int expansionCounter;
 
+	boolean enableBestChildNoLoops = false;
+	boolean useExpandHeuristic = false;
+	boolean useHeavyPlayout = false;
+	boolean useHybridPlayout = false;
+	boolean useCommonPlayout = true;
+	float C = Constants.C;
+	int maxSteps = Constants.MAX_STEPS;
 
-	public MCTS(boolean team, GameState gameState) {
-		super(team, gameState);
-//		ui = new UI(null, null);
+	public MCTS(boolean team, GameState gameState, String ... guesserProbs) {
+		super(team, gameState, guesserProbs);
+		//		ui = new UI(null, null);
 		root = new TreeNode(gameState.clone(), null, null);
 		simulationCounter = 0;
 		heuristicCounter = 0;
 		expansionCounter = 0;
-		
-		terminalHeuristic = new core.playing.heuristic.Heuristic();
+
+		terminalHeuristic = new TerminalHeuristic();
+		//		terminalHeuristic.disableEnhancedKnownDeadMultipliers();
+		moveHeuristic = new MoveHeuristic(guesser);
 	}
 
 	@Override
 	public Move nextMove() {
-//		if(Mediator.stateGame != null)
-//		gameState = Mediator.stateGame;
-//		ui.updateBoard(gameState, lastMove);
-//		ui.setTitle("MCTS perspective " + (getTeam() ? " Red" : " Blue"));
+		//		if(Mediator.stateGame != null)
+		//		gameState = Mediator.stateGame;
+		//		ui.updateBoard(gameState, lastMove);
+		//		ui.setTitle("MCTS perspective " + (getTeam() ? " Red" : " Blue"));
 
 		this.heuristicCounter = 0;
 		this.expansionCounter = 0;
@@ -53,21 +61,24 @@ public class MCTS extends AI {
 
 		root = new TreeNode(gameState.clone(), null, null);
 
-		while(System.currentTimeMillis() < end || simulationCounter + heuristicCounter < Constants.MAX_SIMULATIONS){
+		while(System.currentTimeMillis() < end && simulationCounter + heuristicCounter < Constants.MAX_SIMULATIONS){
 			//Schritte des UCT abarbeiten
 			TreeNode selected = selectAndExpand(root);
-			selected.backpropagate(simulate(selected, 0));
+			selected.backpropagate(simulate(selected, 0), C);
 		}
 
-//		TreeNode bestChild = bestChildNoLoops(root);
-		TreeNode bestChild = bestRootChild(root);
+		TreeNode bestChild;
+		if(enableBestChildNoLoops)
+			bestChild = bestChildNoLoops(root);
+		else
+			bestChild = bestRootChild(root);
 
 		if (bestChild == null || bestChild.getMoveThatLedToThisNode() == null) {
 			System.err.println("MCTS Warning: No best child found or move is null. Picking random valid move.");
 			return RandomAI.nextMove(gameState);
 		}
 
-//		printResults(bestChild);
+		//				printResults(bestChild);
 		System.gc();
 		// TODO: -XX:+UseParallelGC, funktioniert am besten in dieser Umgebung
 
@@ -93,15 +104,15 @@ public class MCTS extends AI {
 				", Move: " + bestChild.getMoveThatLedToThisNode()
 				);
 
-//		TreeNode[] children = root.getChildren().values().toArray(TreeNode[]::new);
-//		Arrays.sort(children, Comparator.comparingDouble(c -> ((TreeNode) c).getV()).reversed());
-//		for(int i=0; i<(children.length > 5 ? 5 : children.length); i++) {
-//				System.out.println(
-//						"\tchild "+ i + 
-//						" Gewinnchance: " + Math.round(children[i].getV()* 1000000)/10000. + 
-//						"% bei " + children[i].getNK() + " Spielen"
-//						);
-//		}
+		//		TreeNode[] children = root.getChildren().values().toArray(TreeNode[]::new);
+		//		Arrays.sort(children, Comparator.comparingDouble(c -> ((TreeNode) c).getV()).reversed());
+		//		for(int i=0; i<(children.length > 5 ? 5 : children.length); i++) {
+		//				System.out.println(
+		//						"\tchild "+ i + 
+		//						" Gewinnchance: " + Math.round(children[i].getV()* 1000000)/10000. + 
+		//						"% bei " + children[i].getNK() + " Spielen"
+		//						);
+		//		}
 
 		System.out.println("\n");
 	}
@@ -130,7 +141,7 @@ public class MCTS extends AI {
 		while (!node.isTerminal()) {
 			if (!node.isFullyExpanded()) {
 				expansionCounter++;
-				return node.expand();
+				return node.expand(useExpandHeuristic, moveHeuristic);
 			} else {
 				// Node is fully expanded, move down via UCT
 				node = node.bestChild();
@@ -148,7 +159,6 @@ public class MCTS extends AI {
 	 * 		   false if team B wins the simulation (either by getting more beans or team A having no moves left)
 	 * 		   default case is a heuristic. if it returns value > 0, team A is winning
 	 */
-	// TODO isTerminal nur 3
 	boolean simulate(TreeNode simulateOn, int step){
 		boolean isTerminal = simulateOn.isTerminal();
 		TreeNode clone = null;
@@ -158,7 +168,7 @@ public class MCTS extends AI {
 		else
 			clone = simulateOn;
 
-		while(!isTerminal && step++ < Constants.MAX_STEPS) {
+		while(!isTerminal && step++ < maxSteps) {
 			oneMove(clone, pickField(clone));
 			isTerminal = clone.isTerminal();
 		}
@@ -190,57 +200,107 @@ public class MCTS extends AI {
 	}
 
 	/**
-	 * Picks a (random) Move
+	 * Picks a Move while simulating.
+	 * Configure heavy(heuristic) or light(random) move choosing with {@link #useHeavyPlayout}.
 	 * @return a random Move
 	 */	
-	// TODO anderes als Random
 	Move pickField(TreeNode simulateOn) {
-		Move move = RandomAI.nextMove(simulateOn.getGameState());
-		return move;
-	}
+		Move move;
 
-	/**
-	 * Simulates one move and returns a new node containing the new state.
-	 * also adds the new node to the parent nodes children, its place in the Array
-	 * is the move made to get from the parent to the child (= field %6)
-	 * @param parent node
-	 * @param the move in form of the selected element in the parents array
-	 * @param isExpanding true if oneMove gets called from the expand method. false if its from simulate. depending on that less calculations are made for simulations
-	 * @return a child node containing the simulation result
-	 */
-	void oneMove(TreeNode parent, Move move) {
-		Utils.execute(parent.getGameState(), move);
-	}	
+		if(useCommonPlayout) {
+			double evaluationNeighbors;
+			double evaluationTarget;
+			do {
+				move = RandomAI.nextMove(simulateOn.getGameState());
+				evaluationNeighbors = moveHeuristic.moveNeighborSafety(move, simulateOn.getGameState());
+				evaluationTarget = moveHeuristic.evaluate(move, gameState);
+			} while ((evaluationTarget == 0 &&
+					((evaluationNeighbors) > 0.7 && evaluationNeighbors < 1))
+					&& rand.nextInt(5) > 1);
+		} else if(useHybridPlayout) {
+			if(rand.nextInt(5) < 1)
+				move = moveHeuristic.getBestMove(
+						Utils.getAllPossibleMoves(
+								simulateOn.getGameState()), 
+						simulateOn.getGameState());
+			else
+				move = RandomAI.nextMove(simulateOn.getGameState());
+		} else if(useHeavyPlayout)
+			move = moveHeuristic.getBestMove(
+					Utils.getAllPossibleMoves(
+							simulateOn.getGameState()), 
+					simulateOn.getGameState());
+		else
+			move = RandomAI.nextMove(simulateOn.getGameState());
 
-	/**
-	 * Returns the {@link #root} best child.
-	 * @param parent node
-	 * @return roots child that got visited the most
-	 */
-	TreeNode bestRootChild(TreeNode parent) {
-		return root.getChildren().values().stream()
-				.max(Comparator.comparingInt(TreeNode::getNK))
-				.orElse(null);
-	}
+	return move;
+}
 
-	/**
-	 * Returns the root best child. 
-	 * Uses improved algorithms to prohibit infinity loops.
-	 * Looks for the best children by V value, if the best children's win chances are less than 0.1% apart, 
-	 * the child with the least best path depth gets chosen (= faster win).
-	 * @param parent node
-	 * @return the child node with the highest V-value 
-	 */
-	TreeNode bestChildNoLoops(TreeNode parent) {
-		ArrayList<TreeNode> goodChildren = new ArrayList<TreeNode>();
-		goodChildren.add(bestRootChild(parent));
+/**
+ * Simulates one move and returns a new node containing the new state.
+ * also adds the new node to the parent nodes children, its place in the Array
+ * is the move made to get from the parent to the child (= field %6)
+ * @param parent node
+ * @param the move in form of the selected element in the parents array
+ * @param isExpanding true if oneMove gets called from the expand method. false if its from simulate. depending on that less calculations are made for simulations
+ * @return a child node containing the simulation result
+ */
+void oneMove(TreeNode parent, Move move) {
+	Utils.execute(parent.getGameState(), move);
+}	
 
-		for(TreeNode node : parent.getChildren().values())
-			if(node != goodChildren.get(0) 
-			&& goodChildren.get(0).getV() - node.getV() < 0.001)
-				goodChildren.add(node);
+/**
+ * Returns the {@link #root} best child.
+ * @param parent node
+ * @return roots child that got visited the most
+ */
+TreeNode bestRootChild(TreeNode parent) {
+	return root.getChildren().values().stream()
+			.max(Comparator.comparingInt(TreeNode::getNK))
+			.orElse(null);
+}
 
-		goodChildren.sort((e1, e2) -> bestPathDepth(e1) - bestPathDepth(e2));
-		return goodChildren.get(0);
-	}
+
+/**
+ * Returns the root best child. 
+ * Uses improved algorithms to prohibit infinity loops.
+ * Looks for the best children by V value, if the best children's win chances are less than 0.1% apart, 
+ * the child with the least best path depth gets chosen (= faster win).
+ * @param parent node
+ * @return the child node with the highest V-value 
+ */
+TreeNode bestChildNoLoops(TreeNode parent) {
+	ArrayList<TreeNode> goodChildren = new ArrayList<TreeNode>();
+	goodChildren.add(bestRootChild(parent));
+
+	for(TreeNode node : parent.getChildren().values())
+		if(node != goodChildren.get(0) 
+		&& goodChildren.get(0).getV() - node.getV() < 0.001)
+			goodChildren.add(node);
+
+	goodChildren.sort((e1, e2) -> bestPathDepth(e1) - bestPathDepth(e2));
+	return goodChildren.get(0);
+}
+
+public void setMaxSteps(int maxSteps) {
+	this.maxSteps = maxSteps;
+}
+public void setC(float C) {
+	this.C = C;
+}
+public void useExpandHeuristic() {
+	useExpandHeuristic = true;
+}
+public void enableBestChildNoLoops() {
+	enableBestChildNoLoops = true;
+}
+public void useHeavyPlayout() {
+	useHeavyPlayout = true;
+}
+public void useHybridPlayout() {
+	useHeavyPlayout = true;
+}
+public void useCommonPlayout() {
+	useCommonPlayout = true;
+}
 }

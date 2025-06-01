@@ -12,6 +12,8 @@ import core.Piece;
 import core.Utils;
 import core.placing.Placer;
 import core.playing.AI;
+import core.playing.heuristic.HeuristicAI;
+import core.playing.mcts.MCTS;
 import ui.UI;
 
 /**
@@ -37,17 +39,19 @@ public class Runner {
 	public static boolean use_UI;
 
 	public static void main(String[] args) {
-		use_UI = true;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
+		use_UI = false;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
 		printGame = false;
 		printResults = false;
-		int UI_delay = 50;
+		int UI_delay = 1000;
 		
 		Placer.Type redPlacement = Placer.Type.BARRAGE;
-		Placer.Type bluePlacement = Placer.Type.BARRAGE;
-		AI.Type redPlayer = AI.Type.RANDOM;
-		AI.Type bluePlayer = AI.Type.RANDOM;
-		int simulations = 1;
+		Placer.Type bluePlacement = Placer.Type.DEBOER;
+		AI.Type redPlayer = AI.Type.MCTS;
+		AI.Type bluePlayer = AI.Type.MCTS;
+		int simulations = 1_000;
 
+//		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay, 1);
+//		printResults();
 		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay);
 		printResults();
 	}
@@ -63,6 +67,7 @@ public class Runner {
 	 * @param delay in ms
 	 */
 	public static void simulate(int simulations, Placer.Type redPlacement, AI.Type redType, Placer.Type bluePlacement, AI.Type blueType, int delay) {
+		winList.clear();
 		if(simulations > 1) { if(use_UI) { printGame = true; printResults = true; } use_UI = false;}
 		long start = System.currentTimeMillis();
 		while(simulations-- > 0) {
@@ -70,12 +75,34 @@ public class Runner {
 				initUI(redType, blueType);
             }
 			
+//			Piece[] redPieces = Placer.placePiecesWith(true, redPlacement, true, false);
+//			Piece[] bluePieces = Placer.placePiecesWith(false, bluePlacement, true, true);
+			
 			Piece[] redPieces = Placer.placePiecesWith(true, redPlacement);
 			Piece[] bluePieces = Placer.placePiecesWith(false, bluePlacement);
 			Mediator mediator = new Mediator(new GameState(redPieces, bluePieces));
+			mediator.getGameState().changeTeam();
 			showGame(mediator, 0);
-			AI red = redType.createAI(true, mediator.obfuscateFor(true));
-			AI blue = blueType.createAI(false, mediator.obfuscateFor(false));
+			AI red = redType.createAI(true, mediator.obfuscateFor(true), "barrage");
+			AI blue = blueType.createAI(false, mediator.obfuscateFor(false), "classic");
+			
+//			AI red = redType.createAI(true, mediator.obfuscateFor(true));
+//			AI blue = blueType.createAI(false, mediator.obfuscateFor(false));
+//			((HeuristicAI)red).moveHeuristic.disableUseTargetCheck();
+//			((HeuristicAI)red).moveHeuristic.disableUseTargetNeighborCheck();
+//			((HeuristicAI)red).disableMoveHeuristic();
+//			((HeuristicAI)blue).disableTerminalHeuristic();
+//			((HeuristicAI)blue).moveHeuristic.disableUseTargetCheck();
+//			((HeuristicAI)blue).moveHeuristic.disableUseTargetNeighborCheck();
+//			((HeuristicAI)blue).moveHeuristic.enableUncertainty();
+//			((HeuristicAI)red).terminalHeuristic.disableEnhancedKnownDeadMultipliers();
+//			((HeuristicAI)red).disableTerminalHeuristic();
+			
+//			((HeuristicAI)blue).moveHeuristic.disableUseTargetNeighborCheck();
+//			((MCTS)red).terminalHeuristic.disableEnhancedKnownDeadMultipliers();
+//			((MCTS)red).useHeavyPlayout();
+//			((MCTS)red).useCommonPlayout();
+			
 			HashMap<Integer, Double> redOnMoveGuessingAccuracy = new HashMap<Integer, Double>();
 			HashMap<Integer, Double> blueOnMoveGuessingAccuracy = new HashMap<Integer, Double>();
 
@@ -86,7 +113,6 @@ public class Runner {
 			
 			if(use_UI)
 				Utils.sleep(delay);
-			
 			while(!mediator.isGameOver()) {
 				Move move;
 				if(mediator.getCurrentTeam() == red.getTeam()) {
@@ -102,9 +128,9 @@ public class Runner {
 				}
 				
 				redOnMoveGuessingAccuracy.put(moves, red.guesser.accuracy(mediator.getStartState(), red.getTeam()));
-				System.out.println(moves + " red: " +  redOnMoveGuessingAccuracy.get(moves) + " " + red.guesser.currentState.getKnownRed() + " " + red.guesser.currentState.getKnownBlue());
 				blueOnMoveGuessingAccuracy.put(moves, blue.guesser.accuracy(mediator.getStartState(), blue.getTeam()));
-				System.out.println(moves + " blue: " +  blueOnMoveGuessingAccuracy.get(moves) + " " + red.guesser.currentState.getKnownRed() + " " + red.guesser.currentState.getKnownBlue());
+//				System.out.println(moves + " red: " +  redOnMoveGuessingAccuracy.get(moves) + " " + red.guesser.currentState.getKnownRed() + " " + red.guesser.currentState.getKnownBlue());
+//				System.out.println(moves + " blue: " +  blueOnMoveGuessingAccuracy.get(moves) + " " + red.guesser.currentState.getKnownRed() + " " + red.guesser.currentState.getKnownBlue());
 				
 				if(!mediator.makeMove(move)) {
 					System.err.println("error while executing move " + move + "\n" + Utils.fieldToString(mediator.getGameState().getField()));
@@ -113,12 +139,14 @@ public class Runner {
 							red.gameState.isInChase() + " " + red.gameState.getInChase() + " " + red.gameState.getChasedFields().size());
 					System.exit(0);
 					break;
-				}
+				} else if (moves > 600) {
+//					System.err.println("Game going for " + moves + " moves, stopped.");
+					break;
+				} 
 
 				showGame(mediator, delay);
 				
 				moves++;
-
 				red.update(mediator.getAIInformer(true));
 				blue.update(mediator.getAIInformer(false));
 			}
@@ -134,6 +162,7 @@ public class Runner {
 					redOnMoveGuessingAccuracy, 
 					blueOnMoveGuessingAccuracy,
 					simTime));
+			System.out.println(simulations + " sims left, winner: " + Utils.getWinner(mediator.getGameState()));
 		}
 		long end = System.currentTimeMillis();
 		System.out.println("total time: " + (end - start) + "ms");
@@ -182,6 +211,7 @@ public class Runner {
 		double winsRed = 0;
 		double winsBlue = 0;
 		double draws = 0;
+		double stopped = 0;
 		for(WinnerEntry entry : winList) {
 			time += entry.nanoTime;
 			moves += entry.moves;
@@ -191,19 +221,26 @@ public class Runner {
 				winsRed++;
 			else if (entry.winner == 1)
 				winsBlue++;
-			else
+			else if (entry.winner == 2)
 				draws++;
+			else
+				stopped++;
 		}
-		winList.sort((o1, o2) -> (int)(o1.nanoTime - o2.nanoTime));
+		try {
+		winList.sort((o1, o2) -> ((int)(o1.nanoTime/1000.) - (int)(o2.nanoTime/100.)));
+		} catch (Exception e) {
+			System.err.println("winList.sort() Error in Runner. Median won't be correct.");
+		}
 		long median = winList.get(winList.size() / 2).nanoTime;
 		System.out.println(
 				"Played " + String.format("%,d", winList.size()) + " game" + (winList.size() > 1 ? "s" : "")+ 
 				" in " +  String.format("%,d", (winList.stream().mapToLong(e -> e.nanoTime()).sum() / 1000000)) + "ms simulation time.\n" + 
 						"red placed with " + winList.get(0).redPlacement + ", played as "+ winList.get(0).redType + "\n" +
 						"blue placed with " + winList.get(0).bluePlacement + ", played as " + winList.get(0).blueType + "\n" +
-						"Win rate red:  \t" + (winsRed / winList.size()) * 100 + "%\n" +
-						"Win rate blue: \t" + (winsBlue / winList.size()) * 100 + "%\n" + 
-						"Draws: \t" + (draws / winList.size()) * 100 + "%\n" + 
+						"Win rate red:  \t" + (winsRed / (winsRed+winsBlue+draws)) * 100 + "%\n" +
+						"Win rate blue: \t" + (winsBlue / (winsRed+winsBlue+draws)) * 100 + "%\n" + 
+						"Draws: \t" + (draws / (winsRed+winsBlue+draws)) * 100 + "%\n" + 
+						"Stopped: \t" + (stopped / winList.size()) * 100 + "%\n" + 
 						"Average time:  \t" + String.format("%,d", (time / winList.size())) + "ns\n" + 
 						"Median time: \t" + String.format("%,d", median) +  "ns\n" + 
 						"Average moves: \t" + (moves / winList.size() + " longest Game: " + mostMoves + ", shortest Game: " + leastMoves));

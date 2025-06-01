@@ -323,7 +323,7 @@ public class GameState implements Cloneable {
 	/**
 	 * Places all pieces from {@link #getRedPieces()} and {@link #getBluePieces()} on the field.
 	 */
-	private void createField(){
+	public void createField(){
 		for(Piece piece : getRedPieces())
 			if(piece != null)
 				field[piece.getX()][piece.getY()] = piece;

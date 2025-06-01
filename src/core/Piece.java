@@ -7,6 +7,10 @@ public class Piece implements Cloneable {
 	 */
 	private byte pos;
 	/**
+	 * Like {@link #pos}, represents the Pieces starting position. Use for Piece identification.
+	 */
+	private byte startPos;
+	/**
 	 * Contains the information if a Piece is known to the enemy.
 	 * Also represents the PieceType as a byte to save space.
 	 * k000tttt: byte representation: the left bit represents known, the right four the PieceType
@@ -43,6 +47,25 @@ public class Piece implements Cloneable {
 
 	public void setPos(byte pos) {
 		this.pos = pos;
+	}
+	
+	/**
+	 * sets {@link #pos} and {@link #startPos}
+	 * @param x
+	 * @param y
+	 */
+	public void setStartPos(int x, int y) {
+		pos = ByteMapper.toByte(x, y);
+		startPos = ByteMapper.toByte(x, y);
+	}
+
+	/**
+	 * Sets {@link #pos} and {@link #startPos}
+	 * @param pos
+	 */
+	public void setStartPos(byte pos) {
+		this.pos = pos;
+		this.startPos = pos;
 	}
 
 	
@@ -121,6 +144,10 @@ public class Piece implements Cloneable {
 
 	public byte getPos() {
 		return pos;
+	}
+	
+	public byte getStartPos() {
+		return startPos;
 	}
 	
 	public int getX() {

@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
@@ -26,7 +25,12 @@ public class Guesser {
 	public GameState startState;
 	public GameState currentState;
 	Move lastMove;
-	PieceType[] RANKS = {PieceType.SPIONIN, PieceType.FLAGGE, PieceType.BOMBE, PieceType.MARSCHALL, PieceType.MINEUR, PieceType.GENERAL, PieceType.SPAEHER};
+	public PieceType[] RANKS = {PieceType.SPIONIN, PieceType.FLAGGE, PieceType.BOMBE, 
+	PieceType.MARSCHALL, PieceType.MINEUR, PieceType.GENERAL, PieceType.SPAEHER}; // best Permutation
+	
+//	PieceType[] RANKS = {PieceType.FLAGGE, PieceType.BOMBE,PieceType.SPIONIN, 
+//	PieceType.SPAEHER, PieceType.MINEUR, PieceType.GENERAL, PieceType.MARSCHALL}; // Permutation used for rankMap in nerfing (use Strg+F)
+	Map<Byte, Piece> startPosToPieces;
 	Map<Piece, double[]> redPieces;
 	Map<Piece, double[]> bluePieces;
 	Set<Piece> deadPieces;
@@ -40,35 +44,45 @@ public class Guesser {
 	/**
 	 * Used in {@link #converge()}, decides if pieces get converged by rank or probability
 	 */
-	public boolean legacySearch;
+	public boolean legacySearch = false;
 	/**
 	 * Used in {@link #normalize()}, applies neighbor counts to probabilities
 	 */
-	public boolean applyNeighborCounts;
-
-	public static String mode = "classic";
+	public boolean applyNeighborCounts = false;
+	/**
+	 * Used in {@link #initPieces()}, initializes pieces with random probabilities
+	 */
+	public boolean useRandomInit = false;
+	
+	public String mode = "barrage";
 	
 	public static double epsilon = 0.01;
 	public static double neighborBuffFactor = 1;
-	public static double neighborNerfFactor = 1;
+	public static double neighborNerfFactor = 0;
 	
 	/**
 	 * Guesses team Pieces.
 	 * @param gameState starting position
 	 * @param RANKS null to use default, otherwise permutation of {@link #RANKS}
 	 */
-	public Guesser(GameState gameState, PieceType[] RANKS) {
+	public Guesser(GameState gameState, PieceType[] RANKS, String ... guesserProbs) {
 		if(RANKS != null)
 			this.RANKS = RANKS;
-		legacySearch = false;
-		applyNeighborCounts = true;
-
+		
 		redPieces = new HashMap<Piece, double[]> ();
 		bluePieces = new HashMap<Piece, double[]> ();
 		redDeadPieces = new HashMap<PieceType, Integer>();
 		blueDeadPieces = new HashMap<PieceType, Integer>();
+		if(guesserProbs != null && guesserProbs.length == 1) {
+			if(guesserProbs[0].equals("random"))
+				useRandomInit = true;
+			else
+				mode = guesserProbs[0];
+		}
+			
 		probabilities = CompressedMapIO.loadCompressedMaps(mode);
 		neighborProbabilities = NeighborIO.loadNeighborCounts(mode);
+		startPosToPieces = new HashMap<Byte, Piece>();
 		currentState = gameState.clone();
 		startState = gameState.clone();
 		startToCurrentStateMap = new HashMap<Piece, Piece>();
@@ -78,6 +92,7 @@ public class Guesser {
 
 		for(int i=0; i<2; i++)
 			for(Piece startPiece : startState.getPieces()[i]) {
+				startPosToPieces.put(startPiece.getStartPos(), startPiece);
 				for(Piece piece : currentState.getPieces()[i]) {
 					if(startPiece.getPos() == piece.getPos()) {
 						startToCurrentStateMap.put(startPiece, piece);
@@ -113,8 +128,11 @@ public class Guesser {
 								&& movable.contains(piece)) {
 							probabilities[i] = 0;
 						} else {
-							probabilities[i] = this.probabilities.get(RANKS[i])[x][y] + 1;
-//							probabilities[i] = Math.random() * 100 +1;  // TODO zufalls Test
+							if(!useRandomInit) {
+								probabilities[i] = this.probabilities.get(RANKS[i])[x][y] + 1;
+							} else {
+								probabilities[i] = Math.random() * 100 +1;
+							}
 						}
 					}
 				}
@@ -432,20 +450,35 @@ public class Guesser {
 
 			if (x >= 0 && x < 8 && y >= 0 && y < 8) {
 				Piece neighbor = startState.inspect(x, y);
-				if (neighbor != null 
-						&& !neighbor.getKnown()
-						&& neighborProbabilities.get(known.getType()) != null
-						&& neighborProbabilities.get(known.getType()).get(pos) != null) {
-					Map<PieceType, Double> neighbors = neighborProbabilities.get(known.getType()).get(pos);
-					if (neighbors != null) {
-						double[] neighborProbs = rankProbs.get(neighbor);
-						
-						for (int r=0; r<RANKS.length; r++) {
-							if(neighbors.get(RANKS[r]) != null) {
-								neighborProbs[r] *= 1 + buffFactor * neighbors.get(RANKS[r]);
+				if(	// is neighbor not null and unknown?
+						neighbor != null 
+						&& !neighbor.getKnown()) {
+					if ( // does the known-pos pair exist in neighborProbabilities?
+							neighborProbabilities.get(known.getType()) != null
+							&& neighborProbabilities.get(known.getType()).get(pos) != null) {
+						Map<PieceType, Double> neighbors = neighborProbabilities.get(known.getType()).get(pos);
+						if (neighbors != null) {
+							double[] neighborProbs = rankProbs.get(neighbor);
+
+							for (int r=0; r<RANKS.length; r++) {
+								if(neighbors.get(RANKS[r]) != null) {
+									neighborProbs[r] *= 1 + buffFactor * neighbors.get(RANKS[r]);
+								}
 							}
 						}
 					}
+					
+//					for(int r=0; r<RANKS.length; r++) {
+//							if(neighborProbabilities.get(RANKS[r]) != null
+//									&& neighborProbabilities.get(RANKS[r]).get(pos.invert()) != null
+//									&& neighborProbabilities.get(RANKS[r]).get(pos.invert()).get(known.getType()) != null) {
+//								double knownAsNeighborProb = neighborProbabilities.get(RANKS[r]).get(pos.invert()).get(known.getType());
+//								
+//								double[] neighborProbs = rankProbs.get(neighbor);
+//								neighborProbs[r] *= 1 + buffFactor * knownAsNeighborProb;
+//								
+//							}
+//					}
 				}
 			}
 		}
@@ -461,8 +494,16 @@ public class Guesser {
 	 */
 	public void nerfFarPieces(Piece known, double nerfFactor) {
 		Map<Piece, double[]> rankProbs = (known.getTeam()) ? redPieces : bluePieces;
+	
+		// TODO following 4 lines are used for testing normalized probabilities. 
+		// if commented in, comment the for{} after combinedProb = ... out and comment everything regarding rankMap[] in.
+//		int knownRank = 0; 
+//		for(int rank=0; rank<RANKS.length; rank++)
+//			if(known.getType() == RANKS[rank])
+//				knownRank=rank;
+		
 		for(int r=0; r<RANKS.length; r++) {
-			double combinedProb = 0;
+			double combinedProb = 0; //rankMap[knownRank][r];
 			for(RelativePosition pos : RelativePosition.values()) {
 				if(		neighborProbabilities.get(known.getType()) != null
 						&& neighborProbabilities.get(known.getType()).get(pos) != null
@@ -480,6 +521,17 @@ public class Guesser {
 			}
 		}
 	}
+	
+//	static double[][] rankMap = new double[7][7];
+//	static {
+//		rankMap [0] = new double[]{0, 0.33, 0.04, 0.26, 0.14, 0.11, 0.12};
+//		rankMap [1] = new double[]{0.22, 0.08, 0.03, 0.26, 0.15, 0.15, 0.11};
+//		rankMap [2] = new double[]{0.1, 0.1, 0, 0.23, 0.18, 0.23, 0.15};
+//		rankMap [3] = new double[]{0.16, 0.24, 0.06, 0.18, 0.13, 0.11, 0.13};
+//		rankMap [4] = new double[]{0.16, 0.25, 0.09, 0.25, 0, 0.12, 0.14};
+//		rankMap [5] = new double[]{0.13, 0.26, 0.12, 0.22, 0.13, 0, 0.14};
+//		rankMap [6] = new double[]{0.15, 0.21, 0.08, 0.26, 0.15, 0.16, 0};
+//		}
 	
 	/**
 	 * Normalizes the ranks probabilities for one Piece so the values add up to 1.
@@ -771,6 +823,12 @@ public class Guesser {
 		}
 
 		return state;
+	}
+	
+	public double[] getPieceProbsFromStartPos(byte startPos) {
+		Piece piece = startPosToPieces.get(startPos);
+		
+		return piece.getTeam() ? redPieces.get(piece) : bluePieces.get(piece);
 	}
 
 	/**

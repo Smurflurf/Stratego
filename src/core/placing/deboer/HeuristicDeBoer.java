@@ -27,7 +27,7 @@ public class HeuristicDeBoer extends Placer {
 		pieceDistributions = strados2.tools.CompressedMapIO.loadCompressedMaps("classic");
 		neighborCounts = NeighborIO.loadNeighborCounts("classic");
 
-		useNeighbors = false;
+		useNeighbors = true;
 		useControlHeuristic = true;
 	}
 
@@ -72,7 +72,7 @@ public class HeuristicDeBoer extends Placer {
 		do {
 			location = getRandomLocation(getDistribution(piece));
 		} while(fieldIsOccupied(location));
-		piece.setPos(location);
+		piece.setStartPos(location);
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class HeuristicDeBoer extends Placer {
 	 */
 	private void resetPieces() {
 		for(Piece piece : pieces)
-			piece.setPos((byte)-1);
+			piece.setStartPos((byte)-1);
 	}
 
 	/**
@@ -290,7 +290,8 @@ public class HeuristicDeBoer extends Placer {
 	}
 
 	/**
-	 * Checks if the flag has a direct sight line upwards
+	 * Checks if the flag has a direct sight line upwards.
+	 * Spies don't count as defenders.
 	 * @param field temporary int field created by {@link #testFlagAccessibility()}
 	 * @return true if the flag is blocked (thats good)
 	 */

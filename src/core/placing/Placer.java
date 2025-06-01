@@ -60,6 +60,41 @@ public abstract class Placer {
 		}
 		return placer.place();
 	}
+	
+	/**
+	 * Places a teams pieces on the board with the selected placing algorithm.
+	 * The Placer disables the second 
+	 * @param team the team which pieces will be placed
+	 * @param type the algorithm responsible for placing the pieces
+	 * @param useControl true to use the control heuristic
+	 * @param useNBR true to use NBR
+	 * @return an Array containing all the teams pieces with their correctly placed locations (x and y initialized)
+	 */
+	public static Piece[] placePiecesWith(boolean team, Type type, boolean useControl, boolean useNBR) {
+		Placer placer;
+		switch(type) {
+		case PREBUILT: 
+			placer = new PrebuiltStates(team);
+			break;
+		case RANDOM:
+			placer = new RandomAI(team);
+			break;
+		case DEBOER:
+			placer = new HeuristicDeBoer(team);
+			((HeuristicDeBoer)placer).useControlHeuristic = useControl;
+			((HeuristicDeBoer)placer).useNeighbors= useNBR;
+			break;
+		case BARRAGE:
+			placer = new HeuristicBarrage(team);
+			((HeuristicBarrage)placer).useControlHeuristic = useControl;
+			((HeuristicBarrage)placer).useNeighbors= useNBR;
+			break;
+		default: 
+			placer = new RandomAI(team);
+			break;
+		}
+		return placer.place();
+	}
 
 	/**
 	 * Places a teams pieces on the board.
