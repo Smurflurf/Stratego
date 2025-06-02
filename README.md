@@ -28,8 +28,8 @@ Das Projekt implementiert die Spielmechanik und nutzt analysierte Spieldaten von
 2.    **MCTS Konfiguration (cote.playing.mcts):**
       *  Das Einkommentieren von `printResults(bestChild);` in der `MCTS.nextMove()` Methode gibt Informationen zur Zugwahl an.
       *  Die `Constants` Klasse enthält MAX_STEPS, um die Simulationstiefe festzulegen. TIME_IN_MS und MAX_SIMULATIONS begrenzen die Simulationszeit, das was zuerst erreicht wird beendet die Zugwahl.
-4.    **Datenanalyse:**
-      *  Analysieren & Daten generieren: `java strados2.GravonAnalyser` (Konfiguration in der `main`-Methode). Lädt automatisch die Gravon Spiele herunter, falls noch nicht geschehen.
+4.    **Datenanalyse(executable):**
+      *  Analysieren & Daten generieren: `GravonAnalyser.java` (Konfiguration in der `main`-Methode). Lädt automatisch die Gravon Spiele herunter, falls noch nicht geschehen.
 5.    **Python:**
       *   Python Code ist in `/src/strados2/py` enthalten. Relevante Analyse Dateien werden von `GravonAnalyser.java` in das `py` package geladen. Genaue Informationen sind in der dortigen README.
       *   EMD-Analyse: `python ProbabilityDifferenceCalculator.py file1.txt file2.txt` file1.txt und file2.txt durch relevante files aus `py` package ersetzen.
