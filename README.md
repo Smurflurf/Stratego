@@ -10,7 +10,7 @@ Das Projekt implementiert die Spielmechanik und nutzt analysierte Spieldaten von
 *   **Spiel-KI (`core.playing`):** Basis für Spielstrategien, implementiert Zufalls-, Heuristische- und MCTS-KI. Eine (`HumanInput`) Klasse verwaltet menschliche Zugwahlen.
 *   **Simulation & Profiler:** `executable.Runner` zum Ausführen von Simulationen, `Mediator` zur Spielzustandsverwaltung (nimmt die Rolle eines Servers ein) und  `Profiler` um den Speicherverbrauch der Klassen zu analysieren
 *   **UI:** `ui.UI` beinhaltet eine einfache Swing-UI zur Visualisierung eines einzigen Spiels.
-*   **Datenanalyse (`strados2`):** Werkzeuge zum Download (`Scraper`), Parsen (`XmlParser`) und Analysieren (`GravonAnalyser`) von Gravon-Spieldaten. Generiert Platzierungsverteilungen und Nachbarschaftsanalysen. Speichert/lädt Analysedaten (`CompressedMapIO`, `NeighborIO`). Generiert Grafiken mithilfe von xChart.
+*   **Datenanalyse (`strados2`):** Werkzeuge zum Download (`Scraper`), Parsen (`XmlParser`) und Analysieren (`executable.GravonAnalyser`) von Gravon-Spieldaten. Generiert Platzierungsverteilungen und Nachbarschaftsanalysen. Speichert/lädt Analysedaten (`CompressedMapIO`, `NeighborIO`). Generiert Grafiken mithilfe von xChart.
 *   **Python (`strados2/py`):** Python-Skripte für Datenanalyse:
        `ProbabilityDifferenceCalculator.py` zur Berechnung der Earth Mover's Distance (EMD) zwischen Platzierungsverteilungen verschiedener Modi mithilfe von `numpy` und `scipy`.
        `DifferenceHeatMap.py` zum Generieren von Differenz Heatmaps die vorher in `GravonAnalyser` textlich erstellt wurden (xChart kann Achsenlabels nicht korrekt darstellen). Nutzt `numpy`, `matplotlib` und `seaborn`.
