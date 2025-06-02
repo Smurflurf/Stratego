@@ -12,7 +12,6 @@ import core.Piece;
 import core.Utils;
 import core.placing.Placer;
 import core.playing.AI;
-import core.playing.heuristic.HeuristicAI;
 import core.playing.mcts.MCTS;
 import ui.UI;
 
@@ -39,19 +38,19 @@ public class Runner {
 	public static boolean use_UI;
 
 	public static void main(String[] args) {
-		use_UI = false;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
+		use_UI = true;		// UI only shows if simulation = 1. If true but simulations > 1 the game is printed onto console
 		printGame = false;
 		printResults = false;
 		int UI_delay = 1000;
 		
 		Placer.Type redPlacement = Placer.Type.BARRAGE;
 		Placer.Type bluePlacement = Placer.Type.DEBOER;
-		AI.Type redPlayer = AI.Type.MCTS;
+		AI.Type redPlayer = AI.Type.HUMAN;
 		AI.Type bluePlayer = AI.Type.MCTS;
-		int simulations = 1_000;
+		int simulations = 1;
+		
+		MCTS.printResultsToConsole = true;
 
-//		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay, 1);
-//		printResults();
 		simulate(simulations, redPlacement, redPlayer, bluePlacement, bluePlayer, UI_delay);
 		printResults();
 	}
@@ -75,28 +74,13 @@ public class Runner {
 				initUI(redType, blueType);
             }
 			
-//			Piece[] redPieces = Placer.placePiecesWith(true, redPlacement, true, false);
-//			Piece[] bluePieces = Placer.placePiecesWith(false, bluePlacement, true, true);
-			
 			Piece[] redPieces = Placer.placePiecesWith(true, redPlacement);
 			Piece[] bluePieces = Placer.placePiecesWith(false, bluePlacement);
 			Mediator mediator = new Mediator(new GameState(redPieces, bluePieces));
 			mediator.getGameState().changeTeam();
 			showGame(mediator, 0);
-			AI red = redType.createAI(true, mediator.obfuscateFor(true), "barrage");
-			AI blue = blueType.createAI(false, mediator.obfuscateFor(false), "classic");
-			
-//			AI red = redType.createAI(true, mediator.obfuscateFor(true));
-//			AI blue = blueType.createAI(false, mediator.obfuscateFor(false));
-//			((HeuristicAI)red).moveHeuristic.disableUseTargetCheck();
-//			((HeuristicAI)red).moveHeuristic.disableUseTargetNeighborCheck();
-//			((HeuristicAI)red).disableMoveHeuristic();
-//			((HeuristicAI)blue).disableTerminalHeuristic();
-//			((HeuristicAI)blue).moveHeuristic.disableUseTargetCheck();
-//			((HeuristicAI)blue).moveHeuristic.disableUseTargetNeighborCheck();
-//			((HeuristicAI)blue).moveHeuristic.enableUncertainty();
-//			((HeuristicAI)red).terminalHeuristic.disableEnhancedKnownDeadMultipliers();
-//			((HeuristicAI)red).disableTerminalHeuristic();
+			AI red = redType.createAI(true, mediator.obfuscateFor(true));
+			AI blue = blueType.createAI(false, mediator.obfuscateFor(false));
 			
 //			((HeuristicAI)blue).moveHeuristic.disableUseTargetNeighborCheck();
 //			((MCTS)red).terminalHeuristic.disableEnhancedKnownDeadMultipliers();

@@ -22,6 +22,8 @@ public class MCTS extends AI {
 	public int simulationCounter;	
 	public int heuristicCounter;
 	public int expansionCounter;
+	
+	public static boolean printResultsToConsole = false;
 
 	boolean enableBestChildNoLoops = false;
 	boolean useExpandHeuristic = false;
@@ -78,7 +80,8 @@ public class MCTS extends AI {
 			return RandomAI.nextMove(gameState);
 		}
 
-		//				printResults(bestChild);
+		if(printResultsToConsole)
+			printResults(bestChild);
 		System.gc();
 		// TODO: -XX:+UseParallelGC, funktioniert am besten in dieser Umgebung
 

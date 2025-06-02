@@ -27,7 +27,7 @@ public class HeuristicDeBoer extends Placer {
 		pieceDistributions = strados2.tools.CompressedMapIO.loadCompressedMaps("classic");
 		neighborCounts = NeighborIO.loadNeighborCounts("classic");
 
-		useNeighbors = true;
+		useNeighbors = false;
 		useControlHeuristic = true;
 	}
 
